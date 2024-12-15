@@ -15,13 +15,16 @@ could be considered a `string`, a series of bytes encoded in `utf-8`.
 - [ ] Make a simple [tokenizer](#tokenizer) for the language
     - [x] Should every token be a string? Or we can decide if token is a `number` on tokenizer level?
         - Encoding to known structures (lists, numbers, strings) should be done in the interpreter 
-    - [ ] Write a couple of smoke tests for tokenizer
+    - [x] Write a couple of smoke tests for tokenizer
 - [ ] Make an encoder, that will encode tokens as trees (just python recursively embedded lists of zeros). This
 will give an ability to describe any data with quotation on the tokenizer level
     - [ ] Make boolean encoding
     - [ ] Make list encoding
     - [ ] Make number encoding
     - [ ] Make string encoding as utf-8 constants
+- [ ] Sugar
+    - [ ] Let bindings
+    - [ ] Lambda abstractions
 - [ ] Make evaluator
 - [ ] Write all different necessary stuff
 - [ ] .... Tooling?

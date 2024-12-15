@@ -8,6 +8,10 @@ class TreeToken:
 
 
 @dataclass
+class SymbolToken:
+    s: str
+
+@dataclass
 class LParenToken:
     pass
 
@@ -22,7 +26,7 @@ class StringToken:
     s: str
 
 
-Token = TreeToken | LParenToken | RParenToken | StringToken
+Token = TreeToken | LParenToken | RParenToken | StringToken | SymbolToken
 
 
 def tokenize(bytes: bytearray) -> [Token]:
@@ -43,7 +47,7 @@ def tokenize(bytes: bytearray) -> [Token]:
                 case '}': assert false
                 case _ if b.isspace():
                     if word:
-                        tokens.append(StringToken(''.join(word)))
+                        tokens.append(SymbolToken(''.join(word)))
                         word = []
                 case _: word.append(b)
         else:
@@ -61,8 +65,11 @@ def tokenize(bytes: bytearray) -> [Token]:
                         word = []
                 case _: word.append(b)
 
+    if in_string:
+        assert(word == [])
+
     if word:
-        tokens.append(StringToken(''.join(word)))
+        tokens.append(SymbolToken(''.join(word)))
         word = []
 
     if block_level != -1:

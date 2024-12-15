@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import unittest
 import main as m
-from main import StringToken, LParenToken, RParenToken, TreeToken
+from main import StringToken, LParenToken, RParenToken, TreeToken, SymbolToken
 
 
 class TestTokenizer(unittest.TestCase):
@@ -16,8 +16,12 @@ class TestTokenizer(unittest.TestCase):
 
     def test_simple(self):
         tokens = TestTokenizer.tokenize_file('tests/simple.tree')
-        self.assertEqual(tokens, [StringToken(s='result'), StringToken(s='='), LParenToken(), TreeToken(), TreeToken(), StringToken(
+        self.assertEqual(tokens, [SymbolToken(s='result'), SymbolToken(s='='), LParenToken(), TreeToken(), TreeToken(), SymbolToken(
             s='println'), StringToken(s='"\'some\' "stuff""'), RParenToken(), StringToken(s='another ^({^({})}) string')])
+
+    def test_simplest_application(self):
+        tokens = TestTokenizer.tokenize_file('tests/simplest-application.tree')
+        self.assertEqual(tokens, [SymbolToken(s='a'), SymbolToken(s='b')])
 
 
 if __name__ == "__main__":
