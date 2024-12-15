@@ -12,21 +12,15 @@ class SymbolToken:
     s: str
 
 @dataclass
-class LParenToken:
-    pass
-
-
-@dataclass
-class RParenToken:
-    pass
-
+class DelimToken:
+    s: str
 
 @dataclass
 class StringToken:
     s: str
 
 
-Token = TreeToken | LParenToken | RParenToken | StringToken | SymbolToken
+Token = TreeToken | DelimToken | StringToken | SymbolToken
 
 
 def tokenize(bytes: bytearray) -> [Token]:
@@ -39,8 +33,11 @@ def tokenize(bytes: bytearray) -> [Token]:
         if not in_string:
             match b:
                 case '^': tokens.append(TreeToken())
-                case ')': tokens.append(RParenToken())
-                case '(': tokens.append(LParenToken())
+                case ')': tokens.append(DelimToken(')'))
+                case '(': tokens.append(DelimToken('('))
+                case '[': tokens.append(DelimToken('['))
+                case ']': tokens.append(DelimToken(']'))
+                case ',': tokens.append(DelimToken(','))
                 case '{':
                     in_string = True
                     continue
