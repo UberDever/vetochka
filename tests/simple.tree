@@ -1,1 +1,1 @@
-result = (^^println {some stuff}) {another ^({^({})}) string}
+result = (^^println {"'some' "stuff""}) {another ^({^({})}) string}

@@ -2,7 +2,6 @@
 import argparse
 from dataclasses import dataclass
 
-
 @dataclass
 class TreeToken:
     pass
@@ -38,16 +37,18 @@ def tokenize(bytes: bytearray) -> [Token]:
                 case '^': tokens.append(TreeToken())
                 case ')': tokens.append(RParenToken())
                 case '(': tokens.append(LParenToken())
-                case '{': in_string = True; continue
+                case '{':
+                    in_string = True
+                    continue
                 case '}': assert false
-                case _ if b.isspace(): 
+                case _ if b.isspace():
                     if word:
                         tokens.append(StringToken(''.join(word)))
                         word = []
                 case _: word.append(b)
         else:
             match b:
-                case '{': 
+                case '{':
                     block_level += 1
                     word.append(b)
                 case '}':
@@ -65,7 +66,8 @@ def tokenize(bytes: bytearray) -> [Token]:
         word = []
 
     if block_level != -1:
-        raise RuntimeError("Can't tokenize, encountered unbalanced expression along the way")
+        raise RuntimeError(
+            "Can't tokenize, encountered unbalanced expression along the way")
     return tokens
 
 
