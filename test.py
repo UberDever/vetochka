@@ -1,14 +1,21 @@
 #!/usr/bin/env python3
+
+# pylint: disable=missing-module-docstring
+# pylint: disable=missing-class-docstring
+# pylint: disable=missing-function-docstring
+# pylint: disable=line-too-long
+
 import unittest
 import main as m
 from main import StringToken, DelimToken, TreeToken, SymbolToken
 
 
 class TestTokenizer(unittest.TestCase):
+    @staticmethod
     def tokenize_file(path: str):
-        with open(path, 'r') as file:
-            bytes = file.read()
-            return m.tokenize(bytes)
+        with open(path, 'r', encoding='utf-8') as file:
+            b = file.read()
+            return m.tokenize(b)
 
     def test_simplest(self):
         tokens = TestTokenizer.tokenize_file('tests/simplest.tree')

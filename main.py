@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
+
+# pylint: disable=missing-module-docstring
+# pylint: disable=missing-class-docstring
+# pylint: disable=missing-function-docstring
+
 import argparse
 from dataclasses import dataclass
+
 
 @dataclass
 class TreeToken:
@@ -11,9 +17,11 @@ class TreeToken:
 class SymbolToken:
     s: str
 
+
 @dataclass
 class DelimToken:
     s: str
+
 
 @dataclass
 class StringToken:
@@ -23,13 +31,13 @@ class StringToken:
 Token = TreeToken | DelimToken | StringToken | SymbolToken
 
 
-def tokenize(bytes: bytearray) -> [Token]:
+def tokenize(byte_array: bytearray) -> [Token]:
     in_string = False
     tokens = []
     word = []
     block_level = -1
 
-    for i, b in enumerate(bytes):
+    for _, b in enumerate(byte_array):
         if not in_string:
             match b:
                 case '^': tokens.append(TreeToken())
@@ -41,7 +49,7 @@ def tokenize(bytes: bytearray) -> [Token]:
                 case '{':
                     in_string = True
                     continue
-                case '}': assert false
+                case '}': assert False
                 case _ if b.isspace():
                     if word:
                         tokens.append(SymbolToken(''.join(word)))
@@ -63,7 +71,7 @@ def tokenize(bytes: bytearray) -> [Token]:
                 case _: word.append(b)
 
     if in_string:
-        assert(word == [])
+        assert not word
 
     if word:
         tokens.append(SymbolToken(''.join(word)))
@@ -81,9 +89,9 @@ def main():
         '-p', '--path', help='Path to file to translate', required=True)
     args = parser.parse_args()
 
-    with open(args.path, 'r') as file:
-        bytes = file.read()
-        print(tokenize(bytes))
+    with open(args.path, 'r', encoding='utf-8') as file:
+        b = file.read()
+        print(tokenize(b))
 
 
 if __name__ == "__main__":
