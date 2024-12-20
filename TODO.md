@@ -24,10 +24,14 @@ of `tree-calculus` can help to build a convenient `ir` (tagging, evaluation with
 # TODO
 
 - [ ] Write a language
+    - [ ] Make a grammar
     - [ ] Make a simple tokenizer for the language
         - [x] Should every token be a string? Or we can decide if token is a `number` on tokenizer level?
             - Encoding to known structures (lists, numbers, strings) should be done in the interpreter 
         - [x] Write a couple of smoke tests for tokenizer
+        - [ ] Add unicode delta as special symbol
+    - [ ] Make a parser to `ir` that supports sugary constructs. We will lower the language from here
+        - [ ] Learn how to parse left-associative application :/
     - [ ] Make an encoder, that will encode tokens as trees (just python recursively embedded lists of zeros). This
     will give an ability to describe any data with quotation on the tokenizer level
         - [ ] Make boolean encoding
