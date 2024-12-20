@@ -40,21 +40,27 @@ def tokenize(byte_array: bytearray) -> [Token]:
     for _, b in enumerate(byte_array):
         if not in_string:
             match b:
-                case '^': tokens.append(TreeToken())
-                case ')': tokens.append(DelimToken(')'))
-                case '(': tokens.append(DelimToken('('))
-                case '[': tokens.append(DelimToken('['))
-                case ']': tokens.append(DelimToken(']'))
-                case ',': tokens.append(DelimToken(','))
+                case '^':
+                    if word:
+                        tokens.append(SymbolToken(''.join(word)))
+                        word = []
+                    tokens.append(TreeToken())
+                case ')' | '(' | '[' | ']' | ',':
+                    if word:
+                        tokens.append(SymbolToken(''.join(word)))
+                        word = []
+                    tokens.append(DelimToken(b))
                 case '{':
                     in_string = True
                     continue
-                case '}': assert False
+                case '}':
+                    assert False
                 case _ if b.isspace():
                     if word:
                         tokens.append(SymbolToken(''.join(word)))
                         word = []
-                case _: word.append(b)
+                case _:
+                    word.append(b)
         else:
             match b:
                 case '{':
@@ -66,9 +72,11 @@ def tokenize(byte_array: bytearray) -> [Token]:
                         word.append(b)
                     else:
                         in_string = False
+                        assert word
                         tokens.append(StringToken(''.join(word)))
                         word = []
-                case _: word.append(b)
+                case _:
+                    word.append(b)
 
     if in_string:
         assert not word
@@ -83,15 +91,23 @@ def tokenize(byte_array: bytearray) -> [Token]:
     return tokens
 
 
+#
+# def encode(tokens: [Token]) -> None:
+#     pass
+#
+
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '-p', '--path', help='Path to file to translate', required=True)
+    parser.add_argument('-p',
+                        '--path',
+                        help='Path to file to translate',
+                        required=True)
     args = parser.parse_args()
 
     with open(args.path, 'r', encoding='utf-8') as file:
-        b = file.read()
-        print(tokenize(b))
+        text = file.read()
+        print(tokenize(text))
 
 
 if __name__ == "__main__":
