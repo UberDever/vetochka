@@ -27,7 +27,7 @@ class TestParser(unittest.TestCase):
         self.assertEqual(tree, None)
 
     def test_simplest(self):
-        tree = TestParser.parse_file('tests/simplest.tree')
+        tree = parser.Parser().parse(t.tokenize('^'))
         self.assertEqual(
             tree,
             Source(token=None,
@@ -38,7 +38,7 @@ class TestParser(unittest.TestCase):
                    ]))
 
     def test_list_expression(self):
-        tree = TestParser.parse_file('tests/list-expression.tree')
+        tree = parser.Parser().parse(t.tokenize('[^,^,^]'))
         self.assertEqual(
             tree,
             Source(token=None,

@@ -18,11 +18,13 @@ class TestTokenizer(unittest.TestCase):
             return t.tokenize(b)
 
     def test_simplest(self):
-        tokens = TestTokenizer.tokenize_file('tests/simplest.tree')
+        tokens = t.tokenize('^')
         self.assertEqual(tokens, [Tree()])
 
-    def test_simple(self):
-        tokens = TestTokenizer.tokenize_file('tests/simple.tree')
+    def test_all_kinds_of_stuff(self):
+        tokens = t.tokenize(
+            """result = (^^println {"'some' "stuff""}) {another ^({^({})}) string}"""
+        )
         self.assertEqual(tokens, [
             Symbol(s='result'),
             Symbol(s='='),
@@ -36,11 +38,12 @@ class TestTokenizer(unittest.TestCase):
         ])
 
     def test_simplest_application(self):
-        tokens = TestTokenizer.tokenize_file('tests/simplest-application.tree')
+        tokens = t.tokenize('a b')
         self.assertEqual(tokens, [Symbol(s='a'), Symbol(s='b')])
 
     def test_all_tokens(self):
-        tokens = TestTokenizer.tokenize_file('tests/all-tokens.tree')
+        tokens = t.tokenize(
+            'a 0 1234 1234.567 (s expr) ( ) ^ [x, y, z] {plain text}')
         self.assertEqual(tokens, [
             Symbol(s='a'),
             Symbol(s='0'),
