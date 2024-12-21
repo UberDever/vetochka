@@ -24,8 +24,8 @@ of `tree-calculus` can help to build a convenient `ir` (tagging, evaluation with
 # TODO
 
 - [ ] Write a language
-    - [ ] Make a grammar
-    - [ ] Make a simple tokenizer for the language
+    - [x] Make a grammar
+    - [x] Make a simple tokenizer for the language
         - [x] Should every token be a string? Or we can decide if token is a `number` on tokenizer level?
             - Encoding to known structures (lists, numbers, strings) should be done in the interpreter 
         - [x] Write a couple of smoke tests for tokenizer
@@ -39,6 +39,7 @@ of `tree-calculus` can help to build a convenient `ir` (tagging, evaluation with
         - [ ] Make number encoding
         - [ ] Make string encoding as utf-8 constants
     - [ ] Sugar
+        - [x] Lists
         - [ ] Let bindings
         - [ ] Lambda abstractions
     - [ ] Make evaluator
