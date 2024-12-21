@@ -8,7 +8,7 @@ import unittest
 
 import tokenizer as t
 import parser
-from parser import TreeNode, Source, Expression
+from parser import TreeNode, Source, Expression, ListExpression
 
 
 class TestParser(unittest.TestCase):
@@ -35,6 +35,37 @@ class TestParser(unittest.TestCase):
                        Expression(
                            token=None,
                            children=[TreeNode(token=t.Tree(), children=[])])
+                   ]))
+
+    def test_list_expression(self):
+        tree = TestParser.parse_file('tests/list-expression.tree')
+        self.assertEqual(
+            tree,
+            Source(token=None,
+                   children=[
+                       Expression(
+                           token=None,
+                           children=[
+                               ListExpression(
+                                   token=None,
+                                   children=[
+                                       Expression(token=None,
+                                                  children=[
+                                                      TreeNode(token=t.Tree(),
+                                                               children=[])
+                                                  ]),
+                                       Expression(token=None,
+                                                  children=[
+                                                      TreeNode(token=t.Tree(),
+                                                               children=[])
+                                                  ]),
+                                       Expression(token=None,
+                                                  children=[
+                                                      TreeNode(token=t.Tree(),
+                                                               children=[])
+                                                  ])
+                                   ])
+                           ])
                    ]))
 
 

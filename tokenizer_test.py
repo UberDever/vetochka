@@ -5,8 +5,8 @@
 # pylint: disable=missing-function-docstring
 
 import unittest
-import t
-from t import String, Delim, Tree, Symbol
+import tokenizer as t
+from tokenizer import String, Delim, Tree, Symbol
 
 
 class TestTokenizer(unittest.TestCase):

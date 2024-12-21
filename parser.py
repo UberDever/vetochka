@@ -25,6 +25,11 @@ class Expression(Node):
 
 
 @dataclass
+class ListExpression(Node):
+    pass
+
+
+@dataclass
 class TreeNode(Node):
     pass
 
@@ -79,8 +84,25 @@ class Parser:
         nodes = []
         if self.match_token(tokenizer.Tree()):
             nodes.append(self.parse_tree())
+        elif self.match_token(tokenizer.Delim('[')):
+            nodes.append(self.parse_list_expression())
 
         return Expression(None, nodes)
+
+    def parse_list_expression(self) -> Node:
+        nodes = []
+        self.expect(tokenizer.Delim('['))
+        while True:
+            if self.match_token(tokenizer.Delim(']')):
+                break
+            if self.at_eof:
+                break
+            nodes.append(self.parse_expression())
+            if self.match_token(tokenizer.Delim(',')):
+                self.expect(tokenizer.Delim(','))
+        self.expect(tokenizer.Delim(']'))
+
+        return ListExpression(None, nodes)
 
     def parse_tree(self) -> Node:
         token = self.cur()
@@ -92,4 +114,9 @@ class Parser:
             return None
 
         self.tokens = tokens
-        return self.parse_source()
+        result = self.parse_source()
+        if not self.at_eof:
+            logging.error("[Parser] Failed to parse string past %s at %d",
+                          self.cur(), self.cur_token)
+            return None
+        return result
