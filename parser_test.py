@@ -8,7 +8,7 @@ import unittest
 
 import tokenizer as t
 import parser
-from parser import Node, TreeNode, Source, Expression, ListExpression
+from parser import Node, TreeNode, ListExpression
 
 
 def strip(root: Node) -> Node:
@@ -17,7 +17,7 @@ def strip(root: Node) -> Node:
     def aux(n: Node) -> Node:
         if n.token is None and len(n.children) == 1:
             return aux(n.children[0])
-        return n
+        return type(n)(n.token, [aux(c) for c in n.children])
 
     return aux(root)
 
@@ -41,27 +41,45 @@ class TestParser(unittest.TestCase):
         tree = parser.Parser().parse(t.tokenize('^'))
         self.assertEqual(strip(tree), TreeNode(token=t.Tree(), children=[]))
 
-    def test_list_expression(self):
+    def test_list_expression_empty(self):
+        tree = parser.Parser().parse(t.tokenize('[]'))
+        self.assertEqual(strip(tree),
+                         ListExpression(token=t.Delim(s='['), children=[]))
+
+    def test_list_expression_single(self):
+        tree = parser.Parser().parse(t.tokenize('[^]'))
+        self.assertEqual(
+            strip(tree),
+            ListExpression(token=t.Delim(s='['),
+                           children=[TreeNode(token=t.Tree(), children=[])]))
+
+    def test_list_expression_single_trailing(self):
+        tree = parser.Parser().parse(t.tokenize('[^,]'))
+        self.assertEqual(
+            strip(tree),
+            ListExpression(token=t.Delim(s='['),
+                           children=[TreeNode(token=t.Tree(), children=[])]))
+
+    def test_list_expression_many(self):
         tree = parser.Parser().parse(t.tokenize('[^,^,^]'))
         self.assertEqual(
             strip(tree),
-            ListExpression(token=None,
+            ListExpression(token=t.Delim(s='['),
                            children=[
-                               Expression(token=None,
-                                          children=[
-                                              TreeNode(token=t.Tree(),
-                                                       children=[])
-                                          ]),
-                               Expression(token=None,
-                                          children=[
-                                              TreeNode(token=t.Tree(),
-                                                       children=[])
-                                          ]),
-                               Expression(token=None,
-                                          children=[
-                                              TreeNode(token=t.Tree(),
-                                                       children=[])
-                                          ])
+                               TreeNode(token=t.Tree(), children=[]),
+                               TreeNode(token=t.Tree(), children=[]),
+                               TreeNode(token=t.Tree(), children=[])
+                           ]))
+
+    def test_list_expression_many_trailing(self):
+        tree = parser.Parser().parse(t.tokenize('[^,^,^,]'))
+        self.assertEqual(
+            strip(tree),
+            ListExpression(token=t.Delim(s='['),
+                           children=[
+                               TreeNode(token=t.Tree(), children=[]),
+                               TreeNode(token=t.Tree(), children=[]),
+                               TreeNode(token=t.Tree(), children=[])
                            ]))
 
 

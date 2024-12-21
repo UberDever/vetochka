@@ -91,6 +91,7 @@ class Parser:
 
     def parse_list_expression(self) -> Node:
         nodes = []
+        token = self.cur()
         self.expect(tokenizer.Delim('['))
         while True:
             if self.match_token(tokenizer.Delim(']')):
@@ -102,7 +103,7 @@ class Parser:
                 self.expect(tokenizer.Delim(','))
         self.expect(tokenizer.Delim(']'))
 
-        return ListExpression(None, nodes)
+        return ListExpression(token, nodes)
 
     def parse_tree(self) -> Node:
         token = self.cur()
