@@ -8,7 +8,18 @@ import unittest
 
 import tokenizer as t
 import parser
-from parser import TreeNode, Source, Expression, ListExpression
+from parser import Node, TreeNode, Source, Expression, ListExpression
+
+
+def strip(root: Node) -> Node:
+    "Strips tree from dormant nodes (unary and without token)"
+
+    def aux(n: Node) -> Node:
+        if n.token is None and len(n.children) == 1:
+            return aux(n.children[0])
+        return n
+
+    return aux(root)
 
 
 class TestParser(unittest.TestCase):
@@ -28,45 +39,30 @@ class TestParser(unittest.TestCase):
 
     def test_simplest(self):
         tree = parser.Parser().parse(t.tokenize('^'))
-        self.assertEqual(
-            tree,
-            Source(token=None,
-                   children=[
-                       Expression(
-                           token=None,
-                           children=[TreeNode(token=t.Tree(), children=[])])
-                   ]))
+        self.assertEqual(strip(tree), TreeNode(token=t.Tree(), children=[]))
 
     def test_list_expression(self):
         tree = parser.Parser().parse(t.tokenize('[^,^,^]'))
         self.assertEqual(
-            tree,
-            Source(token=None,
-                   children=[
-                       Expression(
-                           token=None,
+            strip(tree),
+            ListExpression(token=None,
                            children=[
-                               ListExpression(
-                                   token=None,
-                                   children=[
-                                       Expression(token=None,
-                                                  children=[
-                                                      TreeNode(token=t.Tree(),
-                                                               children=[])
-                                                  ]),
-                                       Expression(token=None,
-                                                  children=[
-                                                      TreeNode(token=t.Tree(),
-                                                               children=[])
-                                                  ]),
-                                       Expression(token=None,
-                                                  children=[
-                                                      TreeNode(token=t.Tree(),
-                                                               children=[])
-                                                  ])
-                                   ])
-                           ])
-                   ]))
+                               Expression(token=None,
+                                          children=[
+                                              TreeNode(token=t.Tree(),
+                                                       children=[])
+                                          ]),
+                               Expression(token=None,
+                                          children=[
+                                              TreeNode(token=t.Tree(),
+                                                       children=[])
+                                          ]),
+                               Expression(token=None,
+                                          children=[
+                                              TreeNode(token=t.Tree(),
+                                                       children=[])
+                                          ])
+                           ]))
 
 
 if __name__ == "__main__":
