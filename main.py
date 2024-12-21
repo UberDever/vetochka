@@ -6,10 +6,7 @@
 
 import argparse
 import tokenizer
-
-
-def parse(tokens: [tokenizer.Token]) -> int:
-    pass
+import parser
 
 
 def encode(root: int) -> int:
@@ -17,16 +14,19 @@ def encode(root: int) -> int:
 
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-p',
-                        '--path',
-                        help='Path to file to translate',
-                        required=True)
-    args = parser.parse_args()
+    arg_parser = argparse.ArgumentParser()
+    arg_parser.add_argument('-p',
+                            '--path',
+                            help='Path to file to translate',
+                            required=True)
+    args = arg_parser.parse_args()
 
     with open(args.path, 'r', encoding='utf-8') as file:
         text = file.read()
-        print(tokenizer.tokenize(text))
+        tokens = tokenizer.tokenize(text)
+        p = parser.Parser()
+        tree = p.parse(tokens)
+        print(tree)
 
 
 if __name__ == "__main__":

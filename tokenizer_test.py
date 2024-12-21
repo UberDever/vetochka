@@ -5,8 +5,8 @@
 # pylint: disable=missing-function-docstring
 
 import unittest
-import tokenizer
-from tokenizer import String, Delim, Tree, Symbol
+import t
+from t import String, Delim, Tree, Symbol
 
 
 class TestTokenizer(unittest.TestCase):
@@ -15,7 +15,7 @@ class TestTokenizer(unittest.TestCase):
     def tokenize_file(path: str):
         with open(path, 'r', encoding='utf-8') as file:
             b = file.read()
-            return tokenizer.tokenize(b)
+            return t.tokenize(b)
 
     def test_simplest(self):
         tokens = TestTokenizer.tokenize_file('tests/simplest.tree')
