@@ -6,11 +6,10 @@
 
 import argparse
 import tokenizer
-import parser
+import parser  # pylint: disable=wrong-import-order,deprecated-module
 
-
-def encode(root: int) -> int:
-    pass
+# def encode(root: int) -> int:
+#     pass
 
 
 def main():

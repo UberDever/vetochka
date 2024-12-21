@@ -7,7 +7,8 @@
 import unittest
 
 import tokenizer as t
-import parser
+import parser  # pylint: disable=wrong-import-order,deprecated-module
+# pylint: disable-next=wrong-import-order,deprecated-module
 from parser import Node, TreeNode, ListExpression
 
 
