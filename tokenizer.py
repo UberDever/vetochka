@@ -25,6 +25,17 @@ class String:
     s: str
 
 
+@dataclass
+class Delimeters:
+    rsquare = Delim('[')
+    lsquare = Delim(']')
+    rbrace = Delim('(')
+    lbrace = Delim(')')
+    rcurly = Delim('{')
+    lcurly = Delim('}')
+    comma = Delim(',')
+
+
 Token = Tree | Delim | String | Symbol
 
 

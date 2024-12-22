@@ -6,6 +6,7 @@ from dataclasses import dataclass
 import logging
 
 import tokenizer
+from tokenizer import Delimeters
 
 
 @dataclass
@@ -82,33 +83,34 @@ class Parser:
 
     def parse_expression(self) -> Node:
         nodes = []
+
         if self.match_token(tokenizer.Tree()):
             nodes.append(self.parse_tree())
-        elif self.match_token(tokenizer.Delim('[')):
+        elif self.match_token(Delimeters.rsquare):
             nodes.append(self.parse_list_expression())
 
         return Expression(None, nodes)
-
-    def parse_list_expression(self) -> Node:
-        nodes = []
-        token = self.cur()
-        self.expect(tokenizer.Delim('['))
-        while True:
-            if self.match_token(tokenizer.Delim(']')):
-                break
-            if self.at_eof:
-                break
-            nodes.append(self.parse_expression())
-            if self.match_token(tokenizer.Delim(',')):
-                self.expect(tokenizer.Delim(','))
-        self.expect(tokenizer.Delim(']'))
-
-        return ListExpression(token, nodes)
 
     def parse_tree(self) -> Node:
         token = self.cur()
         self.expect(tokenizer.Tree())
         return TreeNode(token, [])
+
+    def parse_list_expression(self) -> Node:
+        nodes = []
+        token = self.cur()
+        self.expect(Delimeters.rsquare)
+        while True:
+            if self.match_token(Delimeters.lsquare):
+                break
+            if self.at_eof:
+                break
+            nodes.append(self.parse_expression())
+            if self.match_token(Delimeters.comma):
+                self.expect(Delimeters.comma)
+        self.expect(Delimeters.lsquare)
+
+        return ListExpression(token, nodes)
 
     def parse(self, tokens: [tokenizer.Token]) -> Node | None:
         if not tokens:
