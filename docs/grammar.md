@@ -23,10 +23,13 @@ Expression ::=
     Application
     # InfixExpression
     ListExpression
+    Operand
     
+Operand ::=
     Tree
     String
     Symbol
+    Delimeter('(') Expression Delimeter(')')
     
 Application ::=
     Delimeter('(')? Expression Expression Delimeter(')')?
