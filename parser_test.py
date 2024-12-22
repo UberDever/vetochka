@@ -9,7 +9,8 @@ import unittest
 import tokenizer as t
 import parser  # pylint: disable=wrong-import-order,deprecated-module
 # pylint: disable-next=wrong-import-order,deprecated-module
-from parser import Node, TreeNode, ListExpression
+from parser import (Node, TreeNode, ListExpression, Symbol, Application,
+                    String)
 
 
 def strip(root: Node) -> Node:
@@ -82,6 +83,112 @@ class TestParser(unittest.TestCase):
                                TreeNode(token=t.Tree(), children=[]),
                                TreeNode(token=t.Tree(), children=[])
                            ]))
+
+    def test_single_symbol(self):
+        tree = parser.Parser().parse(t.tokenize('a'))
+        self.assertEqual(strip(tree), Symbol(token=t.Symbol(s='a'),
+                                             children=[]))
+
+    def test_application_simplest(self):
+        tree = parser.Parser().parse(t.tokenize('a b'))
+        self.assertEqual(
+            strip(tree),
+            Application(token=t.Symbol(s='a'),
+                        children=[
+                            Symbol(token=t.Symbol(s='a'), children=[]),
+                            Symbol(token=t.Symbol(s='b'), children=[])
+                        ]))
+
+    def test_application_multiple(self):
+        tree = parser.Parser().parse(t.tokenize('a b c d'))
+        self.assertEqual(
+            strip(tree),
+            Application(token=t.Symbol(s='a'),
+                        children=[
+                            Application(
+                                token=t.Symbol(s='a'),
+                                children=[
+                                    Application(
+                                        token=t.Symbol(s='a'),
+                                        children=[
+                                            Symbol(token=t.Symbol(s='a'),
+                                                   children=[]),
+                                            Symbol(token=t.Symbol(s='b'),
+                                                   children=[])
+                                        ]),
+                                    Symbol(token=t.Symbol(s='c'), children=[])
+                                ]),
+                            Symbol(token=t.Symbol(s='d'), children=[])
+                        ]))
+
+    def test_application_parenthesized(self):
+        tree = parser.Parser().parse(t.tokenize('(((a b)))'))
+        self.assertEqual(
+            strip(tree),
+            Application(token=t.Symbol(s='a'),
+                        children=[
+                            Symbol(token=t.Symbol(s='a'), children=[]),
+                            Symbol(token=t.Symbol(s='b'), children=[])
+                        ]))
+
+    def test_application_different_precedence(self):
+        tree = parser.Parser().parse(t.tokenize('a b (c d)'))
+        self.assertEqual(
+            strip(tree),
+            Application(token=t.Symbol(s='a'),
+                        children=[
+                            Application(token=t.Symbol(s='a'),
+                                        children=[
+                                            Symbol(token=t.Symbol(s='a'),
+                                                   children=[]),
+                                            Symbol(token=t.Symbol(s='b'),
+                                                   children=[])
+                                        ]),
+                            Application(token=t.Symbol(s='c'),
+                                        children=[
+                                            Symbol(token=t.Symbol(s='c'),
+                                                   children=[]),
+                                            Symbol(token=t.Symbol(s='d'),
+                                                   children=[])
+                                        ])
+                        ]))
+
+    def test_application_different_stuff(self):
+        tree = parser.Parser().parse(
+            t.tokenize('[1, 2, 3] ^ (c d) {something}'))
+        self.assertEqual(
+            strip(tree),
+            Application(
+                token=t.Delim(s='['),
+                children=[
+                    Application(
+                        token=t.Delim(s='['),
+                        children=[
+                            Application(
+                                token=t.Delim(s='['),
+                                children=[
+                                    ListExpression(
+                                        token=t.Delim(s='['),
+                                        children=[
+                                            Symbol(token=t.Symbol(s='1'),
+                                                   children=[]),
+                                            Symbol(token=t.Symbol(s='2'),
+                                                   children=[]),
+                                            Symbol(token=t.Symbol(s='3'),
+                                                   children=[])
+                                        ]),
+                                    TreeNode(token=t.Tree(s='^'), children=[])
+                                ]),
+                            Application(token=t.Symbol(s='c'),
+                                        children=[
+                                            Symbol(token=t.Symbol(s='c'),
+                                                   children=[]),
+                                            Symbol(token=t.Symbol(s='d'),
+                                                   children=[])
+                                        ])
+                        ]),
+                    String(token=t.String(s='something'), children=[])
+                ]))
 
 
 if __name__ == "__main__":

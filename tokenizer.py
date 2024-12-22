@@ -7,7 +7,7 @@ from dataclasses import dataclass
 
 @dataclass
 class Tree:
-    pass
+    s: str = '^'
 
 
 @dataclass
@@ -29,8 +29,8 @@ class String:
 class Delimeters:
     rsquare = Delim('[')
     lsquare = Delim(']')
-    rbrace = Delim('(')
-    lbrace = Delim(')')
+    rparen = Delim('(')
+    lparen = Delim(')')
     rcurly = Delim('{')
     lcurly = Delim('}')
     comma = Delim(',')

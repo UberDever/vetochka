@@ -21,18 +21,18 @@ Source ::=
 
 Expression ::=
     Application
-    # InfixExpression
-    ListExpression
     Operand
     
 Operand ::=
     Tree
     String
     Symbol
+    ListExpression
     Delimeter('(') Expression Delimeter(')')
     
 Application ::=
     Delimeter('(')? Expression Expression Delimeter(')')?
+    # InfixExpression
 
 # InfixExpression ::=
 #     Delimeter('(') Expression Operator Expression Delimeter(')')

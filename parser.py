@@ -4,6 +4,7 @@
 
 from dataclasses import dataclass
 import logging
+import sys
 
 import tokenizer
 from tokenizer import Delimeters
@@ -26,7 +27,22 @@ class Expression(Node):
 
 
 @dataclass
+class Application(Node):
+    pass
+
+
+@dataclass
 class ListExpression(Node):
+    pass
+
+
+@dataclass
+class String(Node):
+    pass
+
+
+@dataclass
+class Symbol(Node):
     pass
 
 
@@ -82,14 +98,56 @@ class Parser:
         return Source(None, nodes)
 
     def parse_expression(self) -> Node:
-        nodes = []
+        return Expression(None, [self.parse_application(0 + 1)])
 
+    def operator_precedence(self):
+        if self.at_eof:
+            return None, 0
+
+        token = self.cur()
+        # NOTE: until binary operators are implemented,
+        # need to list starting symbols for application
+        # Better to list binary operators instead
+        match token:
+            case tokenizer.String(_) | tokenizer.Symbol(_) | tokenizer.Tree(
+                _) | Delimeters.rparen | Delimeters.rsquare:
+                return Application, 10
+            case tokenizer.Delim:
+                logging.fatal('Not implemented')
+                sys.exit(-1)
+        return None, 0
+
+    def parse_application(self, cur_prec: int) -> Node:
+        lhs = self.parse_operand()
+        while True:
+            ctor, prec = self.operator_precedence()
+            if prec < cur_prec:
+                return lhs
+            token = self.cur()
+            if ctor is Application:
+                token = lhs.token
+            else:
+                self.next()
+            rhs = self.parse_application(prec + 1)
+            lhs = ctor(token, [lhs, rhs])
+
+    def parse_operand(self) -> Node:
+        token = self.cur()
+        if self.match_token(tokenizer.String(''), match_contents=False):
+            self.next()
+            return String(token, [])
+        if self.match_token(tokenizer.Symbol(''), match_contents=False):
+            self.next()
+            return Symbol(token, [])
         if self.match_token(tokenizer.Tree()):
-            nodes.append(self.parse_tree())
-        elif self.match_token(Delimeters.rsquare):
-            nodes.append(self.parse_list_expression())
+            return self.parse_tree()
+        if self.match_token(Delimeters.rsquare):
+            return self.parse_list_expression()
 
-        return Expression(None, nodes)
+        self.expect(Delimeters.rparen)
+        node = self.parse_expression()
+        self.expect(Delimeters.lparen)
+        return node
 
     def parse_tree(self) -> Node:
         token = self.cur()
