@@ -48,7 +48,62 @@ class Symbol(Node):
 
 @dataclass
 class TreeNode(Node):
-    pass
+
+    def is_leaf(self):
+        return len(self.children) == 0
+
+    def is_stem(self):
+        return len(self.children) == 1
+
+    def is_fork(self):
+        return len(self.children) == 2
+
+
+def strip(root: Node) -> Node:
+    "Strips tree from dormant nodes (unary and without token)"
+
+    def aux(n: Node) -> Node:
+        if n.token is None and len(n.children) == 1:
+            return aux(n.children[0])
+        return type(n)(n.token, [aux(c) for c in n.children])
+
+    return aux(root)
+
+
+def saturate(root: Node) -> Node:
+    """Changes ($($($ ^ ^) ^) ^) to ($ (^ ^ ^) ^),
+        therefore transforms a tree node
+        to a leaf, stem or fork, to canonical form"""
+
+    def aux(r: Node) -> Node:
+        if not r.children:
+            return r
+
+        children = [aux(n) for n in r.children]
+
+        if isinstance(r, Application):
+            left = children[0]
+            right = children[1]
+            if isinstance(left, TreeNode):
+                match left:
+                    case _ if left.is_leaf():
+                        return TreeNode(token=left.token,
+                                        children=[aux(right)])
+                    case _ if left.is_stem():
+                        return TreeNode(
+                            token=left.token,
+                            children=[aux(left.children[0]),
+                                      aux(right)])
+                    case _ if left.is_fork():
+                        return type(r)(token=r.token, children=children)
+                    case _:
+                        sys.exit(-1)
+            else:
+                return type(r)(token=r.token, children=children)
+        else:
+            return type(r)(token=r.token, children=children)
+
+    return aux(root)
 
 
 class Parser:

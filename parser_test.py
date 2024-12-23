@@ -9,19 +9,8 @@ import unittest
 import tokenizer as t
 import parser  # pylint: disable=wrong-import-order,deprecated-module
 # pylint: disable-next=wrong-import-order,deprecated-module
-from parser import (Node, TreeNode, ListExpression, Symbol, Application,
-                    String)
-
-
-def strip(root: Node) -> Node:
-    "Strips tree from dormant nodes (unary and without token)"
-
-    def aux(n: Node) -> Node:
-        if n.token is None and len(n.children) == 1:
-            return aux(n.children[0])
-        return type(n)(n.token, [aux(c) for c in n.children])
-
-    return aux(root)
+from parser import (strip, saturate, TreeNode, ListExpression, Symbol,
+                    Application, String)
 
 
 class TestParser(unittest.TestCase):
@@ -189,6 +178,42 @@ class TestParser(unittest.TestCase):
                         ]),
                     String(token=t.String(s='something'), children=[])
                 ]))
+
+    def test_saturation_k(self):
+        tree = parser.Parser().parse(t.tokenize('^ ^ ^ ^'))
+        self.assertEqual(
+            strip(saturate(tree)),
+            Application(token=t.Tree(s='^'),
+                        children=[
+                            TreeNode(token=t.Tree(s='^'),
+                                     children=[
+                                         TreeNode(token=t.Tree(s='^'),
+                                                  children=[]),
+                                         TreeNode(token=t.Tree(s='^'),
+                                                  children=[])
+                                     ]),
+                            TreeNode(token=t.Tree(s='^'), children=[])
+                        ]))
+
+    def test_saturation_s(self):
+        tree = parser.Parser().parse(t.tokenize('^ (^ ^) ^ ^'))
+        self.assertEqual(
+            strip(saturate(tree)),
+            Application(token=t.Tree(s='^'),
+                        children=[
+                            TreeNode(token=t.Tree(s='^'),
+                                     children=[
+                                         TreeNode(token=t.Tree(s='^'),
+                                                  children=[
+                                                      TreeNode(
+                                                          token=t.Tree(s='^'),
+                                                          children=[])
+                                                  ]),
+                                         TreeNode(token=t.Tree(s='^'),
+                                                  children=[])
+                                     ]),
+                            TreeNode(token=t.Tree(s='^'), children=[])
+                        ]))
 
 
 if __name__ == "__main__":

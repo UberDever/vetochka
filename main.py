@@ -4,6 +4,8 @@
 # pylint: disable=missing-class-docstring
 # pylint: disable=missing-function-docstring
 
+import pprint
+
 import argparse
 import tokenizer
 import parser  # pylint: disable=wrong-import-order,deprecated-module
@@ -25,7 +27,8 @@ def main():
         tokens = tokenizer.tokenize(text)
         p = parser.Parser()
         tree = p.parse(tokens)
-        print(tree)
+        rich = parser.saturate(tree)
+        pprint.pprint(parser.strip(rich))
 
 
 if __name__ == "__main__":
