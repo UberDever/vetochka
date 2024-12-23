@@ -41,9 +41,5 @@ class Node:
         self.repr = self.repr | n
 
 
-def encode_tree_nodes(root: parser.Node) -> parser.Node:
-    ...
-
-
-# def encode(root: int) -> int:
-#     pass
+def encode_tree_nodes(root: parser.Node) -> [Node]:
+    _ = root
