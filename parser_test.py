@@ -179,6 +179,9 @@ class TestParser(unittest.TestCase):
                     String(token=t.String(s='something'), children=[])
                 ]))
 
+
+class TestTreeUtilities(unittest.TestCase):
+
     def test_saturation_k(self):
         tree = parser.Parser().parse(t.tokenize('^ ^ ^ ^'))
         self.assertEqual(

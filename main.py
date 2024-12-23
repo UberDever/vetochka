@@ -10,9 +10,6 @@ import argparse
 import tokenizer
 import parser  # pylint: disable=wrong-import-order,deprecated-module
 
-# def encode(root: int) -> int:
-#     pass
-
 
 def main():
     arg_parser = argparse.ArgumentParser()
