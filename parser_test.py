@@ -215,6 +215,28 @@ class TestParser(unittest.TestCase):
                             TreeNode(token=t.Tree(s='^'), children=[])
                         ]))
 
+    def test_saturation_with_other_tokens(self):
+        tree = parser.Parser().parse(t.tokenize('^ (^ w x) y z'))
+        self.assertEqual(
+            strip(saturate(tree)),
+            Application(token=t.Tree(s='^'),
+                        children=[
+                            TreeNode(token=t.Tree(s='^'),
+                                     children=[
+                                         TreeNode(
+                                             token=t.Tree(s='^'),
+                                             children=[
+                                                 Symbol(token=t.Symbol(s='w'),
+                                                        children=[]),
+                                                 Symbol(token=t.Symbol(s='x'),
+                                                        children=[])
+                                             ]),
+                                         Symbol(token=t.Symbol(s='y'),
+                                                children=[])
+                                     ]),
+                            Symbol(token=t.Symbol(s='z'), children=[])
+                        ]))
+
 
 if __name__ == "__main__":
     unittest.main()
