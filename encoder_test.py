@@ -5,11 +5,22 @@
 # pylint: disable=missing-function-docstring
 
 import unittest
+import pprint
 
+import parser  # pylint: disable=wrong-import-order,deprecated-module
+import tokenizer
+import encoder
 from encoder import Node
 
 
 class TestNodeEncoder(unittest.TestCase):
+
+    @staticmethod
+    def encode(text: str):
+        tree = parser.Parser().parse(tokenizer.tokenize(text))
+        staturated = parser.saturate(tree)
+        striped = parser.strip(staturated)
+        return encoder.encode_tree_nodes(striped)
 
     def test_node_set_tag(self):
         n = Node()
@@ -41,6 +52,38 @@ class TestNodeEncoder(unittest.TestCase):
         self.assertEqual(n.tag(), Node.APP)
         self.assertEqual(n.lhs(), 69)
         self.assertEqual(n.rhs(), 42)
+
+    def test_encoder_simplest(self):
+        tree = TestNodeEncoder.encode('^')
+        self.assertEqual(tree, (0, [Node(0, 0, 0)]))
+
+    def test_encoder_simple(self):
+        tree = TestNodeEncoder.encode('^ ^ ^')
+        self.assertEqual(
+            tree,
+            (0, [Node(2, 1, 2), Node(0, 0, 0),
+                 Node(0, 0, 0)]))
+
+    def test_encoder_simplest_redux_k(self):
+        tree = TestNodeEncoder.encode('^ ^ ^ ^')
+        self.assertEqual(tree, (0, [
+            Node(3, 1, 4),
+            Node(2, 1, 2),
+            Node(0, 0, 0),
+            Node(0, 0, 0),
+            Node(0, 0, 0)
+        ]))
+
+    def test_encoder_simplest_redux_s(self):
+        tree = TestNodeEncoder.encode('^ (^ ^) ^ ^')
+        self.assertEqual(tree, (0, [
+            Node(3, 1, 5),
+            Node(2, 1, 3),
+            Node(1, 1, 0),
+            Node(0, 0, 0),
+            Node(0, 0, 0),
+            Node(0, 0, 0)
+        ]))
 
 
 if __name__ == "__main__":
