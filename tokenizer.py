@@ -6,23 +6,46 @@ from dataclasses import dataclass
 
 
 @dataclass
-class Tree:
-    s: str = '^'
+class Location:
+
+    def __init__(self, s=-1, e=-1, ln=-1, c=-1):
+        self.start = s
+        self.end = e
+        self.line = ln
+        self.col = c
+
+    start: int
+    end: int
+    line: int
+    col: int
 
 
 @dataclass
-class Symbol:
+class Token:
     s: str
+    loc: Location = Location()
 
 
 @dataclass
-class Delim:
-    s: str
+class Tree(Token):
+
+    def __init__(self, s='^', loc=Location()):
+        super().__init__(s, loc)
 
 
 @dataclass
-class String:
-    s: str
+class Symbol(Token):
+    pass
+
+
+@dataclass
+class Delim(Token):
+    pass
+
+
+@dataclass
+class String(Token):
+    pass
 
 
 @dataclass
@@ -36,62 +59,96 @@ class Delimeters:
     comma = Delim(',')
 
 
-Token = Tree | Delim | String | Symbol
+class Word:
+
+    def __init__(self, s=-1, e=-1, ln=-1, c=-1):
+        self.word = []
+        self.start = s
+        self.end = e
+        self.line = ln
+        self.col = c
+
+    def add(self, letter):
+        self.word.append(letter)
+
+    def reset(self):
+        self.word = []
+
+    def compose(self):
+        return ''.join(self.word)
+
+    def valid(self) -> bool:
+        return self.word
 
 
 def tokenize(byte_array: bytearray) -> [Token]:
+    line = 1
+    col = 1
+
     in_string = False
     tokens = []
-    word = []
+    word = Word(ln=line, c=col)
     block_level = -1
 
-    for _, b in enumerate(byte_array):
+    def flush_word(token_ctor):
+        nonlocal word, tokens
+        nonlocal line, col
+        if word.valid():
+            tokens.append(
+                token_ctor(word.compose(),
+                           loc=Location(word.start, word.end, word.line,
+                                        word.col)))
+            word.line = line
+            word.col = col
+            word.reset()
+
+    for i, b in enumerate(byte_array):
         if not in_string:
             match b:
                 case '^':
-                    if word:
-                        tokens.append(Symbol(''.join(word)))
-                        word = []
-                    tokens.append(Tree())
+                    flush_word(Symbol)
+                    tokens.append(Tree(loc=Location(i, i + 1, line, col)))
                 case ')' | '(' | '[' | ']' | ',':
-                    if word:
-                        tokens.append(Symbol(''.join(word)))
-                        word = []
-                    tokens.append(Delim(b))
+                    flush_word(Symbol)
+                    tokens.append(Delim(b, loc=Location(i, i + 1, line, col)))
                 case '{':
                     in_string = True
+                    col += 1
                     continue
                 case '}':
                     assert False
+                case '\n':
+                    line += 1
+                    col = 0
+                    flush_word(Symbol)
                 case _ if b.isspace():
-                    if word:
-                        tokens.append(Symbol(''.join(word)))
-                        word = []
+                    flush_word(Symbol)
                 case _:
-                    word.append(b)
+                    word.add(b)
         else:
             match b:
                 case '{':
                     block_level += 1
-                    word.append(b)
+                    word.add(b)
                 case '}':
                     if block_level >= 0:
                         block_level -= 1
-                        word.append(b)
+                        word.add(b)
                     else:
                         in_string = False
-                        assert word
-                        tokens.append(String(''.join(word)))
-                        word = []
+                        assert word.valid()
+                        flush_word(String)
+                case '\n':
+                    line += 1
+                    col = 0
+                    word.add(b)
                 case _:
-                    word.append(b)
+                    word.add(b)
+        col += 1
 
     if in_string:
-        assert not word
-
-    if word:
-        tokens.append(Symbol(''.join(word)))
-        word = []
+        assert not word.valid()
+    flush_word(Symbol)
 
     if block_level != -1:
         raise RuntimeError(
