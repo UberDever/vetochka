@@ -33,9 +33,9 @@ of `tree-calculus` can help to build a convenient `ir` (tagging, evaluation with
         - [ ] Add unicode delta as special symbol
     - [ ] Make a parser to `ir` that supports sugary constructs. We will lower the language from here
         - [x] Learn how to parse left-associative application :/
-    - [ ] Make an encoder, that will encode tokens as trees (just python recursively embedded lists of zeros). This
+    - [ ] Make an encoder, that will encode tokens as trees. This
     will give an ability to describe any data with quotation on the tokenizer level
-        - [ ] Make encoding functions written in plain text `^ (^^) ...` and then parse it using
+        - [x] Make encoding functions written in plain text `^ (^^) ...` and then parse it using
 this parser and map to `executable tree` format (optionally efficient)
         - [ ] Make boolean encoding
         - [ ] Make list encoding
