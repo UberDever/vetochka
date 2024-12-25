@@ -6,24 +6,21 @@ import parser  # pylint: disable=wrong-import-order,deprecated-module
 
 
 # NOTE: This is not for python, but for system language like C
-# NOTE: This can be used with arbitrary-length integers, since
-# we traverse nodes by their offset in the memory (or array)
-# but this encoding is simpler
 class Node:
     repr: int
 
+    TREE = 0b00
+    APP = 0b01
+    DATA = 0b10
+
     int_size = 31
     int_max = 2**int_size - 1
-    LEAF = 0
-    STEM = 1
-    FORK = 2
-    APP = 3
 
-    def __init__(self, tag=0, lhs=0, rhs=0):
+    def __init__(self, tag=0, lhs=None, rhs=None):
         self.repr = 0
         self.set_tag(tag)
-        self.set_lhs(lhs)
-        self.set_rhs(rhs)
+        self.set_lhs(lhs if lhs else self.int_max)
+        self.set_rhs(rhs if rhs else self.int_max)
 
     def tag(self):
         return (self.repr & 0b11 << (self.int_size * 2)) >> (self.int_size * 2)
@@ -35,15 +32,18 @@ class Node:
         return self.repr & self.int_max
 
     def set_tag(self, tag):
-        assert tag <= self.APP
         self.repr = self.repr | tag << (self.int_size * 2)
 
     def set_lhs(self, n):
         assert n <= self.int_max
+        mask = (2**64 - 1) ^ ((2**31 - 1) << self.int_size)
+        self.repr &= mask
         self.repr = self.repr | (n << self.int_size)
 
     def set_rhs(self, n):
         assert n <= self.int_max
+        mask = (2**64 - 1) ^ (2**31 - 1)
+        self.repr &= mask
         self.repr = self.repr | n
 
     def __eq__(self, obj):
@@ -54,6 +54,24 @@ class Node:
 
     def __str__(self):
         return f'Node({self.tag()}, {self.lhs()}, {self.rhs()})'
+
+    def is_leaf(self):
+        return (self.tag() == self.TREE and self.lhs() == self.int_max
+                and self.rhs == self.int_max)
+
+    def is_stem(self):
+        return (self.tag() == self.TREE and self.lhs() != self.int_max
+                and self.rhs == self.int_max)
+
+    def is_fork(self):
+        return (self.tag() == self.TREE and self.lhs() != self.int_max
+                and self.rhs != self.int_max)
+
+    def is_app(self):
+        return self.tag() == self.APP
+
+    def is_data(self):
+        return self.tag() >= self.DATA
 
 
 def encode_tree_nodes(root: parser.Node) -> (int, [Node]):
@@ -70,15 +88,7 @@ def encode_tree_nodes(root: parser.Node) -> (int, [Node]):
         if isinstance(n, parser.Application):
             tag = Node.APP
         else:
-            match len(n.children):
-                case 0:
-                    tag = Node.LEAF
-                case 1:
-                    tag = Node.STEM
-                case 2:
-                    tag = Node.FORK
-                case _:
-                    assert False, "Unreachable"
+            tag = Node.TREE
         node = Node()
         node.set_tag(tag)
         nodes.append(node)

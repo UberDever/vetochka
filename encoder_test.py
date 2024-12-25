@@ -5,7 +5,6 @@
 # pylint: disable=missing-function-docstring
 
 import unittest
-import pprint
 
 import parser  # pylint: disable=wrong-import-order,deprecated-module
 import tokenizer
@@ -24,8 +23,8 @@ class TestNodeEncoder(unittest.TestCase):
 
     def test_node_set_tag(self):
         n = Node()
-        n.set_tag(Node.FORK)
-        self.assertEqual(n.tag(), Node.FORK)
+        n.set_tag(Node.APP)
+        self.assertEqual(n.tag(), Node.APP)
 
     def test_node_set_lhs(self):
         n = Node()
@@ -49,6 +48,7 @@ class TestNodeEncoder(unittest.TestCase):
         n.set_tag(Node.APP)
         n.set_lhs(69)
         n.set_rhs(42)
+        print(bin(n.repr))
         self.assertEqual(n.tag(), Node.APP)
         self.assertEqual(n.lhs(), 69)
         self.assertEqual(n.rhs(), 42)
@@ -59,30 +59,31 @@ class TestNodeEncoder(unittest.TestCase):
 
     def test_encoder_simple(self):
         tree = TestNodeEncoder.encode('^ ^ ^')
-        self.assertEqual(
-            tree,
-            (0, [Node(2, 1, 2), Node(0, 0, 0),
-                 Node(0, 0, 0)]))
+        self.assertEqual(tree, (0, [
+            Node(Node.TREE, 1, 2),
+            Node(Node.TREE, Node.int_max, Node.int_max),
+            Node(Node.TREE, Node.int_max, Node.int_max)
+        ]))
 
     def test_encoder_simplest_redux_k(self):
         tree = TestNodeEncoder.encode('^ ^ ^ ^')
         self.assertEqual(tree, (0, [
-            Node(3, 1, 4),
-            Node(2, 1, 2),
-            Node(0, 0, 0),
-            Node(0, 0, 0),
-            Node(0, 0, 0)
+            Node(Node.APP, 1, 4),
+            Node(Node.TREE, 1, 2),
+            Node(Node.TREE, Node.int_max, Node.int_max),
+            Node(Node.TREE, Node.int_max, Node.int_max),
+            Node(Node.TREE, Node.int_max, Node.int_max),
         ]))
 
     def test_encoder_simplest_redux_s(self):
         tree = TestNodeEncoder.encode('^ (^ ^) ^ ^')
         self.assertEqual(tree, (0, [
-            Node(3, 1, 5),
-            Node(2, 1, 3),
-            Node(1, 1, 0),
-            Node(0, 0, 0),
-            Node(0, 0, 0),
-            Node(0, 0, 0)
+            Node(Node.APP, 1, 5),
+            Node(Node.TREE, 1, 3),
+            Node(Node.TREE, 1, 0),
+            Node(Node.TREE, Node.int_max, Node.int_max),
+            Node(Node.TREE, Node.int_max, Node.int_max),
+            Node(Node.TREE, Node.int_max, Node.int_max),
         ]))
 
 

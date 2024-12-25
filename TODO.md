@@ -119,7 +119,7 @@ of `tree-calculus` can help to build a convenient `ir` (tagging, evaluation with
         | Intrinsic node      | 1\*  | \*    | \*     |
 
         For `tree node`: lhs and rhs should be relative (in memory)
-        offsets with reserved value `max(2**31)` which indicates absence of the node.
+        offsets with reserved value `2**31 - 1` which indicates absence of the node.
         For `intrinsic node`: This node can store any data that is intrinsic for a
         interpreter i.e. built-in functions and variables.
 
@@ -147,6 +147,7 @@ this parser and map to `executable tree` format (optionally efficient)
     - [ ] Sugar
         - [x] Lists
         - [ ] Let bindings
+            - [x] Described
         - [ ] Lambda abstractions
     - [ ] Make evaluator
     - [ ] Write all different stdliby necessary stuff
