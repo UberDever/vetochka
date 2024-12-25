@@ -60,7 +60,7 @@ could be considered a `string`, a series of bytes encoded in `utf-8`.
 
         -- Modules can be nested
         scope {A} in
-            module {B} in
+            scope {B} in
                 -- This effectivelly means combination
                 -- of names (i.e. {A/B})
             end
