@@ -12,6 +12,26 @@
 could be considered a `string`, a series of bytes encoded in `utf-8`.
     - Better use more complex tokenization to support various levels of sugar
 
+- Scopes:
+    * Declared as `scope [name: string | none] in ... end`
+    * Inside: series of sugared bindings of the form
+        ```
+        scope in
+            a = 10
+            b = 20
+        end
+        -- equivalent to
+        scope in
+            let a = 10 in
+            let b = 20 in
+            ^ -- `^` is a false value
+        end
+        ```
+    * Ending expression of the scope is final value of the expression. If no
+        expression is provided, false/nullish idk value is returned (maybe 
+        do an analysis before? not for interpreter...)
+    * No recursive and mutually-recursive bindings are currently considered
+
 - Modules can be done pretty easily:
     * Create a `root.tree` in the project
     * In case this root is empty -- all paths will be relative to this root
@@ -27,24 +47,23 @@ could be considered a `string`, a series of bytes encoded in `utf-8`.
         file system. This way is done through a file because it is "conventional?".
         Other way is to use shell variable like `ROOT_TREE` which can be used in the interpreter
         in similar fashion. I prefer the file tho.
+    * On the launch of the interpreter, all files relative to `root.tree` are parsed
+        to find all module declarations in case of `use` construct is used.
+    * Module is just a named scope. Reference to named scope can be done in every other
+        scope, even in separate file. Project is just a certain collection of files,
+        each containing scopes and their usages
     * All modules created as follows:
         ```ocaml
-        module {something} in
+        scope {something} in
             ...
         end
 
         -- Modules can be nested
-        module {A} in
+        scope {A} in
             module {B} in
                 -- This effectivelly means combination
                 -- of names (i.e. {A/B})
             end
-        end
-
-        -- Module without explicit name gets the name of the full path to the file
-        -- containing the module
-        module in
-            The path to this module is i.e. {/home/uber/dev/project/src/file.tree}
         end
         ```
     * All modules can be used as follows:
@@ -65,6 +84,14 @@ could be considered a `string`, a series of bytes encoded in `utf-8`.
         as qualified prefix and every use of such prefix is then
         `use {some/path.tree} in func foo bar end` rather than `path.func foo bar`.
         But this really simplifies module system.
+
+- Let-bindings
+    * Since we have scopes, I decided to reuse this construct for let bindings also.
+        Honestly, this feels natural from a semantical point of view, need to see it in practice
+    * Therefore:
+        `let a = 10; b = 15; c = 20 in a + b + c; end`
+        =>
+        `scope in a = 10; b = 15; c = 20; a + b + c; end`
 
 - To accomplish project goal, that is the **mighty preprocessor** the following could be done:
     - Make a functional language based on `tree-calculus` (with sugar and statements in some form)
@@ -95,7 +122,6 @@ of `tree-calculus` can help to build a convenient `ir` (tagging, evaluation with
         offsets with reserved value `max(2**31)` which indicates absence of the node.
         For `intrinsic node`: This node can store any data that is intrinsic for a
         interpreter i.e. built-in functions and variables.
-        
 
 # TODO
 
