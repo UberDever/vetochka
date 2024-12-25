@@ -12,6 +12,60 @@
 could be considered a `string`, a series of bytes encoded in `utf-8`.
     - Better use more complex tokenization to support various levels of sugar
 
+- Write about strings
+
+- Modules can be done pretty easily:
+    * Create a `root.tree` in the project
+    * In case this root is empty -- all paths will be relative to this root
+    * Bad decision: ~~Otherwise -- this root contains code that can be executed on setup (this is just
+        a room for extension, i don't think this will be actually used)~~.
+        Better to use `root.tree` as anchor for module location and nothing more.
+        Otherwise, we blend together solutions (build time code execution and module location)
+        which is not orthogonal.
+    * Interpreter accepts either (1) source file to interpret or (2) path to `root.tree` and
+        "entry point" source file. The former doesn't allow for `use` constructs because
+        there is no explicit module locator prefix and I don't want to provide implicit heuristics.
+        Side note: `root.tree` stands out as a way for linking the interpreter and project
+        file system. This way is done through a file because it is "conventional?".
+        Other way is to use shell variable like `ROOT_TREE` which can be used in the interpreter
+        in similar fashion. I prefer the file tho.
+    * All modules created as follows:
+        ```ocaml
+        module {something} in
+            ...
+        end
+
+        -- Modules can be nested, this effectivelly means combination
+        -- of their names (i.e. {A/B})
+        module {A} in
+            module {B} in
+            end
+        end
+
+        -- Module without explicit name gets the name of the full path to the file
+        -- containing the module
+        module in
+            The path to this module is i.e. {/home/uber/dev/project/src/file.tree}
+        end
+        ```
+    * All modules can be used as follows:
+        ```ocaml
+        use {src/stuff.tree} in
+            ...
+        end
+
+        -- modules can be referenced anywhere (in the same file multiply in any place)
+        use {src/other.tree} in
+            use {src/something.tree} in
+                ...
+            end
+        end
+        ```
+    * `use` brings in top-level declarations (i.e. let bindings) into scope of `in ... end`
+        This can be a little clunky because it semantically can be considered
+        as qualified prefix and every use of such prefix is then
+        `use {some/path.tree} in func foo bar end` rather than `path.func foo bar`.
+        But this really simplifies module system.
 
 - To accomplish project goal, that is the **mighty preprocessor** the following could be done:
     - Make a functional language based on `tree-calculus` (with sugar and statements in some form)
@@ -31,6 +85,7 @@ of `tree-calculus` can help to build a convenient `ir` (tagging, evaluation with
         - [x] Write a couple of smoke tests for tokenizer
         - [ ] Add source information to tokens
         - [ ] Add unicode delta as special symbol
+        - [ ] COMMENTS??? `use --`
     - [ ] Make a parser to `ir` that supports sugary constructs. We will lower the language from here
         - [x] Learn how to parse left-associative application :/
     - [ ] Make an encoder, that will encode tokens as trees. This
