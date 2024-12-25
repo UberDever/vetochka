@@ -22,9 +22,8 @@ class TestTokenizer(unittest.TestCase):
         self.assertEqual(tokens, [Tree()])
 
     def test_all_kinds_of_stuff(self):
-        tokens = t.tokenize(
-            """result = (^^println {"'some' "stuff""}) {another ^({^({})}) string}"""
-        )
+        tokens = t.tokenize("""result = (^^println {"'some' "stuff""})
+            {another ^({^({})}) string}""")
         self.assertEqual(tokens, [
             Symbol(s='result'),
             Symbol(s='='),
