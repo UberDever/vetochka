@@ -12,8 +12,6 @@
 could be considered a `string`, a series of bytes encoded in `utf-8`.
     - Better use more complex tokenization to support various levels of sugar
 
-- Write about strings
-
 - Modules can be done pretty easily:
     * Create a `root.tree` in the project
     * In case this root is empty -- all paths will be relative to this root
@@ -35,10 +33,11 @@ could be considered a `string`, a series of bytes encoded in `utf-8`.
             ...
         end
 
-        -- Modules can be nested, this effectivelly means combination
-        -- of their names (i.e. {A/B})
+        -- Modules can be nested
         module {A} in
             module {B} in
+                -- This effectivelly means combination
+                -- of names (i.e. {A/B})
             end
         end
 
@@ -75,6 +74,29 @@ could be considered a `string`, a series of bytes encoded in `utf-8`.
 This is ridiculously hard if done in full swing, but for some subset of `C` it can be pretty easy. Also, some properties
 of `tree-calculus` can help to build a convenient `ir` (tagging, evaluation without interpretation).
 
+- On fast (relatively) and compact (relatively) representation:
+    * Firstly, need to somewhat use cache locality => store tree/commands in the contiguous memory
+    * Idk how to represent `tree-calculus` trees as commands or something, so stick to the tree
+    * Node of the tree should be as small as possible => stick to a number (64-bit).
+        Side note: actually, since we are storing *and evaluating* (adding nodes) of the tree, 
+        nodes can't be implicitly linked by their position in the memory, because
+        this would require copying them around. This means that we should store link information 
+        explicitly, in the nodes themselves => this strips the restriction of uniform node size.
+        Which means that node can be of any size and can be actually VLE encoded.
+        But 64 bit nodes and single array is pretty simple implementation, so I stick to it.
+    * Node can be encoded as follows:
+        | Node type           | 0..1 | 2..32 | 33..63 |
+        |---------------------|------|-------|--------|
+        | Tree node           | 00   | lhs   | rhs    |
+        | Application node    | 01   | lhs   | rhs    |
+        | Intrinsic node      | 1\*  | \*    | \*     |
+
+        For `tree node`: lhs and rhs should be relative (in memory)
+        offsets with reserved value `max(2**31)` which indicates absence of the node.
+        For `intrinsic node`: This node can store any data that is intrinsic for a
+        interpreter i.e. built-in functions and variables.
+        
+
 # TODO
 
 - [ ] Write a language
@@ -103,4 +125,5 @@ this parser and map to `executable tree` format (optionally efficient)
     - [ ] Make evaluator
     - [ ] Write all different stdliby necessary stuff
         - [ ] Modules?
+            - [x] Described system
     - [ ] .... Tooling?

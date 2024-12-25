@@ -5,7 +5,9 @@
 The following token groups are there:
 - Tree: designates the tree-calculus combinator, denoted as `Δ` or `^`
 - Delimeter: any token from the list `()[],`
-- String: anything enclosed in outermost curly braces `{}`
+- String (two cases): 
+    * Anything enclosed in single curly braces `{...}`
+    * Anything enclosed in group of sequential curly braces, group size is >= 3 `{{{...}}}`
 - TODO(don't need them for now) ~~Operator: any token from the list `+ - * /`~~
 - Symbol: any other token
 
