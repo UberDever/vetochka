@@ -66,6 +66,18 @@ class TestTokenizer(unittest.TestCase):
             String(s='plain text')
         ])
 
+    def test_very_bad_string1(self):
+        tokens = t.tokenize('{{}')
+        self.assertIsInstance(tokens, str)
+
+    def test_very_bad_string2(self):
+        tokens = t.tokenize('{}}')
+        self.assertIsInstance(tokens, str)
+
+    def test_very_bad_string3(self):
+        tokens = t.tokenize('{ }}')
+        self.assertIsInstance(tokens, str)
+
 
 if __name__ == "__main__":
     unittest.main()

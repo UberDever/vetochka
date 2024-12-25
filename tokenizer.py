@@ -39,7 +39,8 @@ class Delimeters:
 Token = Tree | Delim | String | Symbol
 
 
-def tokenize(byte_array: bytearray) -> [Token]:
+# pylint: disable-next=too-many-branches
+def tokenize(byte_array: bytearray) -> list[Token] | str:
     in_string = False
     tokens = []
     word = []
@@ -62,7 +63,8 @@ def tokenize(byte_array: bytearray) -> [Token]:
                     in_string = True
                     continue
                 case '}':
-                    assert False
+                    return ("Encountered closing extra closing curly, "
+                            "check if curlies are balanced")
                 case _ if b.isspace():
                     if word:
                         tokens.append(Symbol(''.join(word)))
@@ -80,14 +82,18 @@ def tokenize(byte_array: bytearray) -> [Token]:
                         word.append(b)
                     else:
                         in_string = False
-                        assert word
+                        if not word:
+                            return ("Encountered closing curly too soon, "
+                                    "check if curlies are balanced")
                         tokens.append(String(''.join(word)))
                         word = []
                 case _:
                     word.append(b)
 
     if in_string:
-        assert not word
+        if word:
+            return ("Tokenization ended with unclosed string literal, "
+                    "check if curlies are balanced")
 
     if word:
         tokens.append(Symbol(''.join(word)))
