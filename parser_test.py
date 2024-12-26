@@ -179,6 +179,10 @@ class TestParser(unittest.TestCase):
                     String(token=t.String(s='something'), children=[])
                 ]))
 
+    def test_scope_simplest(self):
+        tree = parser.Parser().parse(t.tokenize('scope do ^ end'))
+        print(tree)
+
 
 class TestTreeUtilities(unittest.TestCase):
 

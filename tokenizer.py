@@ -34,6 +34,7 @@ class Delimeters:
     rcurly = Delim('{')
     lcurly = Delim('}')
     comma = Delim(',')
+    semicolon = Delim(';')
 
 
 Token = Tree | Delim | String | Symbol
@@ -54,7 +55,7 @@ def tokenize(byte_array: bytearray) -> list[Token] | str:
                         tokens.append(Symbol(''.join(word)))
                         word = []
                     tokens.append(Tree())
-                case ')' | '(' | '[' | ']' | ',':
+                case ')' | '(' | '[' | ']' | ',' | ';':
                     if word:
                         tokens.append(Symbol(''.join(word)))
                         word = []
@@ -65,6 +66,11 @@ def tokenize(byte_array: bytearray) -> list[Token] | str:
                 case '}':
                     return ("Encountered closing extra closing curly, "
                             "check if curlies are balanced")
+                case '\n' | '\r\n':
+                    if word:
+                        tokens.append(Symbol(''.join(word)))
+                        word = []
+                    tokens.append(Delim(';'))
                 case _ if b.isspace():
                     if word:
                         tokens.append(Symbol(''.join(word)))

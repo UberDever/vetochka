@@ -20,6 +20,7 @@ could be considered a `string`, a series of bytes encoded in `utf-8`.
         scope do
             a = 10
             b = 20
+            ^
         end
         -- equivalent to
         scope do
@@ -143,7 +144,8 @@ of `tree-calculus` can help to build a convenient `ir` (tagging, evaluation with
         - [x] Write a couple of smoke tests for tokenizer
         - [ ] Add source information to tokens
         - [ ] Add unicode delta as special symbol
-        - [ ] COMMENTS??? `use --`
+        - [ ] COMMENTS??? use `--`
+        - [ ] [Unimportant] Rewrite the tokenizer to be more powerful
     - [ ] Make a parser to `ir` that supports sugary constructs. We will lower the language from here
         - [x] Learn how to parse left-associative application :/
     - [ ] Make an encoder, that will encode tokens as trees. This

@@ -37,6 +37,16 @@ class ListExpression(Node):
 
 
 @dataclass
+class Scope(Node):
+    name: str | None
+
+
+@dataclass
+class ScopeBinding(Node):
+    pass
+
+
+@dataclass
 class String(Node):
     pass
 
@@ -153,7 +163,12 @@ class Parser:
         return Source(None, nodes)
 
     def parse_expression(self) -> Node:
-        return Expression(None, [self.parse_application(0 + 1)])
+        nodes = []
+        if self.match_token(tokenizer.Symbol('scope')):
+            nodes.append(self.parse_scope())
+        else:
+            nodes.append(self.parse_application(0 + 1))
+        return Expression(None, nodes)
 
     def operator_precedence(self):
         if self.at_eof:
@@ -225,12 +240,60 @@ class Parser:
 
         return ListExpression(token, nodes)
 
+    def is_scope_binding(self) -> bool:
+        at = self.cur_token
+        result = False
+        if self.match_token(tokenizer.Symbol, match_contents=False):
+            self.next()
+            result = self.match_token(tokenizer.Symbol('='))
+            self.cur_token = at
+        return result
+
+    def parse_scope_binding(self) -> Node:
+        token = self.cur()
+        self.next()  # Symbol
+        self.next()  # =
+        bound_to = Symbol(token, [])
+        expr = self.parse_expression()
+        self.expect(tokenizer.Delimeters.semicolon)
+        return ScopeBinding(token, [bound_to, expr])
+
+    def parse_scope(self) -> Node:
+        token = self.cur()
+        self.expect(tokenizer.Symbol('scope'))
+        scope_name = None
+        if self.match_token(tokenizer.String(''), match_contents=False):
+            self.next()
+            scope_name = self.cur().s
+        self.expect(tokenizer.Symbol('do'))
+        if self.match_token(tokenizer.Symbol('end')):
+            logging.error('[Parser] Expected expression in scope')
+            self.at_eof = True
+            self.was_error = True
+            return None
+
+        nodes = []
+        while self.is_scope_binding():
+            nodes.append(self.parse_scope_binding())
+        if self.match_token(tokenizer.Symbol('end')):
+            logging.error('[Parser] Expected expression in scope')
+            self.at_eof = True
+            self.was_error = True
+            return None
+
+        nodes.append(self.parse_expression())
+        self.expect(tokenizer.Symbol('end'))
+        return Scope(token, nodes, scope_name)
+
     def parse(self, tokens: [tokenizer.Token]) -> Node | None:
         if not tokens:
             return None
 
         self.tokens = tokens
         result = self.parse_source()
+        if self.was_error:
+            logging.error("[Parser] There was some errors")
+            return None
         if not self.at_eof:
             logging.error("[Parser] Failed to parse string past %s at %d",
                           self.cur(), self.cur_token)
