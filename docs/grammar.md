@@ -7,7 +7,9 @@ The following token groups are there:
 - Delimeter: any token from the list `()[],`
 - String (two cases): 
     * Anything enclosed in single curly braces `{...}`
-    * Anything enclosed in group of sequential curly braces, group size is >= 3 `{{{...}}}`
+    * Anything enclosed in group of sequential curly braces, group size is 3 `{{{...}}}`.
+        Therefore, only data `}}}` is unrepresentable in the language -- fair enough, just use
+        explicit concatenation then.
 - TODO(don't need them for now) ~~Operator: any token from the list `+ - * /`~~
 - Symbol: any other token
 

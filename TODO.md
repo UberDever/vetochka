@@ -13,15 +13,16 @@ could be considered a `string`, a series of bytes encoded in `utf-8`.
     - Better use more complex tokenization to support various levels of sugar
 
 - Scopes:
-    * Declared as `scope [name: string | none] in ... end`
+    * Declared as `scope [name: string | none] do ... end`
+    * Named scopes are `modules` and unnamed ones are alternative form of `let-bindings`
     * Inside: series of sugared bindings of the form
         ```
-        scope in
+        scope do
             a = 10
             b = 20
         end
         -- equivalent to
-        scope in
+        scope do
             let a = 10 in
             let b = 20 in
             ^ -- `^` is a false value
@@ -31,6 +32,15 @@ could be considered a `string`, a series of bytes encoded in `utf-8`.
         expression is provided, false/nullish idk value is returned (maybe 
         do an analysis before? not for interpreter...)
     * No recursive and mutually-recursive bindings are currently considered
+        - They are achieved via combinators and stuff
+    * This notion of scope is not very mathematical, rather functional-flawored.
+        This is because scopes are not first-class and are not part of the language
+        internal representation (i.e. `tree-calculus` trees).
+        But this notion seems functional enough, also easy to implement.
+        The more rigorous implementation would consider scopes as a first-class entities
+        with ability to combine and unpack them in several ways. And I'm afraid there
+        would still be a problem of integration with filesystem
+        
 
 - Modules can be done pretty easily:
     * Create a `root.tree` in the project
@@ -54,13 +64,13 @@ could be considered a `string`, a series of bytes encoded in `utf-8`.
         each containing scopes and their usages
     * All modules created as follows:
         ```ocaml
-        scope {something} in
+        scope {something} do
             ...
         end
 
         -- Modules can be nested
-        scope {A} in
-            scope {B} in
+        scope {A} do
+            scope {B} do
                 -- This effectivelly means combination
                 -- of names (i.e. {A/B})
             end
@@ -68,21 +78,21 @@ could be considered a `string`, a series of bytes encoded in `utf-8`.
         ```
     * All modules can be used as follows:
         ```ocaml
-        use {src/stuff.tree} in
+        use {src/stuff.tree} do
             ...
         end
 
         -- modules can be referenced anywhere (in the same file multiply in any place)
-        use {src/other.tree} in
-            use {src/something.tree} in
+        use {src/other.tree} do
+            use {src/something.tree} do
                 ...
             end
         end
         ```
-    * `use` brings in top-level declarations (i.e. let bindings) into scope of `in ... end`
+    * `use` brings in top-level declarations (i.e. let bindings) into scope of `do ... end`
         This can be a little clunky because it semantically can be considered
         as qualified prefix and every use of such prefix is then
-        `use {some/path.tree} in func foo bar end` rather than `path.func foo bar`.
+        `use {some/path.tree} do func foo bar end` rather than `path.func foo bar`.
         But this really simplifies module system.
 
 - Let-bindings
@@ -91,7 +101,7 @@ could be considered a `string`, a series of bytes encoded in `utf-8`.
     * Therefore:
         `let a = 10; b = 15; c = 20 in a + b + c; end`
         =>
-        `scope in a = 10; b = 15; c = 20; a + b + c; end`
+        `scope do a = 10; b = 15; c = 20; a + b + c; end`
 
 - To accomplish project goal, that is the **mighty preprocessor** the following could be done:
     - Make a functional language based on `tree-calculus` (with sugar and statements in some form)
