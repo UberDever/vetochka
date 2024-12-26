@@ -16,7 +16,7 @@ could be considered a `string`, a series of bytes encoded in `utf-8`.
     * Declared as `scope [name: string | none] do ... end`
     * Named scopes are `modules` and unnamed ones are alternative form of `let-bindings`
     * Inside: series of sugared bindings of the form
-        ```
+        ```elixir
         scope do
             a = 10
             b = 20
@@ -63,7 +63,7 @@ could be considered a `string`, a series of bytes encoded in `utf-8`.
         scope, even in separate file. Project is just a certain collection of files,
         each containing scopes and their usages
     * All modules created as follows:
-        ```ocaml
+        ```elixir
         scope {something} do
             ...
         end
@@ -77,7 +77,7 @@ could be considered a `string`, a series of bytes encoded in `utf-8`.
         end
         ```
     * All modules can be used as follows:
-        ```ocaml
+        ```elixir
         use {src/stuff.tree} do
             ...
         end
@@ -154,6 +154,7 @@ this parser and map to `executable tree` format (optionally efficient)
         - [ ] Make list encoding
         - [ ] Make number encoding
         - [ ] Make string encoding as utf-8 constants
+        - [ ] [Unimportant] store tags and stuff in LE fashion (from 0 up to the left)
     - [ ] Sugar
         - [x] Lists
         - [ ] Let bindings

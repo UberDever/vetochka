@@ -13,6 +13,8 @@ The following token groups are there:
 - TODO(don't need them for now) ~~Operator: any token from the list `+ - * /`~~
 - Symbol: any other token
 
+Comments: simplest line comments, start with `--` on the word boundaries.
+
 Note that this simple tokenization requires further parsing and encoding.
 
 ## Language

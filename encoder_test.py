@@ -48,7 +48,6 @@ class TestNodeEncoder(unittest.TestCase):
         n.set_tag(Node.APP)
         n.set_lhs(69)
         n.set_rhs(42)
-        print(bin(n.repr))
         self.assertEqual(n.tag(), Node.APP)
         self.assertEqual(n.lhs(), 69)
         self.assertEqual(n.rhs(), 42)
