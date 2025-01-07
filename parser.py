@@ -7,6 +7,7 @@ import logging
 import sys
 
 import tokenizer
+import copy
 from tokenizer import Delimeters
 
 
@@ -75,7 +76,9 @@ def strip(root: Node) -> Node:
     def aux(n: Node) -> Node:
         if n.token is None and len(n.children) == 1:
             return aux(n.children[0])
-        return type(n)(n.token, [aux(c) for c in n.children])
+        new_node = copy.copy(n)
+        new_node.children = [aux(c) for c in n.children]
+        return new_node
 
     return aux(root)
 
@@ -86,6 +89,12 @@ def saturate(root: Node) -> Node:
         to a leaf, stem or fork, to canonical form"""
 
     def aux(r: Node) -> Node:
+
+        def clone_with_new_children(node: Node, children: list):
+            n = copy.copy(node)
+            n.children = children
+            return n
+
         if not r.children:
             return r
 
@@ -105,18 +114,19 @@ def saturate(root: Node) -> Node:
                             children=[aux(left.children[0]),
                                       aux(right)])
                     case _ if left.is_fork():
-                        return type(r)(token=r.token, children=children)
+                        return clone_with_new_children(r, children)
                     case _:
                         sys.exit(-1)
             else:
-                return type(r)(token=r.token, children=children)
+                return clone_with_new_children(r, children)
         else:
-            return type(r)(token=r.token, children=children)
+            return clone_with_new_children(r, children)
 
     return aux(root)
 
 
 class Parser:
+    saved_self: dict | None = None
     tokens: [tokenizer.Token]
     cur_token = 0
     at_eof = False
@@ -132,11 +142,19 @@ class Parser:
                 self.at_eof = True
             return
 
+    def save_self(self):
+        self.saved_self = copy.copy(self.__dict__)
+
+    def rollback(self) -> None:
+        assert self.saved_self
+        self.__dict__ = self.saved_self
+        self.saved_self = None
+
     def match_token(self, token: tokenizer.Token, match_contents=True) -> bool:
         if self.at_eof:
             return False
 
-        t = self.tokens[self.cur_token]
+        t = self.cur()
         if match_contents:
             return t == token
 
@@ -148,8 +166,8 @@ class Parser:
 
         ok = self.match_token(token, match_contents)
         if not ok:
-            logging.error("[Parser] Unexpected '%s' expected '%s'", self.cur(),
-                          token)
+            logging.error("[Parser] Unexpected '%s' expected '%s' at %d",
+                          self.cur(), token, self.cur_token)
             self.at_eof = True
             self.was_error = True
             return False
@@ -179,12 +197,13 @@ class Parser:
         # need to list starting symbols for application
         # Better to list binary operators instead
         match token:
-            case tokenizer.String(_) | tokenizer.Symbol(_) | tokenizer.Tree(
-                _) | Delimeters.rparen | Delimeters.rsquare:
+            case tokenizer.Symbol('end'):
+                return None, 0
+            # case tokenizer.Symbol('scope'):
+            #     return None, 0
+            case (tokenizer.String(_) | tokenizer.Symbol(_) | tokenizer.Tree(_)
+                  | Delimeters.lparen | Delimeters.lsquare):
                 return Application, 10
-            case tokenizer.Delim:
-                logging.fatal('Not implemented')
-                sys.exit(-1)
         return None, 0
 
     def parse_application(self, cur_prec: int) -> Node:
@@ -203,6 +222,8 @@ class Parser:
 
     def parse_operand(self) -> Node:
         token = self.cur()
+        if self.match_token(tokenizer.Symbol('scope')):
+            return self.parse_scope()
         if self.match_token(tokenizer.String(''), match_contents=False):
             self.next()
             return String(token, [])
@@ -211,12 +232,12 @@ class Parser:
             return Symbol(token, [])
         if self.match_token(tokenizer.Tree()):
             return self.parse_tree()
-        if self.match_token(Delimeters.rsquare):
+        if self.match_token(Delimeters.lsquare):
             return self.parse_list_expression()
 
-        self.expect(Delimeters.rparen)
-        node = self.parse_expression()
         self.expect(Delimeters.lparen)
+        node = self.parse_expression()
+        self.expect(Delimeters.rparen)
         return node
 
     def parse_tree(self) -> Node:
@@ -227,26 +248,26 @@ class Parser:
     def parse_list_expression(self) -> Node:
         nodes = []
         token = self.cur()
-        self.expect(Delimeters.rsquare)
+        self.expect(Delimeters.lsquare)
         while True:
-            if self.match_token(Delimeters.lsquare):
+            if self.match_token(Delimeters.rsquare):
                 break
             if self.at_eof:
                 break
             nodes.append(self.parse_expression())
             if self.match_token(Delimeters.comma):
                 self.expect(Delimeters.comma)
-        self.expect(Delimeters.lsquare)
+        self.expect(Delimeters.rsquare)
 
         return ListExpression(token, nodes)
 
     def is_scope_binding(self) -> bool:
-        at = self.cur_token
+        self.save_self()
         result = False
-        if self.match_token(tokenizer.Symbol, match_contents=False):
+        if self.match_token(tokenizer.Symbol(''), match_contents=False):
             self.next()
             result = self.match_token(tokenizer.Symbol('='))
-            self.cur_token = at
+            self.rollback()
         return result
 
     def parse_scope_binding(self) -> Node:
@@ -263,8 +284,8 @@ class Parser:
         self.expect(tokenizer.Symbol('scope'))
         scope_name = None
         if self.match_token(tokenizer.String(''), match_contents=False):
-            self.next()
             scope_name = self.cur().s
+            self.next()
         self.expect(tokenizer.Symbol('do'))
         if self.match_token(tokenizer.Symbol('end')):
             logging.error('[Parser] Expected expression in scope')
@@ -295,6 +316,8 @@ class Parser:
             logging.error("[Parser] There was some errors")
             return None
         if not self.at_eof:
+            import pprint
+            pprint.pprint(strip(result))
             logging.error("[Parser] Failed to parse string past %s at %d",
                           self.cur(), self.cur_token)
             return None

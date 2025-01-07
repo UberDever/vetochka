@@ -27,12 +27,12 @@ class String:
 
 @dataclass
 class Delimeters:
-    rsquare = Delim('[')
-    lsquare = Delim(']')
-    rparen = Delim('(')
-    lparen = Delim(')')
-    rcurly = Delim('{')
-    lcurly = Delim('}')
+    lsquare = Delim('[')
+    rsquare = Delim(']')
+    lparen = Delim('(')
+    rparen = Delim(')')
+    lcurly = Delim('{')
+    rcurly = Delim('}')
     comma = Delim(',')
     semicolon = Delim(';')
 
@@ -66,11 +66,12 @@ def tokenize(byte_array: bytearray) -> list[Token] | str:
                 case '}':
                     return ("Encountered closing extra closing curly, "
                             "check if curlies are balanced")
-                case '\n' | '\r\n':
-                    if word:
-                        tokens.append(Symbol(''.join(word)))
-                        word = []
-                    tokens.append(Delim(';'))
+                # TODO: autoinsert is not a priority right now
+                # case '\n' | '\r\n':
+                #     if word:
+                #         tokens.append(Symbol(''.join(word)))
+                #         word = []
+                #     tokens.append(Delim(';'))
                 case _ if b.isspace():
                     if word:
                         tokens.append(Symbol(''.join(word)))

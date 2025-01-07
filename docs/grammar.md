@@ -38,7 +38,7 @@ Expression ::=
     Operand
 
 Scope ::=
-    Symbol('scope') String? Symbol('do') ScopeBinding* Expression Symbol('end')
+    Symbol('scope') String? Symbol('do') ScopeBinding* Expression Delimeter(';') Symbol('end')
 
 ScopeBinding ::=
     Symbol Symbol('=') Expression Delimeter(';')

@@ -9,8 +9,8 @@ import unittest
 import tokenizer as t
 import parser  # pylint: disable=wrong-import-order,deprecated-module
 # pylint: disable-next=wrong-import-order,deprecated-module
-from parser import (strip, saturate, TreeNode, ListExpression, Symbol,
-                    Application, String)
+from parser import (strip, saturate, Scope, ScopeBinding, TreeNode,
+                    ListExpression, Symbol, Application, String)
 
 
 class TestParser(unittest.TestCase):
@@ -71,6 +71,34 @@ class TestParser(unittest.TestCase):
                                TreeNode(token=t.Tree(), children=[]),
                                TreeNode(token=t.Tree(), children=[]),
                                TreeNode(token=t.Tree(), children=[])
+                           ]))
+
+    def test_list_expression_with_application(self):
+        tree = parser.Parser().parse(t.tokenize('[^ ^, ^ ^ ^]'))
+        self.assertEqual(
+            strip(tree),
+            ListExpression(token=t.Delim(s='['),
+                           children=[
+                               Application(token=t.Tree(),
+                                           children=[
+                                               TreeNode(token=t.Tree(),
+                                                        children=[]),
+                                               TreeNode(token=t.Tree(),
+                                                        children=[]),
+                                           ]),
+                               Application(token=t.Tree(),
+                                           children=[
+                                               Application(
+                                                   token=t.Tree(),
+                                                   children=[
+                                                       TreeNode(token=t.Tree(),
+                                                                children=[]),
+                                                       TreeNode(token=t.Tree(),
+                                                                children=[]),
+                                                   ]),
+                                               TreeNode(token=t.Tree(),
+                                                        children=[]),
+                                           ])
                            ]))
 
     def test_single_symbol(self):
@@ -179,17 +207,162 @@ class TestParser(unittest.TestCase):
                     String(token=t.String(s='something'), children=[])
                 ]))
 
-    # TODO(morlovsky): this doesn't work as intended
-    # because application currently is greedy enough to consider it's body
-    # a whole file after it!
-    # The solution is to handle the "termination" characters, such as
-    # `;` or `,`
-    # Autoinsertion of semicolons is another sugary topic and can be solved
-    # independently of this problem
     def test_scope_simplest(self):
         tree = parser.Parser().parse(t.tokenize('scope do ^ end'))
-        print(tree)
-        self.fail()
+        self.assertEqual(
+            strip(tree),
+            Scope(token=t.Symbol(s='scope'),
+                  children=[TreeNode(token=t.Tree(s='^'), children=[])],
+                  name=None))
+
+    def test_scope_simplest_application(self):
+        tree = parser.Parser().parse(t.tokenize('scope do ^ ^ ^ end'))
+        self.assertEqual(
+            strip(tree),
+            Scope(token=t.Symbol(s='scope'),
+                  children=[
+                      Application(token=t.Tree(s='^'),
+                                  children=[
+                                      Application(
+                                          token=t.Tree(s='^'),
+                                          children=[
+                                              TreeNode(token=t.Tree(s='^'),
+                                                       children=[]),
+                                              TreeNode(token=t.Tree(s='^'),
+                                                       children=[])
+                                          ]),
+                                      TreeNode(token=t.Tree(s='^'),
+                                               children=[])
+                                  ])
+                  ],
+                  name=None))
+
+    def test_scope_application_nested(self):
+        tree = parser.Parser().parse(
+            t.tokenize('scope do ^ scope {Stuff} do ^ end end'))
+        self.assertEqual(
+            strip(tree),
+            Scope(token=t.Symbol(s='scope'),
+                  children=[
+                      Application(token=t.Tree(s='^'),
+                                  children=[
+                                      TreeNode(token=t.Tree(s='^'),
+                                               children=[]),
+                                      Scope(token=t.Symbol(s='scope'),
+                                            children=[
+                                                TreeNode(token=t.Tree(s='^'),
+                                                         children=[])
+                                            ],
+                                            name="Stuff")
+                                  ])
+                  ],
+                  name=None))
+
+    def test_scope_simple_binding(self):
+        tree = parser.Parser().parse(t.tokenize('scope do a = ^; ^ end'))
+        print(strip(tree))
+        self.assertEqual(
+            strip(tree),
+            Scope(token=t.Symbol(s='scope'),
+                  children=[
+                      ScopeBinding(token=t.Symbol(s='a'),
+                                   children=[
+                                       Symbol(token=t.Symbol(s='a'),
+                                              children=[]),
+                                       TreeNode(token=t.Tree(s='^'),
+                                                children=[])
+                                   ]),
+                      TreeNode(token=t.Tree(s='^'), children=[])
+                  ],
+                  name=None))
+
+    def test_scope_everything_at_once(self):
+        text = """
+            scope do
+                a = ^;
+                b = ^^;
+                c = a b;
+                scope {Named} do
+                    d = scope do ^^ end;
+                    e = c;
+                    e
+                end
+            end
+        """
+        tree = parser.Parser().parse(t.tokenize(text))
+        self.assertEqual(
+            strip(tree),
+            Scope(token=t.Symbol(s='scope'),
+                  children=[
+                      ScopeBinding(token=t.Symbol(s='a'),
+                                   children=[
+                                       Symbol(token=t.Symbol(s='a'),
+                                              children=[]),
+                                       TreeNode(token=t.Tree(s='^'),
+                                                children=[])
+                                   ]),
+                      ScopeBinding(token=t.Symbol(s='b'),
+                                   children=[
+                                       Symbol(token=t.Symbol(s='b'),
+                                              children=[]),
+                                       Application(
+                                           token=t.Tree(s='^'),
+                                           children=[
+                                               TreeNode(token=t.Tree(s='^'),
+                                                        children=[]),
+                                               TreeNode(token=t.Tree(s='^'),
+                                                        children=[])
+                                           ])
+                                   ]),
+                      ScopeBinding(token=t.Symbol(s='c'),
+                                   children=[
+                                       Symbol(token=t.Symbol(s='c'),
+                                              children=[]),
+                                       Application(
+                                           token=t.Symbol(s='a'),
+                                           children=[
+                                               Symbol(token=t.Symbol(s='a'),
+                                                      children=[]),
+                                               Symbol(token=t.Symbol(s='b'),
+                                                      children=[])
+                                           ])
+                                   ]),
+                      Scope(
+                          token=t.Symbol(s='scope'),
+                          children=[
+                              ScopeBinding(
+                                  token=t.Symbol(s='d'),
+                                  children=[
+                                      Symbol(token=t.Symbol(s='d'),
+                                             children=[]),
+                                      Scope(
+                                          token=t.Symbol(s='scope'),
+                                          children=[
+                                              Application(
+                                                  token=t.Tree(s='^'),
+                                                  children=[
+                                                      TreeNode(
+                                                          token=t.Tree(s='^'),
+                                                          children=[]),
+                                                      TreeNode(
+                                                          token=t.Tree(s='^'),
+                                                          children=[])
+                                                  ])
+                                          ],
+                                          name=None)
+                                  ]),
+                              ScopeBinding(token=t.Symbol(s='e'),
+                                           children=[
+                                               Symbol(token=t.Symbol(s='e'),
+                                                      children=[]),
+                                               Symbol(token=t.Symbol(s='c'),
+                                                      children=[])
+                                           ]),
+                              Symbol(token=t.Symbol(s='e'), children=[])
+                          ],
+                          name='Named')
+                  ],
+                  name=None))
 
 
 class TestTreeUtilities(unittest.TestCase):
