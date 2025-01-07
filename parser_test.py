@@ -179,9 +179,17 @@ class TestParser(unittest.TestCase):
                     String(token=t.String(s='something'), children=[])
                 ]))
 
+    # TODO(morlovsky): this doesn't work as intended
+    # because application currently is greedy enough to consider it's body
+    # a whole file after it!
+    # The solution is to handle the "termination" characters, such as
+    # `;` or `,`
+    # Autoinsertion of semicolons is another sugary topic and can be solved
+    # independently of this problem
     def test_scope_simplest(self):
         tree = parser.Parser().parse(t.tokenize('scope do ^ end'))
         print(tree)
+        self.fail()
 
 
 class TestTreeUtilities(unittest.TestCase):
