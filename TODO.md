@@ -45,56 +45,104 @@ could be considered a `string`, a series of bytes encoded in `utf-8`.
 
 - Modules can be done pretty easily:
     * Create a `root.tree` in the project
-    * In case this root is empty -- all paths will be relative to this root
+    * ~~In case this root is empty -- all paths will be relative to this root~~ The set of modules
+      `M` is composed of every module found in every file that can be found recursively from the `root.tree` directory
     * Bad decision: ~~Otherwise -- this root contains code that can be executed on setup (this is just
         a room for extension, i don't think this will be actually used)~~.
         Better to use `root.tree` as anchor for module location and nothing more.
         Otherwise, we blend together solutions (build time code execution and module location)
         which is not orthogonal.
-    * Interpreter accepts either (1) source file to interpret or (2) path to `root.tree` and
-        "entry point" source file. The former doesn't allow for `use` constructs because
+    * Interpreter accepts:
+        - Single source file only and evaluates it top-down
+        - (1) Set of modules to `import` and (2) `entry point` source file. First is defined by the pair of
+           `(prefix, root.tree)` where `prefix` is the string that will be prepended to every module name on import and
+            `root.tree` is an anchor to find all the project modules.
+        - This way interpreter can be fed with any project with any naming as long as this project has **locally** unique
+            naming for modules.
+        - Example: `tree --prefix std/ --root-tree ~/dev/tree/std/root.tree my-script.tree`
+            ```elixir
+                use {std/bool} do
+                    true? true -- Outputs true
+                end
+            ```
+    * Side note: Interpreter accepts either (1) source file to interpret or (2) path to `root.tree` and
+        `entry point` source file. The former doesn't allow for `use` constructs because
         there is no explicit module locator prefix and I don't want to provide implicit heuristics.
-        Side note: `root.tree` stands out as a way for linking the interpreter and project
+        `root.tree` stands out as a way for linking the interpreter and project
         file system. This way is done through a file because it is "conventional?".
         Other way is to use shell variable like `ROOT_TREE` which can be used in the interpreter
         in similar fashion. I prefer the file tho.
-    * On the launch of the interpreter, all files relative to `root.tree` are parsed
-        to find all module declarations in case of `use` construct is used.
+    * Module name is a string. Since all the modules that are accessible from the `root.tree` are assumed to
+        be in programmer's control, it is their responsibility to come up with unique name for each module.
     * Module is just a named scope. Reference to named scope can be done in every other
         scope, even in separate file. Project is just a certain collection of files,
-        each containing scopes and their usages
+        each containing scopes and their usages (inside the scope). Project is defined by `root.tree` in the project directory
     * All modules created as follows:
         ```elixir
         scope {something} do
             ...
         end
 
-        # Modules can be nested
+        ```
+    * ~~Nesting of modules can be added as a syntax sugar, but I don't see if it's necessary. Right now modules
+        considered to be a linear sequence of declarations in the file.~~
+        Nesting of modules does nothing to their names, instead, it just brings outer definitions to the scope of
+        the inner module
+        ```elixir
+        -- Modules can be nested
         scope {A} do
+            a = ...
             scope {B} do
-                # This effectivelly means combination
-                # of names (i.e. {A/B})
+                b = a
+            end
+        end
+
+        -- Since named scopes are considered modules, they are always exported with
+        -- every each of their declarations being available
+        -- If you need to 'hide' implementation of a module, you can do this
+        scope do
+            get_impl = ...
+            -- Here, KV is exported anyway since it is named, even if it is nested inside anon scope
+            scope {KV} do
+                get = get_impl ...
+                set = ... get_impl ...
             end
         end
         ```
     * All modules can be used as follows:
         ```elixir
-        use {src/stuff.tree} do
+        use {stuff} do
             ...
         end
 
-        # modules can be referenced anywhere (in the same file multiply in any place)
-        use {src/other.tree} do
-            use {src/something.tree} do
+        -- modules can be referenced anywhere (in the same file multiply in any place)
+        use {other} do
+            use {some/thing} do
                 ...
             end
         end
         ```
-    * `use` brings in top-level declarations (i.e. let bindings) into scope of `do ... end`
+    * `use` construct can enclose any expression, and since `scope` is an expression on itself, `use`
+        can appear on top level with unrestricted embedding depth.
+    * `use` brings in top-level declarations (i.e. let bindings) into the scope of `do ... end`
         This can be a little clunky because it semantically can be considered
         as qualified prefix and every use of such prefix is then
         `use {some/path.tree} do func foo bar end` rather than `path.func foo bar`.
         But this really simplifies module system.
+        If you have a name clash you can alias the clashing things yourself.
+        ```elixir
+        scope {KV} do
+            get = ...
+        end
+        scope {State} do
+            get = ...
+        end
+        scope {User} do
+            kv_get = use {KV} do get; end
+            state_get = use {State} do get; end
+            ...
+        end
+        ```
 
 - Let-bindings
     * Since we have scopes, I decided to reuse this construct for let bindings also.
@@ -166,4 +214,5 @@ this parser and map to `executable tree` format (optionally efficient)
     - [ ] Write all different stdliby necessary stuff
         - [ ] Modules?
             - [x] Described system
+        - [ ] State/IO
     - [ ] .... Tooling?
