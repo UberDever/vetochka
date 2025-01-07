@@ -6,8 +6,8 @@ from dataclasses import dataclass
 import logging
 import sys
 
-import tokenizer
 import copy
+import tokenizer
 from tokenizer import Delimeters
 
 
@@ -316,8 +316,6 @@ class Parser:
             logging.error("[Parser] There was some errors")
             return None
         if not self.at_eof:
-            import pprint
-            pprint.pprint(strip(result))
             logging.error("[Parser] Failed to parse string past %s at %d",
                           self.cur(), self.cur_token)
             return None

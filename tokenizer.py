@@ -66,7 +66,7 @@ def tokenize(byte_array: bytearray) -> list[Token] | str:
                 case '}':
                     return ("Encountered closing extra closing curly, "
                             "check if curlies are balanced")
-                # TODO: autoinsert is not a priority right now
+                # NOTE: autoinsert is not a priority right now
                 # case '\n' | '\r\n':
                 #     if word:
                 #         tokens.append(Symbol(''.join(word)))
