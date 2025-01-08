@@ -9,6 +9,8 @@ import pprint
 import argparse
 import tokenizer
 import parser  # pylint: disable=wrong-import-order,deprecated-module
+import encoder
+from eval import eval  # pylint: disable=redefined-builtin
 
 
 def main():
@@ -17,6 +19,8 @@ def main():
                             '--path',
                             help='Path to file to translate',
                             required=True)
+    arg_parser.add_argument('--parse',
+                            help='Only parse the provided file and print it')
     args = arg_parser.parse_args()
 
     with open(args.path, 'r', encoding='utf-8') as file:
@@ -24,8 +28,16 @@ def main():
         tokens = tokenizer.tokenize(text)
         p = parser.Parser()
         tree = p.parse(tokens)
-        rich = parser.saturate(tree)
-        pprint.pprint(parser.strip(rich))
+        if args.parse:
+            rich = parser.saturate(tree)
+            pprint.pprint(parser.strip(rich))
+            return
+        encoded_root, encoded_nodes = encoder.encode_tree_nodes(tree)
+        evaluator = eval.Evaluator()
+        evaluator.set_tree(encoded_root, [node.repr for node in encoded_nodes])
+        evaluator.evaluate()
+        if err := evaluator.get_error():
+            print(err)
 
 
 if __name__ == "__main__":

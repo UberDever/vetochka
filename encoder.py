@@ -74,15 +74,17 @@ class Node:
         return self.tag() >= self.DATA
 
 
-def encode_tree_nodes(root: parser.Node) -> (int, [Node]):
-
+def encode_tree_nodes(root: parser.Node | None) -> (int, [Node]):
     nodes = []
+    if root is None:
+        return 0, nodes
 
     def aux(n: parser.Node) -> int:
         nonlocal nodes
         tree_or_app = isinstance(n, (parser.TreeNode, parser.Application))
-        assert tree_or_app, "Encoding to binary nodes \
-            only supported for tree nodes"
+        assert tree_or_app, (
+            "Encoding to binary nodes only supported for tree nodes\n"
+            f"but found {type(n)}")
 
         tag = None
         if isinstance(n, parser.Application):
