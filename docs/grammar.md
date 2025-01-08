@@ -14,7 +14,7 @@ The following token groups are there:
 - Symbol: any other token
 
 End of the line: Delimeter `;` is considered equivalent to a line break.
-Comments: simplest line comments, start with `--` on the word boundaries.
+Comments: simplest line comments, start with `#`
 
 Reserved symbols:
     * `scope`

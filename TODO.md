@@ -22,11 +22,11 @@ could be considered a `string`, a series of bytes encoded in `utf-8`.
             b = 20
             ^
         end
-        -- equivalent to
+        # equivalent to
         scope do
             let a = 10 in
             let b = 20 in
-            ^ -- `^` is a false value
+            ^ # `^` is a false value
         end
         ```
     * Ending expression of the scope is final value of the expression. If no
@@ -69,11 +69,11 @@ could be considered a `string`, a series of bytes encoded in `utf-8`.
             ...
         end
 
-        -- Modules can be nested
+        # Modules can be nested
         scope {A} do
             scope {B} do
-                -- This effectivelly means combination
-                -- of names (i.e. {A/B})
+                # This effectivelly means combination
+                # of names (i.e. {A/B})
             end
         end
         ```
@@ -83,7 +83,7 @@ could be considered a `string`, a series of bytes encoded in `utf-8`.
             ...
         end
 
-        -- modules can be referenced anywhere (in the same file multiply in any place)
+        # modules can be referenced anywhere (in the same file multiply in any place)
         use {src/other.tree} do
             use {src/something.tree} do
                 ...
@@ -144,7 +144,7 @@ of `tree-calculus` can help to build a convenient `ir` (tagging, evaluation with
         - [x] Write a couple of smoke tests for tokenizer
         - [ ] Add source information to tokens
         - [ ] Add unicode delta as special symbol
-        - [ ] COMMENTS??? use `--`
+        - [ ] COMMENTS??? use `#`
         - [ ] [Unimportant] Rewrite the tokenizer to be more powerful
     - [ ] Make a parser to `ir` that supports sugary constructs. We will lower the language from here
         - [x] Learn how to parse left-associative application :/
