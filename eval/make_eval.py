@@ -13,7 +13,7 @@ BUILD_DIR = os.path.join("..", "build")
 TARGET = os.path.join(BUILD_DIR, "evaluate")
 
 CC = "clang"
-CFLAGS = "--std=c89 -Wall -O2"
+CFLAGS = "--std=c89 -Wall -O3"
 SOURCES = ["eval.c"]
 
 

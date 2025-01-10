@@ -60,4 +60,4 @@ class Evaluator:
         if self.state.error_code == 0:
             return None
         return (f'Code: {self.state.error_code}\n'
-                f'Error: {self.state.error.decode('utf-8')}')
+                f'Error: {self.state.error.decode("utf-8")}')
