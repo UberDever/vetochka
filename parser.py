@@ -3,7 +3,6 @@
 # pylint: disable=missing-function-docstring
 
 from dataclasses import dataclass
-import logging
 import sys
 
 import copy
@@ -130,7 +129,10 @@ class Parser:
     tokens: [tokenizer.Token]
     cur_token = 0
     at_eof = False
-    was_error = False
+    errors: list[str] = []
+
+    def add_error(self, error: str):
+        self.errors.append(error)
 
     def cur(self):
         return self.tokens[self.cur_token]
@@ -166,10 +168,9 @@ class Parser:
 
         ok = self.match_token(token, match_contents)
         if not ok:
-            logging.error("[Parser] Unexpected '%s' expected '%s' at %d",
-                          self.cur(), token, self.cur_token)
+            self.add_error(f"[Parser] Unexpected '{self.cur()}' "
+                           f"expected '{token}' at {self.cur_token}")
             self.at_eof = True
-            self.was_error = True
             return False
 
         self.next()
@@ -288,18 +289,16 @@ class Parser:
             self.next()
         self.expect(tokenizer.Symbol('do'))
         if self.match_token(tokenizer.Symbol('end')):
-            logging.error('[Parser] Expected expression in scope')
+            self.add_error('[Parser] Expected expression in scope')
             self.at_eof = True
-            self.was_error = True
             return None
 
         nodes = []
         while self.is_scope_binding():
             nodes.append(self.parse_scope_binding())
         if self.match_token(tokenizer.Symbol('end')):
-            logging.error('[Parser] Expected expression in scope')
+            self.add_error('[Parser] Expected expression in scope')
             self.at_eof = True
-            self.was_error = True
             return None
 
         nodes.append(self.parse_expression())
@@ -312,11 +311,11 @@ class Parser:
 
         self.tokens = tokens
         result = self.parse_source()
-        if self.was_error:
-            logging.error("[Parser] There was some errors")
-            return None
         if not self.at_eof:
-            logging.error("[Parser] Failed to parse string past %s at %d",
-                          self.cur(), self.cur_token)
+            self.add_error(f"[Parser] Failed to parse string past"
+                           f" {self.cur()} at {self.cur_token}")
             return None
+        if self.errors:
+            raise RuntimeError("Parser encountered errors:\n"
+                               "\n".join(self.errors))
         return result

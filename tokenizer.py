@@ -41,7 +41,7 @@ Token = Tree | Delim | String | Symbol
 
 
 # pylint: disable-next=too-many-branches
-def tokenize(byte_array: bytearray) -> list[Token] | str:
+def tokenize(byte_array: bytearray) -> list[Token]:
     in_string = False
     tokens = []
     word = []
@@ -64,8 +64,9 @@ def tokenize(byte_array: bytearray) -> list[Token] | str:
                     in_string = True
                     continue
                 case '}':
-                    return ("Encountered closing extra closing curly, "
-                            "check if curlies are balanced")
+                    raise RuntimeError(
+                        "Encountered closing extra closing curly, "
+                        "check if curlies are balanced")
                 # NOTE: autoinsert is not a priority right now
                 # case '\n' | '\r\n':
                 #     if word:
@@ -90,8 +91,9 @@ def tokenize(byte_array: bytearray) -> list[Token] | str:
                     else:
                         in_string = False
                         if not word:
-                            return ("Encountered closing curly too soon, "
-                                    "check if curlies are balanced")
+                            raise RuntimeError(
+                                "Encountered closing curly too soon, "
+                                "check if curlies are balanced")
                         tokens.append(String(''.join(word)))
                         word = []
                 case _:
@@ -99,8 +101,9 @@ def tokenize(byte_array: bytearray) -> list[Token] | str:
 
     if in_string:
         if word:
-            return ("Tokenization ended with unclosed string literal, "
-                    "check if curlies are balanced")
+            raise RuntimeError(
+                "Tokenization ended with unclosed string literal, "
+                "check if curlies are balanced")
 
     if word:
         tokens.append(Symbol(''.join(word)))
@@ -109,4 +112,5 @@ def tokenize(byte_array: bytearray) -> list[Token] | str:
     if block_level != -1:
         raise RuntimeError(
             "Can't tokenize, encountered unbalanced expression along the way")
+
     return tokens
