@@ -205,6 +205,7 @@ this parser and map to `executable tree` format (optionally efficient)
         - [ ] Make number encoding
         - [ ] Make string encoding as utf-8 constants
         - [ ] [Unimportant] store tags and stuff in LE fashion (from 0 up to the left)
+    - [ ] Make the decoder that will decode arbitrary trees into something meaningful
     - [ ] Sugar
         - [x] Lists
         - [ ] Let bindings
@@ -216,3 +217,4 @@ this parser and map to `executable tree` format (optionally efficient)
             - [x] Described system
         - [ ] State/IO
     - [ ] .... Tooling?
+        - [ ] Repl

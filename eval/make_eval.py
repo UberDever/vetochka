@@ -13,8 +13,8 @@ BUILD_DIR = os.path.join("..", "build")
 TARGET = os.path.join(BUILD_DIR, "evaluate")
 
 CC = "clang"
-CFLAGS = "--std=c89 -Wall -O3"
-SOURCES = ["eval.c"]
+CFLAGS = "--std=c99 -Wall -O3 -I."
+SOURCES = ["eval.c", "node.c"]
 
 
 def compile_c_linux(source, destination):

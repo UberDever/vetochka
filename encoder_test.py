@@ -9,80 +9,65 @@ import unittest
 import parser  # pylint: disable=wrong-import-order,deprecated-module
 import tokenizer
 import encoder
-from encoder import Node
+from eval.eval import load_eval_lib
+from encoder import NodeLib
 
 
 class TestNodeEncoder(unittest.TestCase):
 
-    @staticmethod
-    def encode(text: str):
+    @classmethod
+    def setUpClass(cls):
+        cls.eval_lib = load_eval_lib()
+        cls.node_lib = NodeLib(cls.eval_lib)
+
+    def encode(self, text: str):
         tree = parser.Parser().parse(tokenizer.tokenize(text))
         staturated = parser.saturate(tree)
         striped = parser.strip(staturated)
-        return encoder.encode_tree_nodes(striped)
+        return encoder.encode_tree_nodes(striped, self.eval_lib)
 
-    def test_node_set_tag(self):
-        n = Node()
-        n.set_tag(Node.APP)
-        self.assertEqual(n.tag(), Node.APP)
-
-    def test_node_set_lhs(self):
-        n = Node()
-        n.set_lhs(42)
-        self.assertEqual(n.lhs(), 42)
-
-    def test_node_set_rhs(self):
-        n = Node()
-        n.set_rhs(42)
-        self.assertEqual(n.rhs(), 42)
-
-    def test_node_set_both(self):
-        n = Node()
-        n.set_lhs(69)
-        n.set_rhs(42)
-        self.assertEqual(n.lhs(), 69)
-        self.assertEqual(n.rhs(), 42)
-
-    def test_node_set_all(self):
-        n = Node()
-        n.set_tag(Node.APP)
-        n.set_lhs(69)
-        n.set_rhs(42)
-        self.assertEqual(n.tag(), Node.APP)
-        self.assertEqual(n.lhs(), 69)
-        self.assertEqual(n.rhs(), 42)
+    def test_node_accessors(self):
+        n = self.node_lib.new_tree()
+        self.assertEqual(self.node_lib.tag(n), self.node_lib.tag_tree())
+        n = self.node_lib.new_app(42, 69)
+        self.assertEqual(self.node_lib.tag(n), self.node_lib.tag_app())
+        self.assertEqual(self.node_lib.lhs(n), 42)
+        self.assertEqual(self.node_lib.rhs(n), 69)
+        n = self.node_lib.new_data(69420)
+        self.assertEqual(self.node_lib.tag(n), self.node_lib.tag_data())
+        self.assertEqual(self.node_lib.data(n), 69420)
 
     def test_encoder_simplest(self):
-        tree = TestNodeEncoder.encode('^')
-        self.assertEqual(tree, (0, [Node(0, 0, 0)]))
+        tree = self.encode('^')
+        self.assertEqual(tree, (0, [self.node_lib.new_tree()]))
 
     def test_encoder_simple(self):
-        tree = TestNodeEncoder.encode('^ ^ ^')
+        tree = self.encode('^ ^ ^')
         self.assertEqual(tree, (0, [
-            Node(Node.TREE, 1, 2),
-            Node(Node.TREE, Node.int_max, Node.int_max),
-            Node(Node.TREE, Node.int_max, Node.int_max)
+            self.node_lib.new_tree(1, 2),
+            self.node_lib.new_tree(),
+            self.node_lib.new_tree(),
         ]))
 
     def test_encoder_simplest_redux_k(self):
-        tree = TestNodeEncoder.encode('^ ^ ^ ^')
+        tree = self.encode('^ ^ ^ ^')
         self.assertEqual(tree, (0, [
-            Node(Node.APP, 1, 4),
-            Node(Node.TREE, 1, 2),
-            Node(Node.TREE, Node.int_max, Node.int_max),
-            Node(Node.TREE, Node.int_max, Node.int_max),
-            Node(Node.TREE, Node.int_max, Node.int_max),
+            self.node_lib.new_app(1, 4),
+            self.node_lib.new_tree(1, 2),
+            self.node_lib.new_tree(),
+            self.node_lib.new_tree(),
+            self.node_lib.new_tree(),
         ]))
 
     def test_encoder_simplest_redux_s(self):
-        tree = TestNodeEncoder.encode('^ (^ ^) ^ ^')
+        tree = self.encode('^ (^ ^) ^ ^')
         self.assertEqual(tree, (0, [
-            Node(Node.APP, 1, 5),
-            Node(Node.TREE, 1, 3),
-            Node(Node.TREE, 1, 0),
-            Node(Node.TREE, Node.int_max, Node.int_max),
-            Node(Node.TREE, Node.int_max, Node.int_max),
-            Node(Node.TREE, Node.int_max, Node.int_max),
+            self.node_lib.new_app(1, 5),
+            self.node_lib.new_tree(1, 3),
+            self.node_lib.new_tree(1, 0),
+            self.node_lib.new_tree(),
+            self.node_lib.new_tree(),
+            self.node_lib.new_tree(),
         ]))
 
 

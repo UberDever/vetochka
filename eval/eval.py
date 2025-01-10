@@ -17,20 +17,24 @@ if not os.path.exists(LIB_PATH):
 
 class EvalState(ctypes.Structure):
     _fields_ = [
-        ('root', ctypes.c_uint64),
-        ('nodes', ctypes.POINTER(ctypes.c_uint64)),
-        ('nodes_size', ctypes.c_uint64),
+        ('root', ctypes.c_size_t),
+        ('nodes', ctypes.POINTER(ctypes.c_size_t)),
+        ('nodes_size', ctypes.c_size_t),
         ('error_code', ctypes.c_int8),
         ('error', ctypes.c_char_p),
     ]
+
+
+def load_eval_lib():
+    return ctypes.CDLL(LIB_PATH)
 
 
 class Evaluator:
     state: EvalState
     eval_lib: ctypes.CDLL
 
-    def __init__(self):
-        self.eval_lib = ctypes.CDLL(LIB_PATH)
+    def __init__(self, eval_lib):
+        self.eval_lib = eval_lib
         self.state = EvalState()
         self.state.root = 0
         self.state.nodes = None
@@ -48,7 +52,7 @@ class Evaluator:
     def set_tree(self, root: int, tree: list[int]):
         self.reset()
         self.state.root = root
-        self.state.nodes = (ctypes.c_uint64 * len(tree))(*tree)
+        self.state.nodes = (ctypes.c_size_t * len(tree))(*tree)
 
     def evaluate(self):
         self.eval_lib.eval(ctypes.byref(self.state))

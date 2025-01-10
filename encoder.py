@@ -2,80 +2,87 @@
 # pylint: disable=missing-class-docstring
 # pylint: disable=missing-function-docstring
 
+import ctypes
+
 import parser  # pylint: disable=wrong-import-order,deprecated-module
 
-
-# NOTE: This is not for python, but for system language like C
-class Node:
-    repr: int
-
-    TREE = 0b00
-    APP = 0b01
-    DATA = 0b10
-
-    int_size = 31
-    int_max = 2**int_size - 1
-
-    def __init__(self, tag=0, lhs=None, rhs=None):
-        self.repr = 0
-        self.set_tag(tag)
-        self.set_lhs(lhs if lhs else self.int_max)
-        self.set_rhs(rhs if rhs else self.int_max)
-
-    def tag(self):
-        return (self.repr & 0b11 << (self.int_size * 2)) >> (self.int_size * 2)
-
-    def lhs(self):
-        return (self.repr & self.int_max << self.int_size) >> self.int_size
-
-    def rhs(self):
-        return self.repr & self.int_max
-
-    def set_tag(self, tag):
-        self.repr = self.repr | tag << (self.int_size * 2)
-
-    def set_lhs(self, n):
-        assert n <= self.int_max
-        mask = (2**64 - 1) ^ ((2**31 - 1) << self.int_size)
-        self.repr &= mask
-        self.repr = self.repr | (n << self.int_size)
-
-    def set_rhs(self, n):
-        assert n <= self.int_max
-        mask = (2**64 - 1) ^ (2**31 - 1)
-        self.repr &= mask
-        self.repr = self.repr | n
-
-    def __eq__(self, obj):
-        return self.repr == obj.repr
-
-    def __repr__(self):
-        return self.__str__()
-
-    def __str__(self):
-        return f'Node({self.tag()}, {self.lhs()}, {self.rhs()})'
-
-    def is_leaf(self):
-        return (self.tag() == self.TREE and self.lhs() == self.int_max
-                and self.rhs == self.int_max)
-
-    def is_stem(self):
-        return (self.tag() == self.TREE and self.lhs() != self.int_max
-                and self.rhs == self.int_max)
-
-    def is_fork(self):
-        return (self.tag() == self.TREE and self.lhs() != self.int_max
-                and self.rhs != self.int_max)
-
-    def is_app(self):
-        return self.tag() == self.APP
-
-    def is_data(self):
-        return self.tag() >= self.DATA
+NodeData = ctypes.c_size_t
 
 
-def encode_tree_nodes(root: parser.Node | None) -> (int, [Node]):
-    nodes = []
+class NodeLib:
+    eval_lib: ctypes.CDLL
+
+    def __init__(self, eval_lib):
+        self.eval_lib = eval_lib
+        self.eval_lib.node_new_tree.argtypes = [
+            ctypes.c_size_t, ctypes.c_size_t
+        ]
+        self.eval_lib.node_new_tree.restype = NodeData
+        self.eval_lib.node_new_app.argtypes = [
+            ctypes.c_size_t, ctypes.c_size_t
+        ]
+        self.eval_lib.node_new_app.restype = NodeData
+        self.eval_lib.node_new_data.argtypes = [ctypes.c_size_t]
+        self.eval_lib.node_new_data.restype = NodeData
+        self.eval_lib.node_new_invalid.argtypes = []
+        self.eval_lib.node_new_invalid.restype = NodeData
+
+        self.eval_lib.node_tag.argtypes = [NodeData]
+        self.eval_lib.node_tag.restype = ctypes.c_size_t
+        self.eval_lib.node_lhs.argtypes = [NodeData]
+        self.eval_lib.node_lhs.restype = ctypes.c_size_t
+        self.eval_lib.node_rhs.argtypes = [NodeData]
+        self.eval_lib.node_rhs.restype = ctypes.c_size_t
+        self.eval_lib.node_data.argtypes = [NodeData]
+        self.eval_lib.node_data.restype = ctypes.c_size_t
+
+        self.eval_lib.node_tag_tree.argtypes = []
+        self.eval_lib.node_tag_tree.restype = ctypes.c_size_t
+        self.eval_lib.node_tag_app.argtypes = []
+        self.eval_lib.node_tag_app.restype = ctypes.c_size_t
+        self.eval_lib.node_tag_data.argtypes = []
+        self.eval_lib.node_tag_data.restype = ctypes.c_size_t
+
+    def new_tree(self, lhs=None, rhs=None) -> NodeData:
+        lhs = lhs or self.new_invalid()
+        rhs = rhs or self.new_invalid()
+        return self.eval_lib.node_new_tree(lhs, rhs)
+
+    def new_app(self, lhs, rhs) -> NodeData:
+        return self.eval_lib.node_new_app(lhs, rhs)
+
+    def new_data(self, data) -> NodeData:
+        return self.eval_lib.node_new_data(data)
+
+    def new_invalid(self) -> NodeData:
+        return self.eval_lib.node_new_invalid()
+
+    def tag(self, node: NodeData) -> int:
+        return self.eval_lib.node_tag(node)
+
+    def lhs(self, node: NodeData) -> int:
+        return self.eval_lib.node_lhs(node)
+
+    def rhs(self, node: NodeData) -> int:
+        return self.eval_lib.node_rhs(node)
+
+    def data(self, node: NodeData) -> int:
+        return self.eval_lib.node_data(node)
+
+    def tag_tree(self) -> int:
+        return self.eval_lib.node_tag_tree()
+
+    def tag_app(self) -> int:
+        return self.eval_lib.node_tag_app()
+
+    def tag_data(self) -> int:
+        return self.eval_lib.node_tag_data()
+
+
+def encode_tree_nodes(root: parser.Node | None,
+                      eval_lib: ctypes.CDLL) -> (int, [NodeLib]):
+    node_lib = NodeLib(eval_lib)
+    nodes: list[int] = []
     if root is None:
         return 0, nodes
 
@@ -86,29 +93,27 @@ def encode_tree_nodes(root: parser.Node | None) -> (int, [Node]):
             "Encoding to binary nodes only supported for tree nodes\n"
             f"but found {type(n)}")
 
-        tag = None
         if isinstance(n, parser.Application):
-            tag = Node.APP
+            create_node = node_lib.new_app
         else:
-            tag = Node.TREE
-        node = Node()
-        node.set_tag(tag)
-        nodes.append(node)
-        inserted_at = len(nodes) - 1
+            create_node = node_lib.new_tree
+        nodes.append(0)
+        i = len(nodes) - 1
 
         match len(n.children):
             case 0:
-                return inserted_at
+                nodes[i] = create_node(node_lib.new_invalid(),
+                                       node_lib.new_invalid())
+                return i
             case 1:
-                inserted_at_lhs = aux(n.children[0])
-                nodes[inserted_at].set_lhs(inserted_at_lhs - inserted_at)
-                return inserted_at
+                lhs_i = aux(n.children[0])
+                nodes[i] = create_node(lhs_i - i, node_lib.new_invalid())
+                return i
             case 2:
-                inserted_at_lhs = aux(n.children[0])
-                nodes[inserted_at].set_lhs(inserted_at_lhs - inserted_at)
-                inserted_at_rhs = aux(n.children[1])
-                nodes[inserted_at].set_rhs(inserted_at_rhs - inserted_at)
-                return inserted_at
+                lhs_i = aux(n.children[0])
+                rhs_i = aux(n.children[1])
+                nodes[i] = create_node(lhs_i - i, rhs_i - i)
+                return i
             case _:
                 assert False, "Unreachable"
 

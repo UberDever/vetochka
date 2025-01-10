@@ -5,8 +5,8 @@
 # pylint: disable=missing-function-docstring
 
 import pprint
-
 import argparse
+
 import tokenizer
 import parser  # pylint: disable=wrong-import-order,deprecated-module
 import encoder
@@ -32,8 +32,9 @@ def main():
             rich = parser.saturate(tree)
             pprint.pprint(parser.strip(rich))
             return
-        encoded_root, encoded_nodes = encoder.encode_tree_nodes(tree)
-        evaluator = eval.Evaluator()
+        eval_lib = eval.load_eval_lib()
+        encoded_root, encoded_nodes = encoder.encode_tree_nodes(tree, eval_lib)
+        evaluator = eval.Evaluator(eval_lib)
         evaluator.set_tree(encoded_root, [node.repr for node in encoded_nodes])
         evaluator.evaluate()
         if err := evaluator.get_error():
