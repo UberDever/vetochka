@@ -79,8 +79,8 @@ class NodeLib:
         return self.eval_lib.node_tag_data()
 
 
-def encode_tree_nodes(root: parser.Node | None,
-                      eval_lib: ctypes.CDLL) -> (int, [NodeLib]):
+def encode_pure_tree(root: parser.Node | None,
+                     eval_lib: ctypes.CDLL) -> (int, [NodeLib]):
     node_lib = NodeLib(eval_lib)
     nodes: list[int] = []
     if root is None:

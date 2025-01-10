@@ -5,29 +5,29 @@
 # pylint: disable=missing-function-docstring
 
 import pprint
-from cmd import Cmd
+from cmd import Cmd, IDENTCHARS
 import argparse
 
 import tokenizer
 import parser  # pylint: disable=wrong-import-order,deprecated-module
-import encoder
+import lower
 from eval import eval  # pylint: disable=redefined-builtin
 
 
 class REPL(Cmd):
     intro = ""
     prompt = "tree> "
+    identchars = IDENTCHARS + ":"
 
-    def do_exit(self, _):
+    def exit_impl(self, _):
+        "Exit the repl"
         print("Exiting...")
         return True
 
     # pylint: disable-next=invalid-name
     def do_EOF(self, _):
-        return self.do_exit(_)
-
-    def do_echo(self, arg):
-        print(arg)
+        "Exit with EOF"
+        return self.exit_impl(_)
 
     def default(self, line):
         eval_lib = eval.load_eval_lib()
@@ -37,7 +37,7 @@ class REPL(Cmd):
             p = parser.Parser()
             tree = p.parse(tokens)
             tree = parser.strip(parser.saturate(tree))
-            encoded_root, encoded_nodes = encoder.encode_tree_nodes(
+            encoded_root, encoded_nodes = lower.encode_pure_tree(
                 tree, eval_lib)
             evaluator.set_tree(encoded_root, encoded_nodes)
             evaluator.evaluate()
@@ -45,6 +45,12 @@ class REPL(Cmd):
                 raise RuntimeError(err)
         except RuntimeError as e:
             print(e)
+
+
+def augment_repl(repl: REPL, builtin_commands: list):
+    for cmd_name, cmd in builtin_commands:
+        name = "do_" + cmd_name
+        setattr(repl, name, cmd)
 
 
 def main():
@@ -58,7 +64,9 @@ def main():
     args = arg_parser.parse_args()
 
     if args.repl:
-        REPL().cmdloop()
+        repl = REPL()
+        augment_repl(REPL, [(":exit", repl.exit_impl)])
+        repl.cmdloop()
         return
     assert args.path, "Please provide path to entry file"
 
@@ -72,7 +80,7 @@ def main():
             pprint.pprint(tree)
             return
         eval_lib = eval.load_eval_lib()
-        encoded_root, encoded_nodes = encoder.encode_tree_nodes(tree, eval_lib)
+        encoded_root, encoded_nodes = lower.encode_pure_tree(tree, eval_lib)
         evaluator = eval.Evaluator(eval_lib)
         evaluator.set_tree(encoded_root, encoded_nodes)
         evaluator.evaluate()

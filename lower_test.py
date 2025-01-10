@@ -8,9 +8,9 @@ import unittest
 
 import parser  # pylint: disable=wrong-import-order,deprecated-module
 import tokenizer
-import encoder
+import lower
 from eval.eval import load_eval_lib
-from encoder import NodeLib
+from lower import NodeLib
 
 
 class TestNodeEncoder(unittest.TestCase):
@@ -24,7 +24,7 @@ class TestNodeEncoder(unittest.TestCase):
         tree = parser.Parser().parse(tokenizer.tokenize(text))
         staturated = parser.saturate(tree)
         striped = parser.strip(staturated)
-        return encoder.encode_tree_nodes(striped, self.eval_lib)
+        return lower.encode_pure_tree(striped, self.eval_lib)
 
     def test_node_accessors(self):
         n = self.node_lib.new_tree()
