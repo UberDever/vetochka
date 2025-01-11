@@ -10,7 +10,7 @@ import argparse
 
 import tokenizer
 import parser  # pylint: disable=wrong-import-order,deprecated-module
-import lower
+import bytecode
 from eval import eval  # pylint: disable=redefined-builtin
 
 
@@ -37,7 +37,7 @@ class REPL(Cmd):
             p = parser.Parser()
             tree = p.parse(tokens)
             tree = parser.strip(parser.saturate(tree))
-            encoded_root, encoded_nodes = lower.encode_pure_tree(
+            encoded_root, encoded_nodes = bytecode.encode_pure_tree(
                 tree, eval_lib)
             evaluator.set_tree(encoded_root, encoded_nodes)
             evaluator.evaluate()
@@ -80,7 +80,7 @@ def main():
             pprint.pprint(tree)
             return
         eval_lib = eval.load_eval_lib()
-        encoded_root, encoded_nodes = lower.encode_pure_tree(tree, eval_lib)
+        encoded_root, encoded_nodes = bytecode.encode_pure_tree(tree, eval_lib)
         evaluator = eval.Evaluator(eval_lib)
         evaluator.set_tree(encoded_root, encoded_nodes)
         evaluator.evaluate()

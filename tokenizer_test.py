@@ -66,16 +66,13 @@ class TestTokenizer(unittest.TestCase):
         ])
 
     def test_very_bad_string1(self):
-        tokens = t.tokenize('{{}')
-        self.assertIsInstance(tokens, str)
+        self.assertRaises(RuntimeError, lambda: t.tokenize('{{}'))
 
     def test_very_bad_string2(self):
-        tokens = t.tokenize('{}}')
-        self.assertIsInstance(tokens, str)
+        self.assertRaises(RuntimeError, lambda: t.tokenize('{}}'))
 
     def test_very_bad_string3(self):
-        tokens = t.tokenize('{ }}')
-        self.assertIsInstance(tokens, str)
+        self.assertRaises(RuntimeError, lambda: t.tokenize('{ }}'))
 
 
 if __name__ == "__main__":

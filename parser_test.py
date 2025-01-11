@@ -260,7 +260,6 @@ class TestParser(unittest.TestCase):
 
     def test_scope_simple_binding(self):
         tree = parser.Parser().parse(t.tokenize('scope do a = ^; ^ end'))
-        print(strip(tree))
         self.assertEqual(
             strip(tree),
             Scope(token=t.Symbol(s='scope'),
