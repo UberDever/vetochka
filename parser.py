@@ -52,6 +52,11 @@ class Use(Node):
 
 
 @dataclass
+class Module(Node):
+    name: str | None
+
+
+@dataclass
 class String(Node):
     pass
 
@@ -139,6 +144,11 @@ def saturate(root: Node | None) -> Node | None:
     return aux(root)
 
 
+class ParserExpressionError(Exception):
+    pass
+
+
+# pylint: disable-next=too-many-public-methods
 class Parser:
     saved_self: dict | None = None
     tokens: [tokenizer.Token]
@@ -193,6 +203,8 @@ class Parser:
 
     def parse_source(self) -> Node:
         nodes = []
+        while self.match_token(tokenizer.Symbol('module')):
+            nodes.append(self.parse_module())
         nodes.append(self.parse_expression())
         return Source(None, nodes)
 
@@ -203,7 +215,12 @@ class Parser:
         elif self.match_token(tokenizer.Symbol('use')):
             nodes.append(self.parse_use())
         else:
-            nodes.append(self.parse_application(0 + 1))
+            app = self.parse_application(0 + 1)
+            if not app:
+                self.add_error(
+                    f'[Parser] Expected expression at {self.cur_token}')
+                raise ParserExpressionError
+            nodes.append(app)
         return Expression(None, nodes)
 
     def operator_precedence(self):
@@ -224,6 +241,8 @@ class Parser:
 
     def parse_application(self, cur_prec: int) -> Node:
         lhs = self.parse_operand()
+        if not lhs:
+            return None
         while True:
             ctor, prec = self.operator_precedence()
             if prec < cur_prec:
@@ -238,15 +257,16 @@ class Parser:
 
     # pylint: disable-next=too-many-return-statements
     def parse_operand(self) -> Node:
-        token = self.cur()
         if self.match_token(tokenizer.Symbol('scope')):
             return self.parse_scope()
         if self.match_token(tokenizer.Symbol('use')):
             return self.parse_scope()
         if self.match_token(tokenizer.String(''), match_contents=False):
+            token = self.cur()
             self.next()
             return String(token, [])
         if self.match_token(tokenizer.Symbol(''), match_contents=False):
+            token = self.cur()
             self.next()
             return Symbol(token, [])
         if self.match_token(tokenizer.Tree()):
@@ -254,8 +274,11 @@ class Parser:
         if self.match_token(Delimeters.lsquare):
             return self.parse_list_expression()
 
-        self.expect(Delimeters.lparen)
+        if not self.expect(Delimeters.lparen):
+            return None
         node = self.parse_expression()
+        if not node:
+            return None
         self.expect(Delimeters.rparen)
         return node
 
@@ -289,6 +312,18 @@ class Parser:
             self.rollback()
         return result
 
+    def parse_scope_body(self) -> list[Node]:
+        nodes = []
+        while True:
+            if self.match_token(tokenizer.Symbol('module')):
+                nodes.append(self.parse_module())
+                continue
+            if self.is_scope_binding():
+                nodes.append(self.parse_scope_binding())
+                continue
+            break
+        return nodes
+
     def parse_scope_binding(self) -> Node:
         token = self.cur()
         self.next()  # Symbol
@@ -311,9 +346,7 @@ class Parser:
             self.at_eof = True
             return None
 
-        nodes = []
-        while self.is_scope_binding():
-            nodes.append(self.parse_scope_binding())
+        nodes = self.parse_scope_body()
         if self.match_token(tokenizer.Symbol('end')):
             self.add_error('[Parser] Expected expression in scope')
             self.at_eof = True
@@ -322,6 +355,16 @@ class Parser:
         nodes.append(self.parse_expression())
         self.expect(tokenizer.Symbol('end'))
         return Scope(token, nodes, scope_name)
+
+    def parse_module(self) -> Node:
+        token = self.cur()
+        self.expect(tokenizer.Symbol('module'))
+        module_name = self.cur().s
+        self.expect(tokenizer.String(''), match_contents=False)
+        self.expect(tokenizer.Symbol('do'))
+        nodes = self.parse_scope_body()
+        self.expect(tokenizer.Symbol('end'))
+        return Module(token, nodes, module_name)
 
     def parse_use(self) -> Node:
         token = self.cur()
@@ -338,7 +381,11 @@ class Parser:
             return None
 
         self.tokens = tokens
-        result = self.parse_source()
+        try:
+            result = self.parse_source()
+        except ParserExpressionError:
+            result = None
+
         if not self.at_eof:
             self.add_error(f"[Parser] Failed to parse string past"
                            f" {self.cur()} at {self.cur_token}")

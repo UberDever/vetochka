@@ -10,7 +10,7 @@ import unittest
 import tokenizer as t
 import parser  # pylint: disable=wrong-import-order,deprecated-module
 # pylint: disable-next=wrong-import-order,deprecated-module
-from parser import (strip, saturate, Source, Expression, Use, Scope,
+from parser import (strip, saturate, Source, Expression, Use, Scope, Module,
                     ScopeBinding, TreeNode, ListExpression, Symbol,
                     Application, String)
 
@@ -364,6 +364,89 @@ class TestParser(unittest.TestCase):
                           name='Named')
                   ],
                   name=None))
+
+    def test_module_simplest(self):
+        text = "module {} do end ^"
+        tree = parser.Parser().parse(t.tokenize(text))
+        self.assertEqual(
+            strip(tree),
+            Module(token=t.Symbol(s='module'), children=[], name=''))
+
+    def test_module_multiple(self):
+        text = """
+            module {} do end
+            module {} do end
+            module {} do end
+            ^
+        """
+        tree = parser.Parser().parse(t.tokenize(text))
+        #TODO: exclude Source node from stripped nodes
+        print(strip(tree))
+        # self.assertEqual(
+        #     strip(tree),
+        #     Module(token=t.Symbol(s='module'), children=[], name=''))
+
+    # def test_module_real(self):
+    # module {Combinators} do
+    #     K = ^^;
+    #     I = ^(^^)(^^);
+    #     D = ^(^^)(^^^);
+    #     S = D(K D)((D K)(K D));
+    # end
+    #
+    # module {Bool} do
+    #   _ = use {Combinators} in
+    #   use {OtherStuff} in
+    #   scope do
+    #     true = K;
+    #     false = K I;
+    #     ^
+    #   end;
+    # end
+    #
+    # use {Bool} in true
+    #
+    # # =================
+    # module {Combinators} do
+    #     K = ^^
+    #     I = ^(^^)(^^)
+    #     D = ^(^^)(^^^)
+    #     S = D(K D)((D K)(K D))
+    # end
+    #
+    # module {Bool} do
+    #   use {Combinators}
+    #   use {OtherStuff}
+    #   true = K
+    #   false = K I
+    # end
+    #
+    # use {Bool} in true
+    # text = """
+    # module {Combinators} do
+    #     K = ^^;
+    #     I = ^(^^)(^^);
+    #     D = ^(^^)(^^^);
+    #     S = D(K D)((D K)(K D));
+    # end
+    #
+    # module {Bool} do
+    #   _ = use {Combinators} in
+    #   use {OtherStuff} in
+    #   scope do
+    #     true = K;
+    #     false = K I;
+    #     ^
+    #   end;
+    # end
+    #
+    # use {Bool} in true
+    # """
+    # tree = parser.Parser().parse(t.tokenize(text))
+    # print(strip(tree))
+    # self.assertEqual(
+    #     strip(tree),
+    #     Module(token=t.Symbol(s='module'), children=[], name=''))
 
     def test_use_simplest(self):
         text = "use {} in ^"
