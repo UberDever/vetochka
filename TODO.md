@@ -194,23 +194,24 @@ of `tree-calculus` can help to build a convenient `ir` (tagging, evaluation with
         - [ ] Add unicode delta as special symbol
         - [ ] COMMENTS??? use `#`
         - [ ] [Unimportant] Rewrite the tokenizer to be more powerful
-    - [ ] Make a parser to `ir` that supports sugary constructs. We will lower the language from here
-        - [x] Learn how to parse left-associative application :/
-    - [ ] Make an encoder, that will encode tokens as trees. This
-    will give an ability to describe any data with quotation on the tokenizer level
-        - [x] Make encoding functions written in plain text `^ (^^) ...` and then parse it using
-this parser and map to `executable tree` format (optionally efficient)
-        - [ ] Make boolean encoding
-        - [ ] Make list encoding
-        - [ ] Make number encoding
-        - [ ] Make string encoding as utf-8 constants
-        - [ ] [Unimportant] store tags and stuff in LE fashion (from 0 up to the left)
-    - [ ] Make the decoder that will decode arbitrary trees into something meaningful
     - [ ] Sugar
         - [x] Lists
-        - [ ] Let bindings
+            - [x] Parsing
+            - [ ] Encoding
+            - [ ] Decoding
+        - [ ] Scopes and let bindings
+            - [x] Parsing
             - [x] Described
+            - [ ] Semantics
+            - [ ] Encoding
+            - [ ] Decoding
         - [ ] Lambda abstractions
+            - [ ] Parsing
+            - [ ] Described
+            - [ ] Semantics
+            - [ ] Encoding
+            - [ ] Decoding
+        - [ ] Make a total (closes all clauses prior) end -- `end.`
     - [ ] Make evaluator
     - [ ] Write all different stdliby necessary stuff
         - [ ] Modules?
@@ -218,3 +219,5 @@ this parser and map to `executable tree` format (optionally efficient)
         - [ ] State/IO
     - [ ] .... Tooling?
         - [ ] Repl
+            - [x] Architecture
+            - [ ] Support sugar (scopes and uses)
