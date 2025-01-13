@@ -90,10 +90,6 @@ def tokenize(byte_array: bytearray) -> list[Token]:
                         word.append(b)
                     else:
                         in_string = False
-                        if not word:
-                            raise RuntimeError(
-                                "Encountered closing curly too soon, "
-                                "check if curlies are balanced")
                         tokens.append(String(''.join(word)))
                         word = []
                 case _:

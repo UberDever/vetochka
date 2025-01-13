@@ -18,6 +18,7 @@ Comments: simplest line comments, start with `#`
 
 Reserved symbols:
     * `scope`
+    * `use`
     * `do`
     * `end
     * `=`
@@ -34,6 +35,7 @@ Source ::=
 
 Expression ::=
     Scope
+    Use-clause
     Application
     Operand
 
@@ -42,6 +44,9 @@ Scope ::=
 
 ScopeBinding ::=
     Symbol Symbol('=') Expression Delimeter(';')
+
+Use-clause ::=
+    Symbol('use') String Symbol('do') Expression Symbol('end')
     
 Operand ::=
     Tree

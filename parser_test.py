@@ -3,14 +3,16 @@
 # pylint: disable=missing-module-docstring
 # pylint: disable=missing-class-docstring
 # pylint: disable=missing-function-docstring
+# pylint: disable=too-many-public-methods
 
 import unittest
 
 import tokenizer as t
 import parser  # pylint: disable=wrong-import-order,deprecated-module
 # pylint: disable-next=wrong-import-order,deprecated-module
-from parser import (strip, saturate, Scope, ScopeBinding, TreeNode,
-                    ListExpression, Symbol, Application, String)
+from parser import (strip, saturate, Source, Expression, Use, Scope,
+                    ScopeBinding, TreeNode, ListExpression, Symbol,
+                    Application, String)
 
 
 class TestParser(unittest.TestCase):
@@ -362,6 +364,46 @@ class TestParser(unittest.TestCase):
                           name='Named')
                   ],
                   name=None))
+
+    def test_use_simplest(self):
+        text = "use {} do ^ end"
+        tree = parser.Parser().parse(t.tokenize(text))
+        self.assertEqual(
+            strip(tree),
+            Use(token=t.Symbol(s='use'),
+                children=[TreeNode(token=t.Tree(s='^'), children=[])],
+                scope_name=''))
+
+    # def test_use_with_scope(self):
+    #     text = """
+    #         scope do
+    #
+    #         _ = scope {Combinators} do
+    #             K = ^^;
+    #             I = ^(^^)(^^);
+    #             D = ^(^^)(^^^);
+    #             S = D(K D)((D K)(K D));
+    #             ^
+    #         end;
+    #
+    #         _ = use {Combinators} do
+    #         scope {Bool} do
+    #             true = K;
+    #             false = K I;
+    #             ^
+    #         end;
+    #         end
+    #
+    #         use {Bool} do true end
+    #         end
+    #     """
+    #     tree = parser.Parser().parse(t.tokenize(text))
+    #     print(strip(tree))
+    #     self.assertEqual(
+    #         strip(tree),
+    #         Use(token=t.Symbol(s='use'),
+    #             children=[TreeNode(token=t.Tree(s='^'), children=[])],
+    #             scope_name=''))
 
 
 class TestTreeUtilities(unittest.TestCase):

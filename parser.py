@@ -47,6 +47,11 @@ class ScopeBinding(Node):
 
 
 @dataclass
+class Use(Node):
+    scope_name: str | None
+
+
+@dataclass
 class String(Node):
     pass
 
@@ -69,11 +74,18 @@ class TreeNode(Node):
         return len(self.children) == 2
 
 
-def strip(root: Node) -> Node:
+def strip(root: Node | None) -> Node | None:
     "Strips tree from dormant nodes (unary and without token)"
 
+    if root is None:
+        return root
+
+    stripped_ones = (Source, Expression)
+
     def aux(n: Node) -> Node:
-        if n.token is None and len(n.children) == 1:
+        if isinstance(n, stripped_ones):
+            if len(n.children) == 0:
+                return None
             return aux(n.children[0])
         new_node = copy.copy(n)
         new_node.children = [aux(c) for c in n.children]
@@ -82,10 +94,13 @@ def strip(root: Node) -> Node:
     return aux(root)
 
 
-def saturate(root: Node) -> Node:
+def saturate(root: Node | None) -> Node | None:
     """Changes ($($($ ^ ^) ^) ^) to ($ (^ ^ ^) ^),
         therefore transforms a tree node
         to a leaf, stem or fork, to canonical form"""
+
+    if root is None:
+        return root
 
     def aux(r: Node) -> Node:
 
@@ -185,6 +200,8 @@ class Parser:
         nodes = []
         if self.match_token(tokenizer.Symbol('scope')):
             nodes.append(self.parse_scope())
+        elif self.match_token(tokenizer.Symbol('use')):
+            nodes.append(self.parse_use())
         else:
             nodes.append(self.parse_application(0 + 1))
         return Expression(None, nodes)
@@ -200,8 +217,6 @@ class Parser:
         match token:
             case tokenizer.Symbol('end'):
                 return None, 0
-            # case tokenizer.Symbol('scope'):
-            #     return None, 0
             case (tokenizer.String(_) | tokenizer.Symbol(_) | tokenizer.Tree(_)
                   | Delimeters.lparen | Delimeters.lsquare):
                 return Application, 10
@@ -221,9 +236,12 @@ class Parser:
             rhs = self.parse_application(prec + 1)
             lhs = ctor(token, [lhs, rhs])
 
+    # pylint: disable-next=too-many-return-statements
     def parse_operand(self) -> Node:
         token = self.cur()
         if self.match_token(tokenizer.Symbol('scope')):
+            return self.parse_scope()
+        if self.match_token(tokenizer.Symbol('use')):
             return self.parse_scope()
         if self.match_token(tokenizer.String(''), match_contents=False):
             self.next()
@@ -305,7 +323,22 @@ class Parser:
         self.expect(tokenizer.Symbol('end'))
         return Scope(token, nodes, scope_name)
 
-    def parse(self, tokens: [tokenizer.Token]) -> Node | None:
+    def parse_use(self) -> Node:
+        token = self.cur()
+        self.expect(tokenizer.Symbol('use'))
+        scope_name = self.cur().s
+        self.expect(tokenizer.String(''), match_contents=False)
+        self.expect(tokenizer.Symbol('do'))
+        if self.match_token(tokenizer.Symbol('end')):
+            self.add_error('[Parser] Expected expression in use clause')
+            self.at_eof = True
+            return None
+
+        expr = self.parse_expression()
+        self.expect(tokenizer.Symbol('end'))
+        return Use(token, [expr], scope_name)
+
+    def parse(self, tokens: [tokenizer.Token]) -> Node:
         if not tokens:
             return None
 
@@ -314,7 +347,6 @@ class Parser:
         if not self.at_eof:
             self.add_error(f"[Parser] Failed to parse string past"
                            f" {self.cur()} at {self.cur_token}")
-            return None
         if self.errors:
             raise RuntimeError("Parser encountered errors:\n"
                                "\n".join(self.errors))

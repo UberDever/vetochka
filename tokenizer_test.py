@@ -21,6 +21,10 @@ class TestTokenizer(unittest.TestCase):
         tokens = t.tokenize('^')
         self.assertEqual(tokens, [Tree()])
 
+    def test_simplest_string(self):
+        tokens = t.tokenize('{}')
+        self.assertEqual(tokens, [String('')])
+
     def test_all_kinds_of_stuff(self):
         tokens = t.tokenize("""result = (^^println {"'some' "stuff""})
             {another ^({^({})}) string}""")
