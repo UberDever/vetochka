@@ -366,7 +366,7 @@ class TestParser(unittest.TestCase):
                   name=None))
 
     def test_use_simplest(self):
-        text = "use {} do ^ end"
+        text = "use {} in ^"
         tree = parser.Parser().parse(t.tokenize(text))
         self.assertEqual(
             strip(tree),

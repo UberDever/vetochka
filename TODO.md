@@ -62,7 +62,7 @@ could be considered a `string`, a series of bytes encoded in `utf-8`.
         - Example: `tree --prefix std/ --root-tree ~/dev/tree/std/root.tree my-script.tree`
             ```elixir
                 use {std/bool} do
-                    true? true -- Outputs true
+                    true? true # Outputs true
                 end
             ```
     * Side note: Interpreter accepts either (1) source file to interpret or (2) path to `root.tree` and
@@ -89,7 +89,7 @@ could be considered a `string`, a series of bytes encoded in `utf-8`.
         Nesting of modules does nothing to their names, instead, it just brings outer definitions to the scope of
         the inner module
         ```elixir
-        -- Modules can be nested
+        # Modules can be nested
         scope {A} do
             a = ...
             scope {B} do
@@ -97,12 +97,12 @@ could be considered a `string`, a series of bytes encoded in `utf-8`.
             end
         end
 
-        -- Since named scopes are considered modules, they are always exported with
-        -- every each of their declarations being available
-        -- If you need to 'hide' implementation of a module, you can do this
+        # Since named scopes are considered modules, they are always exported with
+        # every each of their declarations being available
+        # If you need to 'hide' implementation of a module, you can do this
         scope do
             get_impl = ...
-            -- Here, KV is exported anyway since it is named, even if it is nested inside anon scope
+            # Here, KV is exported anyway since it is named, even if it is nested inside anon scope
             scope {KV} do
                 get = get_impl ...
                 set = ... get_impl ...
@@ -115,7 +115,7 @@ could be considered a `string`, a series of bytes encoded in `utf-8`.
             ...
         end
 
-        -- modules can be referenced anywhere (in the same file multiply in any place)
+        # modules can be referenced anywhere (in the same file multiply in any place)
         use {other} do
             use {some/thing} do
                 ...
@@ -124,10 +124,11 @@ could be considered a `string`, a series of bytes encoded in `utf-8`.
         ```
     * `use` construct can enclose any expression, and since `scope` is an expression on itself, `use`
         can appear on top level with unrestricted embedding depth.
-    * `use` brings in top-level declarations (i.e. let bindings) into the scope of `do ... end`
+    * `use` brings in top-level declarations (i.e. let bindings) into the scope of the expression
+        following `in`.
         This can be a little clunky because it semantically can be considered
         as qualified prefix and every use of such prefix is then
-        `use {some/path.tree} do func foo bar end` rather than `path.func foo bar`.
+        `use {some/path.tree} in func foo bar` rather than `path.func foo bar`.
         But this really simplifies module system.
         If you have a name clash you can alias the clashing things yourself.
         ```elixir
@@ -138,9 +139,41 @@ could be considered a `string`, a series of bytes encoded in `utf-8`.
             get = ...
         end
         scope {User} do
-            kv_get = use {KV} do get; end
-            state_get = use {State} do get; end
+            kv_get = use {KV} in get
+            state_get = use {State} in get
             ...
+        end
+        ```
+    * The `module` can be described as a syntax sugar. It acts as a "statement" that doesn't return
+        anything. This makes language less consistent, but much pleasant to work with.
+        ```elixir
+        scope do
+            module {KV} do
+                get = ...
+            end
+            use {KV} in get
+        end
+        # Translates to
+        scope do
+            _ = scope {KV} do
+                get = ...
+                ^
+            end
+            use {KV} in get
+        end
+        ```
+    * If module is defined at top-level, implicit clause is created
+        ```elixir
+        module {A} do end
+        module {B} do end
+        module {C} do end
+        use {Bool} in true
+        # Translates to
+        scope do
+        _ = scope {A} do ^ end
+        _ = scope {B} do ^ end
+        _ = scope {C} do ^ end
+        use {Bool} in true
         end
         ```
 
@@ -195,6 +228,7 @@ of `tree-calculus` can help to build a convenient `ir` (tagging, evaluation with
         - [ ] COMMENTS??? use `#`
         - [ ] [Unimportant] Rewrite the tokenizer to be more powerful
     - [ ] Sugar
+        - [ ] Module clauses
         - [x] Lists
             - [x] Parsing
             - [ ] Encoding
@@ -211,7 +245,6 @@ of `tree-calculus` can help to build a convenient `ir` (tagging, evaluation with
             - [ ] Semantics
             - [ ] Encoding
             - [ ] Decoding
-        - [ ] Make a total (closes all clauses prior) end -- `end.`
     - [ ] Make evaluator
     - [ ] Write all different stdliby necessary stuff
         - [ ] Modules?

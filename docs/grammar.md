@@ -18,7 +18,9 @@ Comments: simplest line comments, start with `#`
 
 Reserved symbols:
     * `scope`
+    * `module`
     * `use`
+    * `in`
     * `do`
     * `end
     * `=`
@@ -31,7 +33,10 @@ The following is the EBNF of the language:
 
 ```
 Source ::=
-    Expression
+    Module* Expression
+
+Module ::=
+    Symbol('module') String Symbol('do') (ScopeBinding | Module)* Symbol('end') 
 
 Expression ::=
     Scope
@@ -40,13 +45,13 @@ Expression ::=
     Operand
 
 Scope ::=
-    Symbol('scope') String? Symbol('do') ScopeBinding* Expression Delimeter(';') Symbol('end')
+    Symbol('scope') String? Symbol('do') (ScopeBinding | Module)* Expression Symbol('end')
 
 ScopeBinding ::=
     Symbol Symbol('=') Expression Delimeter(';')
 
 Use-clause ::=
-    Symbol('use') String Symbol('do') Expression Symbol('end')
+    Symbol('use') String Symbol('in') Expression
     
 Operand ::=
     Tree

@@ -328,14 +328,9 @@ class Parser:
         self.expect(tokenizer.Symbol('use'))
         scope_name = self.cur().s
         self.expect(tokenizer.String(''), match_contents=False)
-        self.expect(tokenizer.Symbol('do'))
-        if self.match_token(tokenizer.Symbol('end')):
-            self.add_error('[Parser] Expected expression in use clause')
-            self.at_eof = True
-            return None
+        self.expect(tokenizer.Symbol('in'))
 
         expr = self.parse_expression()
-        self.expect(tokenizer.Symbol('end'))
         return Use(token, [expr], scope_name)
 
     def parse(self, tokens: [tokenizer.Token]) -> Node:
