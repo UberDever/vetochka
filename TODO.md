@@ -229,6 +229,7 @@ of `tree-calculus` can help to build a convenient `ir` (tagging, evaluation with
         - [ ] [Unimportant] Rewrite the tokenizer to be more powerful
     - [ ] Sugar
         - [ ] Module clauses
+        - [ ] Use statement in module
         - [x] Lists
             - [x] Parsing
             - [ ] Encoding

@@ -235,7 +235,7 @@ class Parser:
             case tokenizer.Symbol('end'):
                 return None, 0
             case (tokenizer.String(_) | tokenizer.Symbol(_) | tokenizer.Tree(_)
-                  | Delimeters.lparen | Delimeters.lsquare):
+                  | Delimeters.lparen):
                 return Application, 10
         return None, 0
 

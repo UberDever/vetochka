@@ -172,6 +172,34 @@ class TestParser(unittest.TestCase):
                                         ])
                         ]))
 
+    def test_application_of_applications(self):
+        tree = parser.Parser().parse(t.tokenize('(a (b c)) (d e)'))
+        self.assertEqual(
+            strip(tree),
+            Application(token=None,
+                        children=[
+                            Application(
+                                token=t.Symbol(s='a'),
+                                children=[
+                                    Symbol(token=t.Symbol(s='a'), children=[]),
+                                    Application(
+                                        token=t.Symbol(s='b'),
+                                        children=[
+                                            Symbol(token=t.Symbol(s='b'),
+                                                   children=[]),
+                                            Symbol(token=t.Symbol(s='c'),
+                                                   children=[])
+                                        ])
+                                ]),
+                            Application(token=t.Symbol(s='d'),
+                                        children=[
+                                            Symbol(token=t.Symbol(s='d'),
+                                                   children=[]),
+                                            Symbol(token=t.Symbol(s='e'),
+                                                   children=[])
+                                        ])
+                        ]))
+
     def test_application_different_stuff(self):
         tree = parser.Parser().parse(
             t.tokenize('[1, 2, 3] ^ (c d) {something}'))
@@ -381,7 +409,7 @@ class TestParser(unittest.TestCase):
         """
         tree = parser.Parser().parse(t.tokenize(text))
         #TODO: exclude Source node from stripped nodes
-        print(strip(tree))
+        # print(strip(tree))
         # self.assertEqual(
         #     strip(tree),
         #     Module(token=t.Symbol(s='module'), children=[], name=''))

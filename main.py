@@ -57,7 +57,8 @@ def main():
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument('-p', '--path', help='Path to file to translate')
     arg_parser.add_argument('--parse',
-                            help='Only parse the provided file and print it')
+                            help='Only parse the provided file and print it',
+                            action='store_true')
     arg_parser.add_argument('--repl',
                             help='Enter repl mode',
                             action='store_true')

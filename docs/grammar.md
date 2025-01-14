@@ -11,9 +11,9 @@ The following token groups are there:
         Therefore, only data `}}}` is unrepresentable in the language -- fair enough, just use
         explicit concatenation then.
 - TODO(don't need them for now) ~~Operator: any token from the list `+ - * /`~~
+- Lambda parameters: Symbols starting with a `\` or a `λ`
 - Symbol: any other token
 
-End of the line: Delimeter `;` is considered equivalent to a line break.
 Comments: simplest line comments, start with `#`
 
 Reserved symbols:
@@ -36,19 +36,28 @@ Source ::=
     Module* Expression
 
 Module ::=
-    Symbol('module') String Symbol('do') (ScopeBinding | Module)* Symbol('end') 
+    Symbol('module') String Symbol('do') ScopeEntry* Symbol('end') 
+
+ScopeEntry ::=
+    ScopeBinding
+    Module
+    Use-statement
 
 Expression ::=
     Scope
     Use-clause
+    Abstraction
     Application
     Operand
 
 Scope ::=
-    Symbol('scope') String? Symbol('do') (ScopeBinding | Module)* Expression Symbol('end')
+    Symbol('scope') String? Symbol('do') ScopeEntry* Expression Symbol('end')
 
 ScopeBinding ::=
     Symbol Symbol('=') Expression Delimeter(';')
+
+Use-statement ::=
+    Symbol('use') String
 
 Use-clause ::=
     Symbol('use') String Symbol('in') Expression
@@ -59,7 +68,10 @@ Operand ::=
     Symbol
     ListExpression
     Delimeter('(') Expression Delimeter(')')
-    
+
+Abstraction ::=
+    LambdaParameter Expression
+
 Application ::=
     Delimeter('(')? Expression Expression Delimeter(')')?
     # InfixExpression
