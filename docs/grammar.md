@@ -3,6 +3,7 @@
 ## Tokenization
 
 The following token groups are there:
+
 - Tree: designates the tree-calculus combinator, denoted as `Δ` or `^`
 - Delimeter: any token from the list `()[],;`
 - String (two cases): 
@@ -17,13 +18,14 @@ The following token groups are there:
 Comments: simplest line comments, start with `#`
 
 Reserved symbols:
-    * `scope`
-    * `module`
-    * `use`
-    * `in`
-    * `do`
-    * `end
-    * `=`
+
+  * `scope`
+  * `module`
+  * `use`
+  * `in`
+  * `do`
+  * `end`
+  * `=`
 
 Note that this simple tokenization requires further parsing and encoding.
 
