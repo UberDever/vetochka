@@ -43,6 +43,11 @@ class REPL(Cmd):
             evaluator.evaluate()
             if err := evaluator.get_error():
                 raise RuntimeError(err)
+
+            root = evaluator.state.root
+            nodes = evaluator.state.nodes
+            print(bytecode.dump_tree(eval_lib, root, nodes))
+
         except RuntimeError as e:
             print(e)
 

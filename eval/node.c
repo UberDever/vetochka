@@ -5,7 +5,7 @@
 #define TAG_SIZE  (uint)2
 #define DATA_SIZE ((NODE_SIZE - TAG_SIZE) / 2)
 /* #define DATA_MAX     ~(1 << DATA_SIZE) */
-#define DATA_INVALID ~(uint)0
+#define DATA_INVALID (~(uint)0 & CHILD_MASK)
 
 #define TAG_MASK   (uint)(((uint)1 << TAG_SIZE) - 1)
 #define CHILD_MASK (uint)(((uint)1 << DATA_SIZE) - 1)

@@ -119,3 +119,45 @@ def encode_pure_tree(root: parser.Node | None,
 
     root_node = aux(root)
     return (root_node, nodes)
+
+
+def dump_tree(eval_lib, root: int, tree: list[int]) -> str:
+    node_lib = NodeLib(eval_lib)
+    invalid = node_lib.new_invalid()
+    lines = []
+
+    def aux(index, prefix='', is_last=False):
+        nonlocal lines
+        line = []
+        line += [prefix, ('└── ' if is_last else '├── ')]
+        new_prefix = prefix + ('    ' if is_last else '│   ')
+
+        n = tree[index]
+        tag = node_lib.tag(n)
+        if tag == node_lib.tag_app():
+            line.append(f'$[{n}]\n')
+            lines.append(''.join(line))
+            lhs = node_lib.lhs(n)
+            rhs = node_lib.rhs(n)
+            is_last = rhs == invalid
+            if lhs != invalid:
+                aux(index + lhs, new_prefix, is_last)
+            is_last = True
+            if rhs != invalid:
+                aux(index + rhs, new_prefix, is_last)
+        elif tag == node_lib.tag_tree():
+            line.append(f'^[{n}]\n')
+            lines.append(''.join(line))
+            lhs = node_lib.lhs(n)
+            rhs = node_lib.rhs(n)
+            is_last = rhs == invalid
+            if lhs != invalid:
+                aux(index + lhs, new_prefix, is_last)
+            is_last = True
+            if rhs != invalid:
+                aux(index + rhs, new_prefix, is_last)
+        else:
+            raise RuntimeError("Unreachable")
+
+    aux(root)
+    return ''.join(lines)
