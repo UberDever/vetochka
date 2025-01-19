@@ -40,7 +40,8 @@ class REPL(Cmd):
             encoded_root, encoded_nodes = bytecode.encode_pure_tree(
                 tree, eval_lib)
             evaluator.set_tree(encoded_root, encoded_nodes)
-            evaluator.evaluate()
+            while evaluator.evaluate():
+                pass
             if err := evaluator.get_error():
                 raise RuntimeError(err)
 
