@@ -78,6 +78,8 @@ class NodeLib:
     def tag_data(self) -> int:
         return self.eval_lib.node_tag_data()
 
+    # NOTE: Should also add is_leaf etc...
+
 
 def encode_pure_tree(root: parser.Node | None,
                      eval_lib: ctypes.CDLL) -> (int, [NodeLib]):
@@ -124,7 +126,7 @@ def encode_pure_tree(root: parser.Node | None,
 # NOTE: better use this for very small numbers (< 255)
 # , to be able to represent a byte
 # Then, we can use a list to represent true list of bytes in tree-calculus
-def value_as_list_to_number(eval_lib, root: int, tree: list[int]) -> int:
+def decode_list_to_number(eval_lib, root: int, tree: list[int]) -> int:
     """
     Do conversion with the following equations
     ^ = 0 as base, ^(base) = base + 1
@@ -154,7 +156,7 @@ def value_as_list_to_number(eval_lib, root: int, tree: list[int]) -> int:
 
 # NOTE: enforce value structure as a tree
 # filled from left to right
-def value_as_tree_to_number(eval_lib, root: int, tree: list[int]) -> int:
+def decode_tree_to_number(eval_lib, root: int, tree: list[int]) -> int:
     """
     This encoding is much more efficient in terms of space, we define:
     0 = ^
@@ -165,8 +167,6 @@ def value_as_tree_to_number(eval_lib, root: int, tree: list[int]) -> int:
     Basically, we exploit node saturation to maximum
     """
     node_lib = NodeLib(eval_lib)
-    assert node_lib.tag(tree[root]) == node_lib.tag_tree(
-    ), "This function accepts only proper numbers"
     to_visit = [root]
     i = 0
     while True:
@@ -174,6 +174,8 @@ def value_as_tree_to_number(eval_lib, root: int, tree: list[int]) -> int:
             break
         cur = to_visit.pop()
         node = tree[cur]
+        assert node_lib.tag(node) == node_lib.tag_tree(
+        ), "This function accepts only proper numbers"
         if node_lib.tag(node) == node_lib.tag_tree():
             i += 1
         if node_lib.lhs(node) != node_lib.new_invalid():
@@ -183,6 +185,30 @@ def value_as_tree_to_number(eval_lib, root: int, tree: list[int]) -> int:
     if i > 0:
         i -= 1
     return i
+
+
+def decode_list_of_numbers_to_string(eval_lib, root: int,
+                                     tree: list[int]) -> str:
+    """
+    This function decodes list of numbers (considered as bytes)
+    to utf-8 encoded string
+    """
+    node_lib = NodeLib(eval_lib)
+    string = bytearray()
+    cur = root
+    while True:
+        node = tree[cur]
+        assert node_lib.tag(node) == node_lib.tag_tree(
+        ), "This function accepts only a list of numbers"
+        tail_i = node_lib.lhs(node)
+        value_i = node_lib.rhs(node)
+        if tail_i == node_lib.new_invalid(
+        ) and value_i == node_lib.new_invalid():
+            break
+        number = decode_tree_to_number(eval_lib, value_i, tree)
+        string.append(number)
+        cur += tail_i
+    return string.decode(encoding='utf-8')
 
 
 def dump_tree(eval_lib, root: int, tree: list[int]) -> str:

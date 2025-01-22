@@ -83,7 +83,7 @@ class TestNumberAsListEncoding(unittest.TestCase):
         staturated = parser.saturate(tree)
         striped = parser.strip(staturated)
         root, nodes = backend.encode_pure_tree(striped, self.eval_lib)
-        return backend.value_as_list_to_number(self.eval_lib, root, nodes)
+        return backend.decode_list_to_number(self.eval_lib, root, nodes)
 
     def test_number_encoding_simple(self):
         self.assertEqual(self.encode('^'), 0)
@@ -107,7 +107,7 @@ class TestNumberAsTreeEncoding(unittest.TestCase):
         staturated = parser.saturate(tree)
         striped = parser.strip(staturated)
         root, nodes = backend.encode_pure_tree(striped, self.eval_lib)
-        return backend.value_as_tree_to_number(self.eval_lib, root, nodes)
+        return backend.decode_tree_to_number(self.eval_lib, root, nodes)
 
     def test_number_encoding_simple(self):
         self.assertEqual(self.encode('^'), 0)
@@ -116,7 +116,7 @@ class TestNumberAsTreeEncoding(unittest.TestCase):
         self.assertEqual(self.encode('^(^^^)'), 3)
 
     def test_number_encoding_newline(self):
-        self.assertEqual(self.encode('^(^^(^^^)^^)(^^^)'),
+        self.assertEqual(self.encode('^(^(^(^^^)^)^)(^^^)'),
                          int.from_bytes(b'\n', byteorder='little'))
 
 

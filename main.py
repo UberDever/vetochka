@@ -52,9 +52,11 @@ class REPL(Cmd):
             nodes = evaluator.state.nodes
             # root = encoded_root
             # nodes = encoded_nodes
+            # print(
+            #     str(backend.decode_tree_to_number(self.eval_lib, root, nodes)))
             print(
-                str(backend.value_as_tree_to_number(self.eval_lib, root,
-                                                    nodes)))
+                backend.decode_list_of_numbers_to_string(
+                    self.eval_lib, root, nodes).encode('utf-8'))
             print(backend.dump_tree(self.eval_lib, root, nodes))
 
         except RuntimeError as e:
