@@ -152,9 +152,15 @@ class ParserExpressionError(Exception):
 class Parser:
     saved_self: dict | None = None
     tokens: [tokenizer.Token]
-    cur_token = 0
-    at_eof = False
-    errors: list[str] = []
+    cur_token: int
+    at_eof: bool
+    errors: list[str]
+
+    def __init__(self):
+        self.tokens = []
+        self.cur_token = 0
+        self.at_eof = False
+        self.errors = []
 
     def add_error(self, error: str):
         self.errors.append(error)
@@ -390,6 +396,5 @@ class Parser:
             self.add_error(f"[Parser] Failed to parse string past"
                            f" {self.cur()} at {self.cur_token}")
         if self.errors:
-            raise RuntimeError("Parser encountered errors:\n"
-                               "\n".join(self.errors))
+            raise RuntimeError("".join([e + '\n' for e in self.errors]))
         return result

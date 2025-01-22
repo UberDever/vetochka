@@ -121,41 +121,78 @@ def encode_pure_tree(root: parser.Node | None,
     return (root_node, nodes)
 
 
+# NOTE: better use this for very small numbers (< 255), To be able to represent a byte
+# Then, we can use a list to represent true list of bytes in tree-calculus
+def value_as_list_to_number(eval_lib, root: int, tree: list[int]) -> int:
+    """
+    Do conversion with the following equations
+    ^ = 0 as base, ^(base) = base + 1
+    Example: ^(^(^(^))) = ^(^(^^)) = 3
+    Basically, a left-directed linked list of ^
+    Function returns a bytearray to be interpret further
+    """
+
+    node_lib = NodeLib(eval_lib)
+
+    cur = root
+    i = 0
+    while True:
+        node = tree[cur]
+        lhs = node_lib.lhs(node)
+        rhs = node_lib.rhs(node)
+        if lhs == node_lib.new_invalid() and rhs == node_lib.new_invalid():
+            break
+        assert rhs == node_lib.new_invalid(), (
+            f"Value is expected to be a linked list, encountered a node {node}"
+        )
+        i += 1
+        cur += lhs
+
+    return i
+
+
+def value_as_tree_to_number(eval_lib, root: int, tree: list[int]) -> int:
+    """
+    This encoding is much more efficient in terms of space, we define:
+    0 = ^
+    1 = ^^
+    2 = ^^^
+    3 = ^(^^^)
+    and so on...
+    Basically, we exploit node saturation to maximum
+    """
+    pass
+
+
 def dump_tree(eval_lib, root: int, tree: list[int]) -> str:
     node_lib = NodeLib(eval_lib)
     invalid = node_lib.new_invalid()
     lines = []
 
+    def add_line(index, node_mark, prefix, new_prefix):
+        n = tree[index]
+        line = [prefix, f'{node_mark}[{bin(n)}]\n']
+        lines.append(''.join(line))
+        lhs = node_lib.lhs(n)
+        rhs = node_lib.rhs(n)
+        is_last = rhs == invalid
+        if lhs != invalid:
+            aux(index + lhs, new_prefix, is_last)
+        is_last = True
+        if rhs != invalid:
+            aux(index + rhs, new_prefix, is_last)
+
     def aux(index, prefix='', is_last=False):
         nonlocal lines
-        line = []
-        line += [prefix, ('└── ' if is_last else '├── ')]
+        line_prefix = prefix + ('└── ' if is_last else '├── ')
         new_prefix = prefix + ('    ' if is_last else '│   ')
 
         n = tree[index]
         tag = node_lib.tag(n)
         if tag == node_lib.tag_app():
-            line.append(f'$[{n}]\n')
-            lines.append(''.join(line))
-            lhs = node_lib.lhs(n)
-            rhs = node_lib.rhs(n)
-            is_last = rhs == invalid
-            if lhs != invalid:
-                aux(index + lhs, new_prefix, is_last)
-            is_last = True
-            if rhs != invalid:
-                aux(index + rhs, new_prefix, is_last)
+            add_line(index, '$', line_prefix, new_prefix)
         elif tag == node_lib.tag_tree():
-            line.append(f'^[{n}]\n')
-            lines.append(''.join(line))
-            lhs = node_lib.lhs(n)
-            rhs = node_lib.rhs(n)
-            is_last = rhs == invalid
-            if lhs != invalid:
-                aux(index + lhs, new_prefix, is_last)
-            is_last = True
-            if rhs != invalid:
-                aux(index + rhs, new_prefix, is_last)
+            add_line(index, '^', line_prefix, new_prefix)
         else:
             raise RuntimeError("Unreachable")
 

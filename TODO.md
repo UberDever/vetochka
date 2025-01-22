@@ -247,6 +247,9 @@ of `tree-calculus` can help to build a convenient `ir` (tagging, evaluation with
             - [ ] Encoding
             - [ ] Decoding
     - [ ] Make evaluator
+        - [ ] Add the "clamp" encoding, to strip unnecessary nodes.
+              So, basically `^^^` would be represented as `0000000000000000000000000000000000000000000000000000000000000000`.
+              We lose index 0 doing this, but this is much better in terms of optimization and index 0 is very cheap to lose
     - [ ] Write all different stdliby necessary stuff
         - [ ] Modules?
             - [x] Described system

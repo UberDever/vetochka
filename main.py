@@ -19,6 +19,10 @@ class REPL(Cmd):
     prompt = "tree> "
     identchars = IDENTCHARS + ":"
 
+    def __init__(self):
+        super().__init__()
+        self.eval_lib = eval.load_eval_lib()
+
     def exit_impl(self, _):
         "Exit the repl"
         print("Exiting...")
@@ -30,24 +34,26 @@ class REPL(Cmd):
         return self.exit_impl(_)
 
     def default(self, line):
-        eval_lib = eval.load_eval_lib()
-        evaluator = eval.Evaluator(eval_lib)
+        evaluator = eval.Evaluator(self.eval_lib)
         try:
             tokens = tokenizer.tokenize(line)
             p = parser.Parser()
             tree = p.parse(tokens)
             tree = parser.strip(parser.saturate(tree))
             encoded_root, encoded_nodes = backend.encode_pure_tree(
-                tree, eval_lib)
+                tree, self.eval_lib)
             evaluator.set_tree(encoded_root, encoded_nodes)
             while evaluator.evaluate():
                 pass
             if err := evaluator.get_error():
                 raise RuntimeError(err)
 
-            root = evaluator.state.root
-            nodes = evaluator.state.nodes
-            print(backend.dump_tree(eval_lib, root, nodes))
+            # root = evaluator.state.root
+            # nodes = evaluator.state.nodes
+            root = encoded_root
+            nodes = encoded_nodes
+            # print(str(backend.value_to_number(self.eval_lib, root, nodes)))
+            print(backend.dump_tree(self.eval_lib, root, nodes))
 
         except RuntimeError as e:
             print(e)
