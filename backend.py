@@ -121,7 +121,8 @@ def encode_pure_tree(root: parser.Node | None,
     return (root_node, nodes)
 
 
-# NOTE: better use this for very small numbers (< 255), To be able to represent a byte
+# NOTE: better use this for very small numbers (< 255)
+# , to be able to represent a byte
 # Then, we can use a list to represent true list of bytes in tree-calculus
 def value_as_list_to_number(eval_lib, root: int, tree: list[int]) -> int:
     """
@@ -151,6 +152,8 @@ def value_as_list_to_number(eval_lib, root: int, tree: list[int]) -> int:
     return i
 
 
+# NOTE: enforce value structure as a tree
+# filled from left to right
 def value_as_tree_to_number(eval_lib, root: int, tree: list[int]) -> int:
     """
     This encoding is much more efficient in terms of space, we define:
@@ -161,7 +164,25 @@ def value_as_tree_to_number(eval_lib, root: int, tree: list[int]) -> int:
     and so on...
     Basically, we exploit node saturation to maximum
     """
-    pass
+    node_lib = NodeLib(eval_lib)
+    assert node_lib.tag(tree[root]) == node_lib.tag_tree(
+    ), "This function accepts only proper numbers"
+    to_visit = [root]
+    i = 0
+    while True:
+        if not to_visit:
+            break
+        cur = to_visit.pop()
+        node = tree[cur]
+        if node_lib.tag(node) == node_lib.tag_tree():
+            i += 1
+        if node_lib.lhs(node) != node_lib.new_invalid():
+            to_visit.append(cur + node_lib.lhs(node))
+        if node_lib.rhs(node) != node_lib.new_invalid():
+            to_visit.append(cur + node_lib.rhs(node))
+    if i > 0:
+        i -= 1
+    return i
 
 
 def dump_tree(eval_lib, root: int, tree: list[int]) -> str:

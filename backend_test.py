@@ -71,7 +71,7 @@ class TestNodeEncoder(unittest.TestCase):
         ]))
 
 
-class TestNumberEncoding(unittest.TestCase):
+class TestNumberAsListEncoding(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -83,7 +83,7 @@ class TestNumberEncoding(unittest.TestCase):
         staturated = parser.saturate(tree)
         striped = parser.strip(staturated)
         root, nodes = backend.encode_pure_tree(striped, self.eval_lib)
-        return backend.value_to_number(self.eval_lib, root, nodes)
+        return backend.value_as_list_to_number(self.eval_lib, root, nodes)
 
     def test_number_encoding_simple(self):
         self.assertEqual(self.encode('^'), 0)
@@ -92,6 +92,31 @@ class TestNumberEncoding(unittest.TestCase):
 
     def test_number_encoding_newline(self):
         self.assertEqual(self.encode('^(^(^(^(^(^(^(^(^(^^)))))))))'),
+                         int.from_bytes(b'\n', byteorder='little'))
+
+
+class TestNumberAsTreeEncoding(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.eval_lib = load_eval_lib()
+        cls.node_lib = NodeLib(cls.eval_lib)
+
+    def encode(self, text: str):
+        tree = parser.Parser().parse(tokenizer.tokenize(text))
+        staturated = parser.saturate(tree)
+        striped = parser.strip(staturated)
+        root, nodes = backend.encode_pure_tree(striped, self.eval_lib)
+        return backend.value_as_tree_to_number(self.eval_lib, root, nodes)
+
+    def test_number_encoding_simple(self):
+        self.assertEqual(self.encode('^'), 0)
+        self.assertEqual(self.encode('^^'), 1)
+        self.assertEqual(self.encode('^^^'), 2)
+        self.assertEqual(self.encode('^(^^^)'), 3)
+
+    def test_number_encoding_newline(self):
+        self.assertEqual(self.encode('^(^^(^^^)^^)(^^^)'),
                          int.from_bytes(b'\n', byteorder='little'))
 
 
