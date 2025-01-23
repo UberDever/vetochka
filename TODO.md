@@ -215,6 +215,89 @@ of `tree-calculus` can help to build a convenient `ir` (tagging, evaluation with
         For `intrinsic node`: This node can store any data that is intrinsic for a
         interpreter i.e. built-in functions and variables.
 
+### About tagging
+
+When I tried to imagine the way for language to communicate with the interpreter, I've stumbled upon
+the fundamental decision -- how pure calculus can communicate with the underlying hardware?
+It splits into two subdecisions -- whether calculus has interactive communication with hardware or not.
+
+If it hasn't, then the only result that is observable is the state of interpreter when the calculation
+is finished. This implies that we always can enforce the format of this result on the programmer.
+My initial idea was to enforce the list of bytes (string) as the only format interpreter could decode from the computation.
+This is limited, but in this case the only channel of communication between calculus and hardware is some static state.
+
+If calculus has interactive communication it means that we must introduce some sort of interpreter intrinsic to it.
+Then, using such intrinsic (i.e. `evalcall`) we can effectively notify an interpreter and tell it to do something to
+the current calculation state. It's like a syscall in the OS kernel. Then, the things are a bit trickier
+because for this to work we **want** not just printing, but other "actions" like changing the interpreter state.
+
+This is when I started to ponder about value tagging. Functions are taggable (see tree-book) and
+they preserve the functional behavior (they can be called normally despite the tagging).
+But the value can't be "transparently" tagged. Value meaning is it's structure and nothing more.
+Therefore, to tag a value is to dramatically change it -- on every usage of the value we must
+ensure that it is boxed/unboxed consistently.
+
+And there is two ways to do it: internally in the calculus or natively in the interpreter.
+The former is way less efficient of course, the latter binds some parts of native implementation and
+the whole language -- dramatic change for the language runtime as a whole.
+Let's consider both approaches.
+
+`Internal` approach allows to encode tagging in the calculus and code related operations in the calculus only.
+The "example" of such approach in the code:
+```elixir
+3_val = ^(^^^)
+tag_int = 3_val
+
+to_string_int = <convert int to list of bytes>
+
+tag = \val \tag ^ val tag
+untag = <untag impl>
+
+3 = tag 3_val tag_int
+plus = <plus implementation> # plus unwraps the values and adds them, then wraps again
+
+print = \x evalcall x
+print (to_string_int 3) # list of bytes that interpreter actually understands
+```
+
+Note that this approach implies that numbers are defined in the source code, when in reality the interpreter
+encoder can just construct numbers before interpretation. In either case the information about the structure
+of data is preserved in the calculus. Interpreter in this case "obeys" the calculus since it must
+encode the value `3` as calculus expected.
+
+`Native` approach is the other way around -- calculus "obeys" the interpreter and asks it in some
+cases. The "example" is the code:
+```elixir
+# 3 is predefined
+# tag_int is predefined
+tag = <predefined in the interpreter> # allows to construct some value and tag it
+untag = <predefined in the interpreter> # allows to get 3_val
+get_tag = <predefined in the interpreter> # allows to get tag_int
+
+to_string_int = <could still be encoded in the calculus, or could be native also>
+plus = <plus implementation> # this implementation can be native also
+
+print = \x evalcall x
+print 3 # since interpreter knows about the tags it can convert the values accordingly
+```
+
+It is clear that `native` approach is the way to go, since it is faster and more convenient.
+The only downside is that we "extend" the channel of communication between calculus and hardware, effectively
+increasing coupling to the implementation, reducing extendibility and portability.
+
+AFAIK the must-have predefined stuff is the natural numbers -- keep the semantics of numbers
+as close to pure calculus as possible while also doing everything in the interpreter. If we have
+intrinsic numbers and their operations, then (hopefully?) we don't need anything else to make native.
+Of course there are also floats, pointers/references, objects and closures, but for the current
+project the numbers will suffice for now.
+
+That said, we can tag the values using intrinsic numbers as tags, like so:
+```
+    a = 5 # single node: |[tag_int][5][tag_data]|
+    s = {abc} # actually a list of numbers [97, 98, 99] or ^ 97 (^ 98 (^ 99 ^))
+```
+It greatly improves performance and space-efficiency.
+
 # TODO
 
 - [ ] Write a language
@@ -250,6 +333,7 @@ of `tree-calculus` can help to build a convenient `ir` (tagging, evaluation with
         - [ ] Add the "clamp" encoding, to strip unnecessary nodes.
               So, basically `^^^` would be represented as `0000000000000000000000000000000000000000000000000000000000000000`.
               We lose index 0 doing this, but this is much better in terms of optimization and index 0 is very cheap to lose
+        - [ ] Make numbers (and the respective operations) intrinsic. STOP on that
     - [ ] Write all different stdliby necessary stuff
         - [ ] Modules?
             - [x] Described system
