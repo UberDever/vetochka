@@ -34,6 +34,7 @@ could be considered a `string`, a series of bytes encoded in `utf-8`.
         do an analysis before? not for interpreter...)
     * No recursive and mutually-recursive bindings are currently considered
         - They are achieved via combinators and stuff
+    * Bindings are **not** calculated as statements, they are calculated on demand/use
     * This notion of scope is not very mathematical, rather functional-flawored.
         This is because scopes are not first-class and are not part of the language
         internal representation (i.e. `tree-calculus` trees).
@@ -306,6 +307,7 @@ It greatly improves performance and space-efficiency.
         - [x] Should every token be a string? Or we can decide if token is a `number` on tokenizer level?
             - Encoding to known structures (lists, numbers, strings) should be done in the interpreter 
         - [x] Write a couple of smoke tests for tokenizer
+        - [x] Statement form (aka block) is not needed, use lists plz
         - [ ] Add source information to tokens
         - [ ] Add unicode delta as special symbol
         - [ ] COMMENTS??? use `#`
@@ -334,6 +336,7 @@ It greatly improves performance and space-efficiency.
               So, basically `^^^` would be represented as `0000000000000000000000000000000000000000000000000000000000000000`.
               We lose index 0 doing this, but this is much better in terms of optimization and index 0 is very cheap to lose
         - [ ] Make numbers (and the respective operations) intrinsic. STOP on that
+        - [ ] Eager evaluation, research it. stat
     - [ ] Write all different stdliby necessary stuff
         - [ ] Modules?
             - [x] Described system

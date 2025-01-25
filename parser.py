@@ -266,7 +266,7 @@ class Parser:
         if self.match_token(tokenizer.Symbol('scope')):
             return self.parse_scope()
         if self.match_token(tokenizer.Symbol('use')):
-            return self.parse_scope()
+            return self.parse_use()
         if self.match_token(tokenizer.String(''), match_contents=False):
             token = self.cur()
             self.next()
