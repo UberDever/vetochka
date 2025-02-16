@@ -301,47 +301,44 @@ It greatly improves performance and space-efficiency.
 
 # TODO
 
-- [ ] Write a language
-    - [x] Make a grammar
-    - [x] Make a simple tokenizer for the language
-        - [x] Should every token be a string? Or we can decide if token is a `number` on tokenizer level?
-            - Encoding to known structures (lists, numbers, strings) should be done in the interpreter 
-        - [x] Write a couple of smoke tests for tokenizer
-        - [x] Statement form (aka block) is not needed, use lists plz
-        - [ ] Add source information to tokens
-        - [ ] Add unicode delta as special symbol
-        - [ ] COMMENTS??? use `#`
-        - [ ] [Unimportant] Rewrite the tokenizer to be more powerful
-    - [ ] Sugar
-        - [ ] Module clauses
-        - [ ] Use statement in module
-        - [x] Lists
-            - [x] Parsing
-            - [ ] Encoding
-            - [ ] Decoding
-        - [ ] Scopes and let bindings
-            - [x] Parsing
-            - [x] Described
-            - [ ] Semantics
-            - [ ] Encoding
-            - [ ] Decoding
-        - [ ] Lambda abstractions
-            - [ ] Parsing
-            - [ ] Described
-            - [ ] Semantics
-            - [ ] Encoding
-            - [ ] Decoding
-    - [ ] Make evaluator
-        - [ ] Add the "clamp" encoding, to strip unnecessary nodes.
-              So, basically `^^^` would be represented as `0000000000000000000000000000000000000000000000000000000000000000`.
-              We lose index 0 doing this, but this is much better in terms of optimization and index 0 is very cheap to lose
-        - [ ] Make numbers (and the respective operations) intrinsic. STOP on that
-        - [ ] Eager evaluation, research it. stat
-    - [ ] Write all different stdliby necessary stuff
-        - [ ] Modules?
-            - [x] Described system
-        - [ ] State/IO
-    - [ ] .... Tooling?
-        - [ ] Repl
-            - [x] Architecture
-            - [ ] Support sugar (scopes and uses)
+Vetochka 0:
+
+- [x] Tokenizer + Parser
+    - [x] Smoke tests
+- [x] Semantics (aren't checked)
+- [ ] Backend
+    - [x] Bytecode generation
+    - [~] Evaluation
+
+Vetochka 1:
+
+- [~] Tokenizer + Parser
+    - [ ] Intrinsics
+    - [ ] Smoke tests
+- [x] Semantics (aren't checked)
+- [ ] Backend
+    - [ ] Bytecode generation
+    - [ ] Evaluation
+
+Vetochka Full:
+- [ ] Tokenizer + Parser
+    - [~] Module system
+    - [ ] Lambdas
+    - [ ] Tests
+        - [x] Smoke tests
+- [ ] Semantics
+- [x] Backend (aren't changed)
+
+Misc:
+
+- [ ] Tokenizer source information
+- [ ] Tokenizer unicode
+- [ ] Tokenizer comments
+- [ ] Tokenizer refactor to be less a mess
+- [ ] Eval Add the "clamp" encoding, to strip unnecessary nodes.
+      So, basically `^^^` would be represented as `0000000000000000000000000000000000000000000000000000000000000000`.
+      We lose index 0 doing this, but this is much better in terms of optimization and index 0 is very cheap to lose
+- [ ] Stdlib
+- [ ] REPL
+    - [x] First draft
+
