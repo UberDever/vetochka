@@ -30,9 +30,9 @@ class NodeLib:
         self.eval_lib.node_tag.argtypes = [NodeData]
         self.eval_lib.node_tag.restype = ctypes.c_size_t
         self.eval_lib.node_lhs.argtypes = [NodeData]
-        self.eval_lib.node_lhs.restype = ctypes.c_size_t
+        self.eval_lib.node_lhs.restype = ctypes.c_ssize_t
         self.eval_lib.node_rhs.argtypes = [NodeData]
-        self.eval_lib.node_rhs.restype = ctypes.c_size_t
+        self.eval_lib.node_rhs.restype = ctypes.c_ssize_t
         self.eval_lib.node_data.argtypes = [NodeData]
         self.eval_lib.node_data.restype = ctypes.c_size_t
 

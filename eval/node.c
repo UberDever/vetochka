@@ -1,3 +1,6 @@
+#define STB_DS_IMPLEMENTATION
+#include "stb_ds.h"
+
 #include "common.h"
 
 #define NODE_SIZE (sizeof(uint) * 8)
@@ -33,7 +36,7 @@ inline Node node_new(uint tag, uint lhs, uint rhs) {
   return node;
 }
 
-Node node_new_tree(uint lhs, uint rhs) {
+Node node_new_tree(sint lhs, sint rhs) {
   return node_new(NODE_TREE, lhs, rhs);
 }
 
@@ -57,11 +60,11 @@ uint node_tag(Node node) {
   return node & TAG_MASK;
 }
 
-uint node_lhs(Node node) {
+sint node_lhs(Node node) {
   return (node >> TAG_SIZE) & CHILD_MASK;
 }
 
-uint node_rhs(Node node) {
+sint node_rhs(Node node) {
   return (node >> (TAG_SIZE + DATA_SIZE)) & CHILD_MASK;
 }
 

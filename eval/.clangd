@@ -1,0 +1,20 @@
+CompileFlags:
+  Add: 
+    - -std=c99
+    - -x
+    - c
+    - -Wall
+    - -Werror
+    - -Wextra
+  Compiler: clang
+Diagnostics:
+  ClangTidy:
+    Add: 
+      - readability-*
+      - clang-analyzer-*
+    Remove: 
+      - modernize-*
+      - cppcoreguidelines-*
+      - readability-identifier-length
+Index:
+  Background: Build

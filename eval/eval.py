@@ -44,16 +44,21 @@ class Evaluator:
 
         self.eval_lib.reset.argtypes = [ctypes.POINTER(EvalState)]
         self.eval_lib.reset.restype = None
+        self.eval_lib.init.argtypes = [
+            ctypes.POINTER(EvalState), ctypes.c_size_t,
+            ctypes.POINTER(ctypes.c_size_t), ctypes.c_size_t
+        ]
+        self.eval_lib.init.restype = None
         self.eval_lib.eval.argtypes = [ctypes.POINTER(EvalState)]
         self.eval_lib.eval.restype = ctypes.c_size_t
+        self.eval_lib.step.argtypes = [ctypes.POINTER(EvalState)]
+        self.eval_lib.step.restype = ctypes.c_size_t
 
         self.reset()
 
     def set_tree(self, root: int, tree: list[int]):
-        self.reset()
-        self.state.root = root
-        self.state.nodes_size = len(tree)
-        self.state.nodes = (ctypes.c_size_t * len(tree))(*tree)
+        tree_arr = (ctypes.c_size_t * len(tree))(*tree)
+        self.eval_lib.init(ctypes.byref(self.state), root, tree_arr, len(tree))
 
     def evaluate(self):
         return self.eval_lib.eval(ctypes.byref(self.state))
