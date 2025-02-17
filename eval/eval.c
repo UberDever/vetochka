@@ -15,6 +15,7 @@ struct EvalState {
   uint root;
   uint* nodes;
   uint nodes_size;
+  uint* stack;
 
   i8 error_code;
   char* error;
@@ -24,6 +25,7 @@ void reset(struct EvalState* state) {
   state->root = 0;
   state->nodes = NULL;
   state->nodes_size = 0;
+  state->stack = NULL;
   state->error_code = 0;
   state->error = g_error_buf;
 }
@@ -67,7 +69,8 @@ static inline struct NodeWithPos fetch_rhs(uint* nodes, struct NodeWithPos node)
 }
 
 uint step(struct EvalState* state) {
-  const struct NodeWithPos root = fetch_node(state->nodes, state->root);
+  const uint root_pos = stbds_arrpop(state->stack);
+  const struct NodeWithPos root = fetch_node(state->nodes, root_pos);
   if (node_tag(root.node) == NODE_APP) {
     const struct NodeWithPos delta = fetch_lhs(state->nodes, root);
     const struct NodeWithPos arg = fetch_rhs(state->nodes, root);
@@ -77,14 +80,12 @@ uint step(struct EvalState* state) {
         node_lhs(delta.node) == (sint)node_new_invalid() && //
         node_rhs(delta.node) == (sint)node_new_invalid()) {
       state->nodes[delta.pos] = node_new_tree(arg.pos - delta.pos, node_new_invalid());
-      state->root = delta.pos;
       return 0;
     }
     // 2. ^ y, z -> ^ y z
     if (node_tag(delta.node) == NODE_TREE && //
         node_rhs(delta.node) == (sint)node_new_invalid()) {
       state->nodes[delta.pos] = node_new_tree(node_lhs(delta.node), arg.pos - delta.pos);
-      state->root = delta.pos;
       return 0;
     }
     // 3. ^ ^ y, z -> y
@@ -95,7 +96,8 @@ uint step(struct EvalState* state) {
         node_lhs(delta_left.node) == (sint)node_new_invalid() && //
         node_rhs(delta_left.node) == (sint)node_new_invalid()    //
     ) {
-      state->root = delta_right.pos;
+      state->root = delta.pos;
+      stbds_arrput(state->stack, state->root);
       return 0;
     }
     // 4. ^ (^ x) y, z -> ($ ($ y z) ($ x z))
@@ -108,41 +110,36 @@ uint step(struct EvalState* state) {
       const struct NodeWithPos z = arg;
       sint app_pos = stbds_arrlen(state->nodes);
       stbds_arrput(state->nodes, node_new_app(app_pos - y.pos, app_pos - z.pos));
-
-      // TODO: possibly fix
-      state->root = app_pos;
-      uint error = step(state);
-      if (error) {
-        return error;
-      }
+      stbds_arrput(state->stack, app_pos);
 
       const sint app_lhs_pos = app_pos;
       app_pos = stbds_arrlen(state->nodes);
       stbds_arrput(state->nodes, node_new_app(app_pos - x.pos, app_pos - z.pos));
-
-      state->root = app_pos;
-      error = step(state);
-      if (error) {
-        return error;
-      }
+      stbds_arrput(state->stack, app_pos);
 
       const sint app_rhs_pos = app_pos;
       app_pos = stbds_arrlen(state->nodes);
       stbds_arrput(state->nodes, node_new_app(app_pos - app_lhs_pos, app_pos - app_rhs_pos));
+      stbds_arrput(state->stack, app_pos);
+      state->root = app_pos;
       return 0;
     }
 
     // NOTE: The following is the triage-calculus, baking the rules of triage into reduction itself
     // 5 (3a). ^ (^ a b) c ^ -> a
-    if (node_tag(delta.node) == NODE_TREE &&   //
-        node_tag(delta_left.node) == NODE_TREE && //
-        node_tag(arg) == NODE_TREE // what if NODE_APP?
-    ) {
-        const struct NodeWithPos w = fetch_lhs(state->nodes, delta_left);
-        const struct NodeWithPos x = fetch_rhs(state->nodes, delta_left);
-        const struct NodeWithPos z = arg;
-
-    }
+    /* if (node_tag(arg.node) == NODE_APP) { */
+    /*     stbds_arrput(state->stack, arg.pos); */
+    /*     stbds_arrput(state->stack, root_pos); */
+    /*     return 0; */
+    /* } */
+    /* assert(node_tag(arg.node) == NODE_TREE); */
+    /* if (node_tag(delta.node) == NODE_TREE &&      // */
+    /*     node_tag(delta_left.node) == NODE_TREE && // */
+    /* ) { */
+    /*   const struct NodeWithPos w = fetch_lhs(state->nodes, delta_left); */
+    /*   const struct NodeWithPos x = fetch_rhs(state->nodes, delta_left); */
+    /*   const struct NodeWithPos z = arg; */
+    /* } */
   }
   assert(node_tag(root.node) == NODE_TREE);
   return 0;
@@ -159,8 +156,15 @@ uint eval(struct EvalState* state) {
       return 0;
     }
 
+    if (node_tag(state->nodes[state->root]) == NODE_APP) {
+      stbds_arrput(state->stack, state->root);
+    }
+    if (stbds_arrlen(state->stack) == 0) {
+      return 0;
+    }
+    state->root = stbds_arrpop(state->stack);
     if (step(state)) {
-      return 1;
+      return 0;
     }
 
     i++;

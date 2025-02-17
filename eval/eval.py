@@ -20,6 +20,7 @@ class EvalState(ctypes.Structure):
         ('root', ctypes.c_size_t),
         ('nodes', ctypes.POINTER(ctypes.c_size_t)),
         ('nodes_size', ctypes.c_size_t),
+        ('stack', ctypes.POINTER(ctypes.c_size_t)),
         ('error_code', ctypes.c_int8),
         ('error', ctypes.c_char_p),
     ]
@@ -39,6 +40,7 @@ class Evaluator:
         self.state.root = 0
         self.state.nodes = None
         self.state.nodes_size = 0
+        self.state.stack = None
         self.state.error_code = 0
         self.state.error = None
 
