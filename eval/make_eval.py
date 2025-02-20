@@ -9,7 +9,7 @@ import sys
 import os
 import shutil
 
-BUILD_DIR = os.path.join("..", "build")
+BUILD_DIR = os.path.join(os.path.dirname(__file__), "..", "build")
 TARGET = os.path.join(BUILD_DIR, "evaluate")
 
 CC = "clang"
@@ -52,8 +52,11 @@ def new_clean_dir(path):
 
 def build():
     new_clean_dir(BUILD_DIR)
+    sources_path = [
+        os.path.join(os.path.dirname(__file__), s) for s in SOURCES
+    ]
     compiled_obj = [os.path.join(BUILD_DIR, s + ".o") for s in SOURCES]
-    commands = [compile_c(s, o) for s, o in zip(SOURCES, compiled_obj)]
+    commands = [compile_c(s, o) for s, o in zip(sources_path, compiled_obj)]
     commands.append(link_c(compiled_obj, TARGET))
     for cmd in commands:
         print(f"""$> {" ".join(cmd)}""")
