@@ -43,8 +43,7 @@ class REPL(Cmd):
             encoded_root, encoded_nodes = backend.encode_pure_tree(
                 tree, self.eval_lib)
             evaluator.set_tree(encoded_root, encoded_nodes)
-            while evaluator.evaluate():
-                pass
+            evaluator.evaluate()
             if err := evaluator.get_error():
                 raise RuntimeError(err)
 
@@ -54,9 +53,10 @@ class REPL(Cmd):
             # nodes = encoded_nodes
             # print(
             #     str(backend.decode_tree_to_number(self.eval_lib, root, nodes)))
-            print(
-                backend.decode_list_of_numbers_to_string(
-                    self.eval_lib, root, nodes).encode('utf-8'))
+            # print(
+            #     backend.decode_list_of_numbers_to_string(
+            #         self.eval_lib, root, nodes).encode('utf-8'))
+            raise RuntimeError("stuff")
             print(backend.dump_tree(self.eval_lib, root, nodes))
 
         except RuntimeError as e:

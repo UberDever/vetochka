@@ -1,7 +1,10 @@
 # Define the compiler and flags
 cc = clang
-cflags = -fPIC --std=c99 -Wall -Wextra -O0 -I.
-ldflags = -shared
+
+debugflags = -fsanitize=address,undefined,leak
+cflags = -fPIC --std=c99 -Wall -Wextra -O0 -I. -g $debugflags -fno-omit-frame-pointer
+ldflags = -shared -fPIC
+
 
 # Define the build directory
 builddir = ../build
@@ -16,7 +19,7 @@ rule link
   description = Linking $out
 
 rule link_executable
-  command = $cc $in -L. -L$builddir -levaluate -Wl,-rpath,$builddir -o $out
+  command = $cc $in $debugflags -L. -L$builddir -levaluate -Wl,-rpath,$builddir -Wl,-rpath,. -o $out
   description = Linking executable $out
 
 rule run_test

@@ -7,8 +7,12 @@ typedef size_t uint;
 typedef ssize_t sint;
 typedef uint Node;
 
+#define debug(fmt, ...)                                                        \
+  printf("[%s:%d] " fmt "\n", __FILE__, __LINE__, __VA_ARGS__);
+#define debug_s(s) printf("[%s:%d] " s "\n", __FILE__, __LINE__);
+
 #define NODE_TREE 0
-#define NODE_APP  1
+#define NODE_APP 1
 #define NODE_DATA 2
 
 Node node_new_tree(sint lhs, sint rhs);
@@ -24,3 +28,19 @@ uint node_data(Node node);
 uint node_tag_tree();
 uint node_tag_app();
 uint node_tag_data();
+
+struct EvalState {
+  uint root;
+  uint *nodes;
+  uint nodes_size;
+  uint *stack;
+
+  i8 error_code;
+  char *error;
+};
+
+void init(struct EvalState *state, uint root, const uint *nodes,
+          uint nodes_size);
+uint step(struct EvalState *state);
+uint eval(struct EvalState *state);
+void reset(struct EvalState *state);

@@ -6,9 +6,8 @@
 import os
 import ctypes
 
-from . import make_eval
-
-LIB_PATH = os.path.join(os.path.dirname(__file__), make_eval.TARGET)
+LIB_PATH = os.path.join(os.path.dirname(__file__),
+                        "..", "build", "libevaluate.so")
 if not os.path.exists(LIB_PATH):
     raise ImportError(
         "No C eval library is found, please build it using make_eval\n"
