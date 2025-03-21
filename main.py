@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S PYTHONUNBUFFERED=1 python3
 
 # pylint: disable=missing-module-docstring
 # pylint: disable=missing-class-docstring

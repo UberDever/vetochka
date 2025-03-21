@@ -1,10 +1,12 @@
 #include <assert.h>
+#include <stdarg.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
 
 #include "common.h"
 #include "stb_ds.h"
+#include <unistd.h>
 
 #define ERROR_BUF_SIZE 65536
 static char g_error_buf[ERROR_BUF_SIZE] = {};
@@ -20,6 +22,9 @@ struct EvalState {
   i8 error_code;
   char* error;
 };
+
+#define debug(fmt, ...) printf("[%s:%d] " fmt "\n", __FILE__, __LINE__, __VA_ARGS__);
+#define debug_s(s) printf("[%s:%d] " s "\n", __FILE__, __LINE__);
 
 void reset(struct EvalState* state) {
   state->root = 0;
@@ -45,12 +50,16 @@ struct NodeWithPos {
   sint pos;
 };
 
-static inline struct NodeWithPos fetch_node(const uint* nodes, uint i) {
+static struct NodeWithPos fetch_node(const uint* nodes, uint i) {
   const uint n = nodes[i];
   return (struct NodeWithPos){.node = n, .shift = i, .pos = i};
 }
 
-static inline struct NodeWithPos fetch_lhs(uint* nodes, struct NodeWithPos node) {
+#define NODE_SIZE (sizeof(uint) * 8)
+#define TAG_SIZE  (uint)2
+#define DATA_SIZE ((NODE_SIZE - TAG_SIZE) / 2)
+#define CHILD_MASK (uint)(((uint)1 << DATA_SIZE) - 1)
+static struct NodeWithPos fetch_lhs(uint* nodes, struct NodeWithPos node) {
   const uint shift = node_lhs(node.node);
   if (shift == node_new_invalid()) {
     return (struct NodeWithPos){node_new_invalid(), node_new_invalid(), node_new_invalid()};
@@ -59,7 +68,7 @@ static inline struct NodeWithPos fetch_lhs(uint* nodes, struct NodeWithPos node)
   return (struct NodeWithPos){.node = nodes[i], .shift = shift, .pos = i};
 }
 
-static inline struct NodeWithPos fetch_rhs(uint* nodes, struct NodeWithPos node) {
+static struct NodeWithPos fetch_rhs(uint* nodes, struct NodeWithPos node) {
   const uint shift = node_rhs(node.node);
   if (shift == node_new_invalid()) {
     return (struct NodeWithPos){node_new_invalid(), node_new_invalid(), node_new_invalid()};
@@ -111,12 +120,12 @@ uint step(struct EvalState* state) {
       sint app_pos = stbds_arrlen(state->nodes);
       stbds_arrput(state->nodes, node_new_app(app_pos - y.pos, app_pos - z.pos));
       stbds_arrput(state->stack, app_pos);
-
+    
       const sint app_lhs_pos = app_pos;
       app_pos = stbds_arrlen(state->nodes);
       stbds_arrput(state->nodes, node_new_app(app_pos - x.pos, app_pos - z.pos));
       stbds_arrput(state->stack, app_pos);
-
+    
       const sint app_rhs_pos = app_pos;
       app_pos = stbds_arrlen(state->nodes);
       stbds_arrput(state->nodes, node_new_app(app_pos - app_lhs_pos, app_pos - app_rhs_pos));
@@ -149,6 +158,7 @@ uint step(struct EvalState* state) {
 
 uint eval(struct EvalState* state) {
   uint i = 0;
+
   while (1) {
     if (i >= MAX_ITERS) {
       state->error_code = error_max_iters;

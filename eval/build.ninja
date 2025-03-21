@@ -1,0 +1,40 @@
+# Define the compiler and flags
+cc = clang
+cflags = -fPIC --std=c99 -Wall -Wextra -O0 -I.
+ldflags = -shared
+
+# Define the build directory
+builddir = ../build
+
+# Define the build rules
+rule compile
+  command = $cc $cflags -c $in -o $out
+  description = Compiling $in
+
+rule link
+  command = $cc $ldflags $in -o $out
+  description = Linking $out
+
+rule link_executable
+  command = $cc $in -L. -L$builddir -levaluate -Wl,-rpath,$builddir -o $out
+  description = Linking executable $out
+
+rule run_test
+  command = $builddir/test_runner
+  description = Running tests
+
+# List the build targets
+build $builddir/eval.o: compile eval.c
+build $builddir/node.o: compile node.c
+
+build $builddir/libevaluate.so: link $builddir/eval.o $builddir/node.o
+
+# Test targets
+build $builddir/test_eval.o: compile test_eval.c
+build $builddir/test_runner: link_executable $builddir/test_eval.o $builddir/libevaluate.so
+
+# Run tests
+build test: run_test | $builddir/test_runner
+
+# Default target
+default $builddir/libevaluate.so

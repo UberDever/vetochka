@@ -25,7 +25,7 @@ uint node_tag_data() {
   return NODE_DATA;
 }
 
-inline Node node_new(uint tag, uint lhs, uint rhs) {
+static inline Node node_new(uint tag, uint lhs, uint rhs) {
   Node node = 0;
   node &= ~TAG_MASK;
   node |= (uint)(tag & TAG_MASK);
