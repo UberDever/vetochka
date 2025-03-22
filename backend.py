@@ -10,80 +10,76 @@ NodeData = ctypes.c_size_t
 
 
 class NodeLib:
-    eval_lib: ctypes.CDLL
+    rt_lib: ctypes.CDLL
 
-    def __init__(self, eval_lib):
-        self.eval_lib = eval_lib
-        self.eval_lib.node_new_tree.argtypes = [
-            ctypes.c_size_t, ctypes.c_size_t
-        ]
-        self.eval_lib.node_new_tree.restype = NodeData
-        self.eval_lib.node_new_app.argtypes = [
-            ctypes.c_size_t, ctypes.c_size_t
-        ]
-        self.eval_lib.node_new_app.restype = NodeData
-        self.eval_lib.node_new_data.argtypes = [ctypes.c_size_t]
-        self.eval_lib.node_new_data.restype = NodeData
-        self.eval_lib.node_new_invalid.argtypes = []
-        self.eval_lib.node_new_invalid.restype = NodeData
+    def __init__(self, rt_lib):
+        self.rt_lib = rt_lib
+        self.rt_lib.node_new_tree.argtypes = [ctypes.c_size_t, ctypes.c_size_t]
+        self.rt_lib.node_new_tree.restype = NodeData
+        self.rt_lib.node_new_app.argtypes = [ctypes.c_size_t, ctypes.c_size_t]
+        self.rt_lib.node_new_app.restype = NodeData
+        self.rt_lib.node_new_data.argtypes = [ctypes.c_size_t]
+        self.rt_lib.node_new_data.restype = NodeData
+        self.rt_lib.node_new_invalid.argtypes = []
+        self.rt_lib.node_new_invalid.restype = NodeData
 
-        self.eval_lib.node_tag.argtypes = [NodeData]
-        self.eval_lib.node_tag.restype = ctypes.c_size_t
-        self.eval_lib.node_lhs.argtypes = [NodeData]
-        self.eval_lib.node_lhs.restype = ctypes.c_ssize_t
-        self.eval_lib.node_rhs.argtypes = [NodeData]
-        self.eval_lib.node_rhs.restype = ctypes.c_ssize_t
-        self.eval_lib.node_data.argtypes = [NodeData]
-        self.eval_lib.node_data.restype = ctypes.c_size_t
+        self.rt_lib.node_tag.argtypes = [NodeData]
+        self.rt_lib.node_tag.restype = ctypes.c_size_t
+        self.rt_lib.node_lhs.argtypes = [NodeData]
+        self.rt_lib.node_lhs.restype = ctypes.c_ssize_t
+        self.rt_lib.node_rhs.argtypes = [NodeData]
+        self.rt_lib.node_rhs.restype = ctypes.c_ssize_t
+        self.rt_lib.node_data.argtypes = [NodeData]
+        self.rt_lib.node_data.restype = ctypes.c_size_t
 
-        self.eval_lib.node_tag_tree.argtypes = []
-        self.eval_lib.node_tag_tree.restype = ctypes.c_size_t
-        self.eval_lib.node_tag_app.argtypes = []
-        self.eval_lib.node_tag_app.restype = ctypes.c_size_t
-        self.eval_lib.node_tag_data.argtypes = []
-        self.eval_lib.node_tag_data.restype = ctypes.c_size_t
+        self.rt_lib.node_tag_tree.argtypes = []
+        self.rt_lib.node_tag_tree.restype = ctypes.c_size_t
+        self.rt_lib.node_tag_app.argtypes = []
+        self.rt_lib.node_tag_app.restype = ctypes.c_size_t
+        self.rt_lib.node_tag_data.argtypes = []
+        self.rt_lib.node_tag_data.restype = ctypes.c_size_t
 
     def new_tree(self, lhs=None, rhs=None) -> NodeData:
         lhs = lhs or self.new_invalid()
         rhs = rhs or self.new_invalid()
-        return self.eval_lib.node_new_tree(lhs, rhs)
+        return self.rt_lib.node_new_tree(lhs, rhs)
 
     def new_app(self, lhs, rhs) -> NodeData:
-        return self.eval_lib.node_new_app(lhs, rhs)
+        return self.rt_lib.node_new_app(lhs, rhs)
 
     def new_data(self, data) -> NodeData:
-        return self.eval_lib.node_new_data(data)
+        return self.rt_lib.node_new_data(data)
 
     def new_invalid(self) -> NodeData:
-        return self.eval_lib.node_new_invalid()
+        return self.rt_lib.node_new_invalid()
 
     def tag(self, node: NodeData) -> int:
-        return self.eval_lib.node_tag(node)
+        return self.rt_lib.node_tag(node)
 
     def lhs(self, node: NodeData) -> int:
-        return self.eval_lib.node_lhs(node)
+        return self.rt_lib.node_lhs(node)
 
     def rhs(self, node: NodeData) -> int:
-        return self.eval_lib.node_rhs(node)
+        return self.rt_lib.node_rhs(node)
 
     def data(self, node: NodeData) -> int:
-        return self.eval_lib.node_data(node)
+        return self.rt_lib.node_data(node)
 
     def tag_tree(self) -> int:
-        return self.eval_lib.node_tag_tree()
+        return self.rt_lib.node_tag_tree()
 
     def tag_app(self) -> int:
-        return self.eval_lib.node_tag_app()
+        return self.rt_lib.node_tag_app()
 
     def tag_data(self) -> int:
-        return self.eval_lib.node_tag_data()
+        return self.rt_lib.node_tag_data()
 
     # NOTE: Should also add is_leaf etc...
 
 
 def encode_pure_tree(root: parser.Node | None,
-                     eval_lib: ctypes.CDLL) -> (int, [NodeLib]):
-    node_lib = NodeLib(eval_lib)
+                     rt_lib: ctypes.CDLL) -> (int, [NodeLib]):
+    node_lib = NodeLib(rt_lib)
     nodes: list[int] = []
     if root is None:
         return 0, nodes
@@ -126,7 +122,7 @@ def encode_pure_tree(root: parser.Node | None,
 # NOTE: better use this for very small numbers (< 255)
 # , to be able to represent a byte
 # Then, we can use a list to represent true list of bytes in tree-calculus
-def decode_list_to_number(eval_lib, root: int, tree: list[int]) -> int:
+def decode_list_to_number(rt_lib, root: int, tree: list[int]) -> int:
     """
     Do conversion with the following equations
     ^ = 0 as base, ^(base) = base + 1
@@ -135,7 +131,7 @@ def decode_list_to_number(eval_lib, root: int, tree: list[int]) -> int:
     Function returns a bytearray to be interpret further
     """
 
-    node_lib = NodeLib(eval_lib)
+    node_lib = NodeLib(rt_lib)
 
     cur = root
     i = 0
@@ -156,7 +152,7 @@ def decode_list_to_number(eval_lib, root: int, tree: list[int]) -> int:
 
 # NOTE: enforce value structure as a tree
 # filled from left to right
-def decode_tree_to_number(eval_lib, root: int, tree: list[int]) -> int:
+def decode_tree_to_number(rt_lib, root: int, tree: list[int]) -> int:
     """
     This encoding is much more efficient in terms of space, we define:
     0 = ^
@@ -166,7 +162,7 @@ def decode_tree_to_number(eval_lib, root: int, tree: list[int]) -> int:
     and so on...
     Basically, we exploit node saturation to maximum
     """
-    node_lib = NodeLib(eval_lib)
+    node_lib = NodeLib(rt_lib)
     to_visit = [root]
     i = 0
     while True:
@@ -187,13 +183,13 @@ def decode_tree_to_number(eval_lib, root: int, tree: list[int]) -> int:
     return i
 
 
-def decode_list_of_numbers_to_string(eval_lib, root: int,
+def decode_list_of_numbers_to_string(rt_lib, root: int,
                                      tree: list[int]) -> str:
     """
     This function decodes list of numbers (considered as bytes)
     to utf-8 encoded string
     """
-    node_lib = NodeLib(eval_lib)
+    node_lib = NodeLib(rt_lib)
     string = bytearray()
     cur = root
     while True:
@@ -205,14 +201,14 @@ def decode_list_of_numbers_to_string(eval_lib, root: int,
         if tail_i == node_lib.new_invalid(
         ) and value_i == node_lib.new_invalid():
             break
-        number = decode_tree_to_number(eval_lib, value_i, tree)
+        number = decode_tree_to_number(rt_lib, value_i, tree)
         string.append(number)
         cur += tail_i
     return string.decode(encoding='utf-8')
 
 
-def dump_tree(eval_lib, root: int, tree: list[int]) -> str:
-    node_lib = NodeLib(eval_lib)
+def dump_tree(rt_lib, root: int, tree: list[int]) -> str:
+    node_lib = NodeLib(rt_lib)
     invalid = node_lib.new_invalid()
     lines = []
 

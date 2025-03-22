@@ -29,18 +29,12 @@ uint node_tag_tree();
 uint node_tag_app();
 uint node_tag_data();
 
-struct EvalState {
-  uint root;
-  uint *nodes;
-  uint nodes_size;
-  uint *stack;
+typedef struct EvalState_s* EvalState;
 
-  i8 error_code;
-  char *error;
-};
-
-void init(struct EvalState *state, uint root, const uint *nodes,
+uint eval_init(EvalState* state, uint root, const uint *nodes,
           uint nodes_size);
-uint step(struct EvalState *state);
-uint eval(struct EvalState *state);
-void reset(struct EvalState *state);
+uint eval_free(EvalState* state);
+
+uint eval_step(EvalState state);
+uint eval_eval(EvalState state);
+uint eval_get_error(EvalState state, uint* code, char** error);

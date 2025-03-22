@@ -1,43 +1,50 @@
-# Define the compiler and flags
+ninja_required_version = 1.12
+
 cc = clang
-
-debugflags = -fsanitize=address,undefined,leak
-cflags = -fPIC --std=c99 -Wall -Wextra -O0 -I. -g $debugflags -fno-omit-frame-pointer
-ldflags = -shared -fPIC
-
+cflags = -fPIC --std=c99 -Wall -Wextra -I.
+extraflags = -g -fsanitize=address,undefined,leak -fno-omit-frame-pointer -O0
 
 # Define the build directory
 builddir = ../build
 
 # Define the build rules
 rule compile
-  command = $cc $cflags -c $in -o $out
+  command = $cc $cflags $extraflags -c $in -o $out
   description = Compiling $in
 
-rule link
-  command = $cc $ldflags $in -o $out
+rule link_lib
+  command = $cc -fPIC -shared $extraflags $in -o $out
   description = Linking $out
 
-rule link_executable
-  command = $cc $in $debugflags -L. -L$builddir -levaluate -Wl,-rpath,$builddir -Wl,-rpath,. -o $out
+rule link_exe
+  command = $cc $in $extraflags -L. -L$builddir -l$lib_name -Wl,-rpath,$builddir -Wl,-rpath,. -o $out
   description = Linking executable $out
 
 rule run_test
   command = $builddir/test_runner
   description = Running tests
 
-# List the build targets
-build $builddir/eval.o: compile eval.c
-build $builddir/node.o: compile node.c
+# Objects
+build $builddir/eval-release.o: compile eval.c
+    extraflags =
+build $builddir/node-release.o: compile node.c
+    extraflags =
+build $builddir/eval-sanitize.o: compile eval.c
+build $builddir/node-sanitize.o: compile node.c
 
-build $builddir/libevaluate.so: link $builddir/eval.o $builddir/node.o
+# Libs
+build $builddir/libeval-release.so: link_lib $builddir/eval-release.o $builddir/node-release.o
+    extraflags =
+build $builddir/libeval-sanitize.so: link_lib $builddir/eval-sanitize.o $builddir/node-sanitize.o
 
-# Test targets
+# Testing
 build $builddir/test_eval.o: compile test_eval.c
-build $builddir/test_runner: link_executable $builddir/test_eval.o $builddir/libevaluate.so
+build $builddir/test_runner: link_exe $builddir/test_eval.o $builddir/libeval-sanitize.so
+    lib_name = eval-sanitize
 
-# Run tests
 build test: run_test | $builddir/test_runner
 
+build lib: phony $builddir/libeval-release.so
+
 # Default target
-default $builddir/libevaluate.so
+default lib

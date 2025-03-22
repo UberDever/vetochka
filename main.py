@@ -21,7 +21,7 @@ class REPL(Cmd):
 
     def __init__(self):
         super().__init__()
-        self.eval_lib = eval.load_eval_lib()
+        self.rt_lib = eval.load_rt_lib()
 
     def exit_impl(self, _):
         "Exit the repl"
@@ -34,14 +34,15 @@ class REPL(Cmd):
         return self.exit_impl(_)
 
     def default(self, line):
-        evaluator = eval.Evaluator(self.eval_lib)
+        raise RuntimeError("this should be updated after the refactoring")
+        evaluator = eval.Evaluator(self.rt_lib)
         try:
             tokens = tokenizer.tokenize(line)
             p = parser.Parser()
             tree = p.parse(tokens)
             tree = parser.strip(parser.saturate(tree))
             encoded_root, encoded_nodes = backend.encode_pure_tree(
-                tree, self.eval_lib)
+                tree, self.rt_lib)
             evaluator.set_tree(encoded_root, encoded_nodes)
             evaluator.evaluate()
             if err := evaluator.get_error():
@@ -56,8 +57,7 @@ class REPL(Cmd):
             # print(
             #     backend.decode_list_of_numbers_to_string(
             #         self.eval_lib, root, nodes).encode('utf-8'))
-            raise RuntimeError("stuff")
-            print(backend.dump_tree(self.eval_lib, root, nodes))
+            print(backend.dump_tree(self.rt_lib, root, nodes))
 
         except RuntimeError as e:
             print(e)
@@ -96,13 +96,12 @@ def main():
         if args.parse:
             pprint.pprint(tree)
             return
-        eval_lib = eval.load_eval_lib()
-        encoded_root, encoded_nodes = backend.encode_pure_tree(tree, eval_lib)
-        evaluator = eval.Evaluator(eval_lib)
-        evaluator.set_tree(encoded_root, encoded_nodes)
-        evaluator.evaluate()
-        if err := evaluator.get_error():
-            print(err)
+        rt_lib = eval.load_rt_lib()
+        encoded_root, encoded_nodes = backend.encode_pure_tree(tree, rt_lib)
+        with eval.Evaluator(rt_lib, encoded_root, encoded_nodes) as evaluator:
+            evaluator.evaluate()
+            if err := evaluator.get_error():
+                print(err)
 
 
 if __name__ == "__main__":
