@@ -1,4 +1,4 @@
-ninja_required_version = 1.12
+ninja_required_version = 1.10
 
 cc = clang
 cflags = -fPIC --std=c99 -Wall -Wextra -I.
@@ -29,13 +29,17 @@ build $builddir/eval-release.o: compile eval.c
     extraflags =
 build $builddir/node-release.o: compile node.c
     extraflags =
+build $builddir/memory-release.o: compile memory.c
+    extraflags =
+
 build $builddir/eval-sanitize.o: compile eval.c
 build $builddir/node-sanitize.o: compile node.c
+build $builddir/memory-sanitize.o: compile memory.c
 
 # Libs
-build $builddir/libeval-release.so: link_lib $builddir/eval-release.o $builddir/node-release.o
+build $builddir/libeval-release.so: link_lib $builddir/eval-release.o $builddir/node-release.o $builddir/memory-release.o
     extraflags =
-build $builddir/libeval-sanitize.so: link_lib $builddir/eval-sanitize.o $builddir/node-sanitize.o
+build $builddir/libeval-sanitize.so: link_lib $builddir/eval-sanitize.o $builddir/node-sanitize.o $builddir/memory-sanitize.o
 
 # Testing
 build $builddir/test_eval.o: compile test_eval.c

@@ -38,3 +38,9 @@ uint eval_free(EvalState* state);
 uint eval_step(EvalState state);
 uint eval_eval(EvalState state);
 uint eval_get_error(EvalState state, uint* code, char** error);
+
+typedef struct Memory_impl* Memory;
+uint eval_memory_init(Memory* arena, uint num_cells);
+uint eval_memory_free(Memory* arena);
+uint eval_memory_set_cell(Memory arena, uint index, uint value);
+uint eval_memory_get_cell(Memory arena, uint index);

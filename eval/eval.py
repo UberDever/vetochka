@@ -30,7 +30,7 @@ class EvalLib:
             ctypes.POINTER(ctypes.c_size_t), ctypes.c_size_t
         ]
         self.rt_lib.eval_init.restype = ctypes.c_size_t
-        self.rt_lib.eval_free.argtypes = [EvalState]
+        self.rt_lib.eval_free.argtypes = [ctypes.POINTER(EvalState)]
         self.rt_lib.eval_free.restype = ctypes.c_size_t
         self.rt_lib.eval_eval.argtypes = [EvalState]
         self.rt_lib.eval_eval.restype = ctypes.c_size_t
