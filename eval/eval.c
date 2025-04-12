@@ -12,7 +12,7 @@ static char g_error_buf[ERROR_BUF_SIZE] = {};
 
 enum error_t { error_max_iters = 1 };
 
-struct EvalState_s {
+struct EvalState_impl {
   uint root;
   uint *nodes;
   uint nodes_size;
@@ -23,10 +23,10 @@ struct EvalState_s {
 };
 
 // TODO: error checking
-uint eval_init(struct EvalState_s **state, uint root, const uint *nodes,
-          uint nodes_size) {
-  *state = malloc(sizeof(struct EvalState_s));
-  memset(*state, 0, sizeof(struct EvalState_s));
+uint eval_init(struct EvalState_impl **state, uint root, const uint *nodes,
+               uint nodes_size) {
+  *state = malloc(sizeof(struct EvalState_impl));
+  memset(*state, 0, sizeof(struct EvalState_impl));
   (*state)->root = root;
   (*state)->nodes_size = nodes_size;
   for (uint i = 0; i < nodes_size; ++i) {
@@ -75,7 +75,7 @@ static struct NodeWithPos fetch_rhs(uint *nodes, struct NodeWithPos node) {
   return (struct NodeWithPos){.node = nodes[i], .shift = shift, .pos = i};
 }
 
-uint eval_step(struct EvalState_s *state) {
+uint eval_step(struct EvalState_impl *state) {
   const uint root_pos = stbds_arrpop(state->stack);
   const struct NodeWithPos root = fetch_node(state->nodes, root_pos);
   if (node_tag(root.node) == NODE_APP) {
@@ -159,7 +159,7 @@ uint eval_step(struct EvalState_s *state) {
 
 #define MAX_ITERS (uint)65535
 
-uint eval_eval(struct EvalState_s *state) {
+uint eval_eval(struct EvalState_impl *state) {
   uint i = 0;
   return 0;
 
@@ -187,8 +187,8 @@ uint eval_eval(struct EvalState_s *state) {
   return 0;
 }
 
-uint eval_get_error(EvalState state, uint* code, char** error) {
-    *code = state->error_code;
-    *error = state->error;
-    return 0;
+uint eval_get_error(EvalState state, uint *code, char **error) {
+  *code = state->error_code;
+  *error = state->error;
+  return 0;
 }
