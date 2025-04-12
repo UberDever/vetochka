@@ -39,8 +39,25 @@ uint eval_step(EvalState state);
 uint eval_eval(EvalState state);
 uint eval_get_error(EvalState state, uint* code, char** error);
 
-typedef struct Memory_impl* Memory;
-uint eval_memory_init(Memory* arena, uint num_cells);
-uint eval_memory_free(Memory* arena);
-uint eval_memory_set_cell(Memory arena, uint index, uint value);
-uint eval_memory_get_cell(Memory arena, uint index);
+typedef uint64_t word_t;
+typedef struct {
+  word_t *pool;               // Array of 64-bit words
+  size_t total_words;         // Number of 64-bit words in the pool
+  uint64_t *word_type_bitmap; // Bitmap: 0 = word used for cells, 1 = used for a
+                              // data word
+  size_t word_type_bitmap_size; // Number of uint64_t in word_type_bitmap
+  uint64_t *cell_bitmap; // Bitmap: allocation status of each cell (total_words
+                         // * 32 bits)
+  size_t cell_bitmap_size; // Number of uint64_t in cell_bitmap
+} Allocator;
+
+
+void allocator_init(Allocator *allocator, size_t initial_words);
+void allocator_destroy(Allocator *allocator);
+uint allocator_allocate(Allocator *allocator, uint type);
+uint allocator_next_cell(Allocator *allocator, uint index);
+uint allocator_next_word(Allocator *allocator, uint index);
+uint allocator_free(Allocator *allocator, uint index);
+uint allocator_get(Allocator *allocator, uint index);
+uint allocator_set(Allocator *allocator, uint index, uint value);
+uint allocator_is_set(Allocator *allocator, uint index);
