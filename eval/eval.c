@@ -1,7 +1,8 @@
-#if 0
+
 
 #include <assert.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
 
@@ -12,7 +13,133 @@
 #define ERROR_BUF_SIZE 65536
 static char g_error_buf[ERROR_BUF_SIZE] = {};
 
-enum error_t { error_max_iters = 1 };
+#define ERROR_PARSE 1
+#define ERROR_STACK_UNDERFLOW 2
+#define ERROR_GENERIC 127
+
+#define EVAL_TAG_NUMBER 0
+#define EVAL_TAG_INDEX 1
+
+struct EvalState_impl {
+  Allocator cells;
+  size_t *stack;
+
+  int8_t error_code;
+  const char *error;
+};
+
+uint eval_init(EvalState *state, const char *program) {
+  EvalState s = calloc(1, sizeof(struct EvalState_impl));
+  if (s == NULL) {
+    return ERROR_VALUE;
+  }
+  s->error = g_error_buf;
+
+  uint res = eval_cells_init(&s->cells, 4);
+  if (res == ERROR_VALUE) {
+    return res;
+  }
+  res = eval_encode_parse(s->cells, program);
+  if (res == ERROR_VALUE) {
+    s->error_code = ERROR_PARSE;
+    sprintf(g_error_buf, "failed to parse %s", program);
+    return res;
+  }
+  stbds_arrput(s->stack, 0);
+  *state = s;
+  return 0;
+}
+
+uint eval_free(EvalState *state) {
+  EvalState s = *state;
+  eval_cells_free(&s->cells);
+  free(s);
+  *state = NULL;
+  return 0;
+}
+
+typedef enum {
+  deref_error,
+  deref_unchanged,
+  deref_changed,
+} deref_t;
+
+static deref_t deref(Allocator cells, size_t *root, uint8_t root_cell) {
+  if (root_cell != EVAL_NATIVE) {
+    return deref_unchanged;
+  }
+
+  word_t word = eval_cells_get_word(cells, *root);
+  uint8_t tag = GET_TAG(word);
+  if (tag != EVAL_TAG_INDEX) {
+    return deref_error;
+  }
+  *root = GET_PAYLOAD(word);
+  return deref_changed;
+}
+
+static uint first_rule(EvalState state, uint root, bool *matched) {
+  uint root_cell = eval_cells_get(state->cells, root);
+  if (root_cell != EVAL_TREE) {
+    return 0;
+  }
+  root++;
+  // TODO: we need while here to dereference N references
+  // and we also need cycle detection :|
+  // deref_t deref_result = deref(state->cells, &root, root_cell);
+  // if (deref_result == deref_error) {
+  //   state->error_code = ERROR_GENERIC;
+  //   g_error_buf[0] = '\0';
+  //   return ERROR_VALUE;
+  // }
+  
+
+  *matched = true;
+  return 1;
+}
+
+uint eval_step(EvalState state, bool *matched) {
+  if (stbds_arrlenu(state->stack) == 0) {
+    state->error_code = ERROR_STACK_UNDERFLOW;
+    g_error_buf[0] = '\0';
+    return ERROR_VALUE;
+  }
+  size_t root = stbds_arrpop(state->stack);
+  uint root_cell = eval_cells_get(state->cells, root);
+  if (root_cell == ERROR_VALUE) {
+    state->error_code = ERROR_GENERIC;
+    g_error_buf[0] = '\0';
+    return ERROR_VALUE;
+  }
+  if (root_cell != EVAL_APPLY) {
+    return 0;
+  }
+
+  uint next_node = root + 1;
+  deref_t deref_result = deref(state->cells, &next_node, root_cell);
+  if (deref_result == deref_error) {
+    state->error_code = ERROR_GENERIC;
+    sprintf(g_error_buf, "cannot apply to a value [%zu] %zu", root,
+            eval_cells_get_word(state->cells, next_node));
+    return ERROR_VALUE;
+  }
+  if (deref_result == deref_changed) {
+    stbds_arrput(state->stack, next_node);
+    next_node = eval_step(state, matched);
+    stbds_arrput(state->stack, next_node);
+    return next_node;
+  }
+
+  uint subtree_len = 0;
+  subtree_len = first_rule(state, next_node, matched);
+  if (*matched) {
+    return subtree_len;
+  }
+
+  return 1;
+}
+
+#if 0
 
 struct EvalState_impl {
   uint root;

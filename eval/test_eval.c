@@ -129,9 +129,10 @@ bool test_encode_parse_smoke() {
     while (eval_cells_is_set(cells, j)) {
       uint8_t cell = eval_cells_get(cells, j);
       printf("%hhu ", cell);
-      if (cell == ENCODE_NATIVE) {
+      if (cell == EVAL_NATIVE) {
         word_t word = eval_cells_get_word(cells, j);
-        printf("[%zu] ", word);
+        word_t payload = GET_PAYLOAD(word);
+        printf("[%zu] ", payload);
       }
       j++;
     }

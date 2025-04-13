@@ -1,12 +1,13 @@
 #ifndef __EVAL_COMMON__
 #define __EVAL_COMMON__
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <sys/types.h>
 
-typedef int8_t i8;
 typedef size_t uint;
+#define ERROR_VALUE (uint)(-1)
 
 #define debug(fmt, ...)                                                        \
   printf("[%s:%d] " fmt "\n", __FILE__, __LINE__, __VA_ARGS__);
@@ -37,6 +38,23 @@ uint eval_eval(EvalState state);
 uint eval_get_error(EvalState state, uint *code, char **error);
 #endif
 
+#define GET_TAG(integer) ((uint8_t)((integer) & 0xFF))
+#define GET_PAYLOAD(integer) ((integer) >> 8)
+#define SET_TAG(integer, tag)                                                  \
+  (((integer) & ~((uint64_t)0xFF)) | ((uint64_t)(tag) & 0xFF))
+#define SET_PAYLOAD(integer, payload) (((payload) << 8) | ((integer) & 0xFF))
+
+#define EVAL_NIL 0
+#define EVAL_TREE 1
+#define EVAL_APPLY 2
+#define EVAL_NATIVE 3
+
+typedef struct EvalState_impl *EvalState;
+
+uint eval_init(EvalState *state, const char *program);
+uint eval_free(EvalState *state);
+uint eval_step(EvalState state, bool *matched);
+
 typedef struct Allocator_impl *Allocator;
 typedef uint64_t word_t;
 
@@ -48,11 +66,6 @@ uint eval_cells_set(Allocator cells, size_t index, uint8_t value);
 uint eval_cells_set_word(Allocator cells, size_t index, word_t value);
 uint eval_cells_is_set(Allocator cells, size_t index);
 uint eval_cells_clear(Allocator cells);
-
-#define ENCODE_NIL 0
-#define ENCODE_TREE 1
-#define ENCODE_APPLY 2
-#define ENCODE_NATIVE 3
 
 uint eval_encode_parse(Allocator cells, const char *program);
 

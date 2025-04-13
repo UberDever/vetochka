@@ -4,10 +4,10 @@
 #include <string.h>
 
 static int ENCODE_MAP[] = {
-    ['*'] = ENCODE_NIL,
-    ['^'] = ENCODE_TREE,
-    ['$'] = ENCODE_APPLY,
-    ['#'] = ENCODE_NATIVE,
+    ['*'] = EVAL_NIL,
+    ['^'] = EVAL_TREE,
+    ['$'] = EVAL_APPLY,
+    ['#'] = EVAL_NATIVE,
 };
 
 static bool char_is_node(char c) {
@@ -47,8 +47,9 @@ uint eval_encode_parse(Allocator cells, const char *program) {
         goto cleanup;
       }
       uint8_t node = eval_cells_get(cells, index - 1);
-      if (node == ENCODE_NATIVE) {
-        uint res = eval_cells_set_word(cells, index - 1, value);
+      if (node == EVAL_NATIVE) {
+        uint64_t val = SET_PAYLOAD(0, value);
+        uint res = eval_cells_set_word(cells, index - 1, val);
         if (res == (uint)-1) {
           result = -1;
           goto cleanup;

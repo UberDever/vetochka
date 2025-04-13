@@ -12,7 +12,7 @@
 #define CELLS_BITMAP_SIZE(cap)                                                 \
   ((cap * CELLS_PER_WORD + BITS_PER_WORD - 1) / BITS_PER_WORD)
 
-#define ERROR_VALUE (uint) - 1
+
 
 typedef struct {
   size_t key;
