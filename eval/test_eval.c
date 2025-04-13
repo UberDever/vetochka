@@ -110,8 +110,9 @@ bool test_encode_parse_smoke() {
   bool result = true;
 
   const char *programs[] = {
-      "$ ^ ^** ^** ^**", // ^ ^ ^ ^
-      "# 10",            // 10
+      "$ ^ ^** ^** ^**",             // ^ ^ ^ ^
+      "# 10 *",                      // 10
+      "$ ^ ^ ^** * # 10 * # 12345 *" // ^ (^ ^) 10 12345
   };
 
   Allocator cells;
@@ -120,9 +121,21 @@ bool test_encode_parse_smoke() {
     eval_cells_clear(cells);
     uint res = eval_encode_parse(cells, programs[i]);
     if (res != 0) {
+      sprintf(g_error_buf, "failed to parse %s", programs[i]);
       result = false;
       goto cleanup;
     }
+    size_t j = 0;
+    while (eval_cells_is_set(cells, j)) {
+      uint8_t cell = eval_cells_get(cells, j);
+      printf("%hhu ", cell);
+      if (cell == ENCODE_NATIVE) {
+        word_t word = eval_cells_get_word(cells, j);
+        printf("[%zu] ", word);
+      }
+      j++;
+    }
+    printf("\n");
   }
 
 cleanup:

@@ -35,7 +35,7 @@ uint eval_encode_parse(Allocator cells, const char *program) {
         }
       }
     } else {
-      char *endptr;
+      char *endptr = NULL;
       unsigned long long value = strtoull(token, &endptr, 10);
       if (*endptr != '\0') {
         result = -1;
