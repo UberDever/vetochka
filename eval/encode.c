@@ -36,6 +36,11 @@ uint eval_encode_parse(Allocator cells, const char *program) {
       }
     } else {
       char *endptr = NULL;
+      bool is_index = false;
+      if (token[0] == '!') {
+        is_index = true;
+        token++;
+      }
       unsigned long long value = strtoull(token, &endptr, 10);
       if (*endptr != '\0') {
         result = -1;
@@ -49,6 +54,9 @@ uint eval_encode_parse(Allocator cells, const char *program) {
       uint8_t node = eval_cells_get(cells, index - 1);
       if (node == EVAL_NATIVE) {
         uint64_t val = SET_PAYLOAD(0, value);
+        if (is_index) {
+          val = SET_TAG(val, EVAL_TAG_INDEX);
+        }
         uint res = eval_cells_set_word(cells, index - 1, val);
         if (res == (uint)-1) {
           result = -1;

@@ -13,11 +13,10 @@
     goto cleanup;                                                              \
   }
 
-uint g_test_error = 0;
 #define ERROR_BUF_SIZE 65536
 static char g_error_buf[ERROR_BUF_SIZE] = {};
 
-bool test_memory_smoke() {
+bool test_memory_smoke(void *_) {
   bool result = true;
 
   Allocator cells;
@@ -53,7 +52,7 @@ typedef struct {
   test_memory_many_cells_entry value;
 } test_memory_many_cells_set_cells;
 
-bool test_memory_many_cells() {
+bool test_memory_many_cells(void *_) {
   bool result = true;
 
   Allocator cells;
@@ -106,7 +105,7 @@ cleanup:
   return result;
 }
 
-bool test_encode_parse_smoke() {
+bool test_encode_parse_smoke(void *_) {
   bool result = true;
 
   const char *programs[] = {
@@ -144,21 +143,128 @@ cleanup:
   return result;
 }
 
-#define ADD_TEST(test)                                                         \
+bool compare_trees(Allocator lhs, Allocator rhs, size_t lhs_root,
+                   size_t rhs_root) {
+  uint lhs_cell = eval_cells_get(lhs, lhs_root);
+  if (lhs_cell == ERROR_VALUE) {
+    sprintf(g_error_buf, "invalid cell [%zu] %zu", lhs_root, lhs_cell);
+    return false;
+  }
+  uint rhs_cell = eval_cells_get(rhs, rhs_root);
+  if (rhs_cell == ERROR_VALUE) {
+    sprintf(g_error_buf, "invalid cell [%zu] %zu", rhs_root, rhs_cell);
+    return false;
+  }
+  if (lhs_cell != rhs_cell) {
+    sprintf(g_error_buf, "cells differ at [%zu] [%zu] %zu != %zu", lhs_root,
+            rhs_root, lhs_cell, rhs_cell);
+    return false;
+  }
+  if (lhs_cell == EVAL_NATIVE) {
+    word_t lhs_word = eval_cells_get_word(lhs, lhs_root);
+    if (lhs_word == ERROR_VALUE) {
+      sprintf(g_error_buf, "invalid value [%zu] %zu", lhs_root, lhs_word);
+      return false;
+    }
+    word_t rhs_word = eval_cells_get_word(rhs, rhs_root);
+    if (rhs_word == ERROR_VALUE) {
+      sprintf(g_error_buf, "invalid value [%zu] %zu", rhs_root, rhs_word);
+      return false;
+    }
+    if (lhs_word != rhs_word) {
+      sprintf(g_error_buf, "words differ at [%zu] [%zu] %zu != %zu", lhs_root,
+              rhs_root, lhs_word, rhs_word);
+      return false;
+    }
+  }
+
+  if (lhs_cell != EVAL_NIL) {
+    bool result = false;
+    result |= compare_trees(lhs, rhs, lhs_root + 1, rhs_root + 1);
+    if (!result) {
+      return result;
+    }
+    result |= compare_trees(lhs, rhs, lhs_root + 2, rhs_root + 2);
+    if (!result) {
+      return result;
+    }
+  }
+  return true;
+}
+
+bool compare_results(Allocator lhs, size_t lhs_root, const char *expected) {
+  bool result = true;
+  Allocator rhs = NULL;
+  eval_cells_init(&rhs, 4);
+  uint res = eval_encode_parse(rhs, expected);
+  if (res != 0) {
+    sprintf(g_error_buf, "failed to parse %s", expected);
+    result = false;
+    goto cleanup;
+  }
+  if (!compare_trees(lhs, rhs, lhs_root, 0)) {
+    result = false;
+    goto cleanup;
+  }
+
+cleanup:
+  eval_cells_free(&rhs);
+  return result;
+}
+
+typedef struct {
+  const char *program;
+  const char *expected;
+} test_eval_data;
+
+bool test_eval_first_rule(void *data_ptr) {
+  bool result = true;
+  test_eval_data *data = data_ptr;
+  EvalState state = NULL;
+  const char *program = data->program;
+  eval_init(&state, program);
+  bool matched = false;
+  uint new_root = eval_step(state, &matched);
+  if (new_root == ERROR_VALUE || !matched) {
+    result = false;
+    sprintf(g_error_buf, "failed to step for program '%s'", program);
+    goto cleanup;
+  }
+
+  Allocator cells = eval_get_memory(state);
+  result = compare_results(cells, new_root, data->expected);
+
+cleanup:
+  eval_free(&state);
+  return result;
+}
+
+#define ADD_TEST(test, datum)                                                  \
   stbds_arrput(tests, test);                                                   \
-  stbds_arrput(names, #test);
+  stbds_arrput(names, #test " $ " #datum);                                     \
+  stbds_arrput(data, datum);
 
 int main() {
-  bool (**tests)() = NULL;
+  bool (**tests)(void *) = NULL;
   const char **names = NULL;
-  ADD_TEST(test_memory_smoke);
-  ADD_TEST(test_memory_many_cells);
-  ADD_TEST(test_encode_parse_smoke);
+  void **data = NULL;
+  ADD_TEST(test_memory_smoke, NULL);
+  ADD_TEST(test_memory_many_cells, NULL);
+  ADD_TEST(test_encode_parse_smoke, NULL);
+
+  test_eval_data test_eval_first_rule_datum1 = {.program = "$ ^ ^** ^** ^**",
+                                                .expected = "^**"};
+  ADD_TEST(test_eval_first_rule, &test_eval_first_rule_datum1);
+  test_eval_data test_eval_first_rule_datum2 = {.program = "$ ^ ^** # 10 * *",
+                                                .expected = "# 10 *"};
+  ADD_TEST(test_eval_first_rule, &test_eval_first_rule_datum2);
+  test_eval_data test_eval_first_rule_datum3 = {
+      .program = "$ # !2 * ^ ^** # 10 * *", .expected = "# 10 *"};
+  ADD_TEST(test_eval_first_rule, &test_eval_first_rule_datum3);
 
   for (int i = 0; i < stbds_arrlen(tests); i++) {
-    g_test_error = 0; // Reset before each test
     g_error_buf[0] = '\0';
-    if (tests[i]()) {
+    if (tests[i](data[i])) {
       printf("%s: PASSED\n", names[i]);
     } else {
       printf("%s: FAILED Error: %s\n", names[i], g_error_buf);
@@ -167,5 +273,6 @@ int main() {
 
   stbds_arrfree(tests);
   stbds_arrfree(names);
+  stbds_arrfree(data);
   return 0;
 }

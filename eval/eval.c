@@ -17,9 +17,6 @@ static char g_error_buf[ERROR_BUF_SIZE] = {};
 #define ERROR_STACK_UNDERFLOW 2
 #define ERROR_GENERIC 127
 
-#define EVAL_TAG_NUMBER 0
-#define EVAL_TAG_INDEX 1
-
 struct EvalState_impl {
   Allocator cells;
   size_t *stack;
@@ -53,6 +50,7 @@ uint eval_init(EvalState *state, const char *program) {
 uint eval_free(EvalState *state) {
   EvalState s = *state;
   eval_cells_free(&s->cells);
+  stbds_arrfree(s->stack);
   free(s);
   *state = NULL;
   return 0;
@@ -74,30 +72,38 @@ static deref_t deref(Allocator cells, size_t *root, uint8_t root_cell) {
   if (tag != EVAL_TAG_INDEX) {
     return deref_error;
   }
-  *root = GET_PAYLOAD(word);
+  *root += GET_PAYLOAD(word);
   return deref_changed;
 }
 
+// $ ^ ^** X Y -> X
 static uint first_rule(EvalState state, uint root, bool *matched) {
   uint root_cell = eval_cells_get(state->cells, root);
   if (root_cell != EVAL_TREE) {
     return 0;
   }
   root++;
-  // TODO: we need while here to dereference N references
-  // and we also need cycle detection :|
-  // deref_t deref_result = deref(state->cells, &root, root_cell);
-  // if (deref_result == deref_error) {
-  //   state->error_code = ERROR_GENERIC;
-  //   g_error_buf[0] = '\0';
-  //   return ERROR_VALUE;
-  // }
-  
+  deref_t deref_result = deref(state->cells, &root, root_cell);
+  if (deref_result == deref_error) {
+    state->error_code = ERROR_GENERIC;
+    g_error_buf[0] = '\0';
+    return ERROR_VALUE;
+  }
+  root_cell = eval_cells_get(state->cells, root++);
+  assert(root_cell == EVAL_TREE);
+  root_cell = eval_cells_get(state->cells, root++);
+  if (root_cell != EVAL_NIL) {
+    return 0;
+  }
+  root_cell = eval_cells_get(state->cells, root++);
+  assert(root_cell == EVAL_NIL);
+  stbds_arrput(state->stack, root);
 
   *matched = true;
-  return 1;
+  return root;
 }
 
+// NOTE: references are second class, we can't have references to references!
 uint eval_step(EvalState state, bool *matched) {
   if (stbds_arrlenu(state->stack) == 0) {
     state->error_code = ERROR_STACK_UNDERFLOW;
@@ -112,11 +118,12 @@ uint eval_step(EvalState state, bool *matched) {
     return ERROR_VALUE;
   }
   if (root_cell != EVAL_APPLY) {
-    return 0;
+    return root;
   }
 
   uint next_node = root + 1;
-  deref_t deref_result = deref(state->cells, &next_node, root_cell);
+  uint next_cell = eval_cells_get(state->cells, next_node);
+  deref_t deref_result = deref(state->cells, &next_node, next_cell);
   if (deref_result == deref_error) {
     state->error_code = ERROR_GENERIC;
     sprintf(g_error_buf, "cannot apply to a value [%zu] %zu", root,
@@ -138,6 +145,8 @@ uint eval_step(EvalState state, bool *matched) {
 
   return 1;
 }
+
+Allocator eval_get_memory(EvalState state) { return state->cells; }
 
 #if 0
 

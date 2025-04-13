@@ -49,14 +49,17 @@ uint eval_get_error(EvalState state, uint *code, char **error);
 #define EVAL_APPLY 2
 #define EVAL_NATIVE 3
 
+#define EVAL_TAG_NUMBER 0
+#define EVAL_TAG_INDEX 1
+
 typedef struct EvalState_impl *EvalState;
+typedef struct Allocator_impl *Allocator;
+typedef uint64_t word_t;
 
 uint eval_init(EvalState *state, const char *program);
 uint eval_free(EvalState *state);
 uint eval_step(EvalState state, bool *matched);
-
-typedef struct Allocator_impl *Allocator;
-typedef uint64_t word_t;
+Allocator eval_get_memory(EvalState state);
 
 uint eval_cells_init(Allocator *cells, size_t words_count);
 uint eval_cells_free(Allocator *cells);
