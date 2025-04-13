@@ -1,30 +1,38 @@
 #include "common.h"
+#include "stb_ds.h"
+
 #include <stdlib.h>
 #include <string.h>
 
-// Define cell and word sizes in bits
-#define CELL_SIZE 2
-#define WORD_SIZE (sizeof(word_t) * 8)
-#define CELLS_IN_WORD (WORD_SIZE / CELL_SIZE)
-#define CELL_MASK_SIZE 5
+#define BITS_PER_CELL 2
+#define BITS_PER_WORD (sizeof(word_t) * 8)
+#define CELLS_PER_WORD (BITS_PER_WORD / BITS_PER_CELL)
+#define ERROR_VALUE (uint) - 1
 
-// Index encoding masks
-#define MSB_MASK                                                               \
-  (1ULL << (WORD_SIZE - 1)) // MSB to indicate type (0 = cell, 1 = word)
-#define CELL_INDEX_MASK (CELLS_IN_WORD - 1) // Bits 0-4 for cell index (0-31)
-#define WORD_INDEX_MASK 0x3FFFFFFFFFFFFF    // Bits 5-62 for word index
+typedef struct {
+  size_t key;
+  size_t value;
+} cell_word;
 
-typedef uint64_t word_t;
+struct Allocator_impl {
+  word_t *cells;
+  word_t *cells_bitmap;
+  size_t cells_capacity;
 
-static inline word_t get_bit(const word_t *bitmap, size_t index) {
-  size_t word_idx = index / WORD_SIZE;
-  size_t bit_idx = index % WORD_SIZE;
+  cell_word *payload_index;
+
+  word_t *payloads;
+};
+
+static inline uint get_bit(const word_t *bitmap, size_t index) {
+  size_t word_idx = index / BITS_PER_WORD;
+  size_t bit_idx = index % BITS_PER_WORD;
   return (bitmap[word_idx] >> bit_idx) & 1;
 }
 
-static inline void set_bit(word_t *bitmap, size_t index, word_t value) {
-  size_t word_idx = index / WORD_SIZE;
-  size_t bit_idx = index % WORD_SIZE;
+static inline void set_bit(word_t *bitmap, size_t index, uint value) {
+  size_t word_idx = index / BITS_PER_WORD;
+  size_t bit_idx = index % BITS_PER_WORD;
   if (value) {
     bitmap[word_idx] |= (1ULL << bit_idx);
   } else {
@@ -32,226 +40,116 @@ static inline void set_bit(word_t *bitmap, size_t index, word_t value) {
   }
 }
 
-struct Allocator_impl {
-  word_t *words;           // Array of 64-bit words
-  size_t words_size;       // Number of 64-bit words in the pool
-  word_t *type_bitmap;     // Bitmap: 0 = word used for cells, 1 = used for a
-                           // data word
-  size_t type_bitmap_size; // Number of uint64_t in word_type_bitmap
-  word_t *cell_bitmap; // Bitmap: allocation status of each cell (total_words
-                       // * 32 bits)
-  size_t cell_bitmap_size; // Number of uint64_t in cell_bitmap
-};
+static uint8_t get_cell_val(const struct Allocator_impl *alloc, size_t index) {
+  size_t word_index = index / CELLS_PER_WORD;
+  size_t shift = (index % CELLS_PER_WORD) * BITS_PER_CELL;
+  return (alloc->cells[word_index] >> shift) & 0x3;
+}
 
-uint eval_cells_init(struct Allocator_impl **cells, size_t initial_words) {
-  *cells = malloc(sizeof(struct Allocator_impl));
-  (*cells)->words_size = initial_words;
-  (*cells)->words = malloc(initial_words * sizeof(word_t));
-  memset((*cells)->words, 0, initial_words * sizeof(word_t));
+static void set_cell_val(struct Allocator_impl *alloc, size_t index,
+                         uint8_t cell_value) {
+  size_t word_index = index / CELLS_PER_WORD;
+  size_t shift = (index % CELLS_PER_WORD) * BITS_PER_CELL;
+  alloc->cells[word_index] &= ~((uint64_t)0x3 << shift);
+  alloc->cells[word_index] |= ((uint64_t)(cell_value & 0x3)) << shift;
+}
 
-  (*cells)->type_bitmap_size = (initial_words + WORD_SIZE - 1) / WORD_SIZE;
-  (*cells)->type_bitmap = malloc((*cells)->type_bitmap_size * sizeof(word_t));
-  memset((*cells)->type_bitmap, 0, (*cells)->type_bitmap_size * sizeof(word_t));
+uint eval_cells_init(Allocator *alloc, size_t words_count) {
+  Allocator cells = calloc(1, sizeof(struct Allocator_impl));
+  if (!cells) {
+    return ERROR_VALUE;
+  }
+  cells->cells = malloc(words_count * sizeof(*cells->cells));
+  cells->cells_capacity = words_count;
+  if (!cells->cells) {
+    return ERROR_VALUE;
+  }
+  size_t cell_bitmap_size =
+      (words_count * CELLS_PER_WORD + BITS_PER_WORD - 1) / BITS_PER_WORD;
+  cells->cells_bitmap = malloc(cell_bitmap_size * sizeof(*cells->cells_bitmap));
+  if (!cells->cells_bitmap) {
+    return ERROR_VALUE;
+  }
+  memset(cells->cells_bitmap, 0,
+         cell_bitmap_size * sizeof(*cells->cells_bitmap));
+  stbds_arrsetcap(cells->payloads, 32);
 
-  (*cells)->cell_bitmap_size =
-      (initial_words * CELLS_IN_WORD + WORD_SIZE - 1) / WORD_SIZE;
-  (*cells)->cell_bitmap = malloc((*cells)->cell_bitmap_size * sizeof(word_t));
-  memset((*cells)->cell_bitmap, 0, (*cells)->cell_bitmap_size * sizeof(word_t));
+  *alloc = cells;
   return 0;
 }
 
-uint eval_cells_free(struct Allocator_impl **cells) {
-  free((*cells)->words);
-  free((*cells)->type_bitmap);
-  free((*cells)->cell_bitmap);
-  (*cells)->words_size = 0;
-  (*cells)->type_bitmap_size = 0;
-  (*cells)->cell_bitmap_size = 0;
-  free(*cells);
-  *cells = NULL;
+uint eval_cells_free(Allocator *alloc) {
+  Allocator cells = *alloc;
+  free(cells->cells);
+  free(cells->cells_bitmap);
+  stbds_hmfree(cells->payload_index);
+  stbds_arrfree(cells->payloads);
+  free(cells);
+  *alloc = NULL;
   return 0;
 }
 
-static void grow_pool(struct Allocator_impl *cells) {
-  size_t old_total_words = cells->words_size;
-  size_t new_total_words = old_total_words * 2;
-
-  cells->words = realloc(cells->words, new_total_words * sizeof(word_t));
-  memset(cells->words + old_total_words, 0,
-         (new_total_words - old_total_words) * sizeof(word_t));
-
-  size_t new_word_type_size = (new_total_words + WORD_SIZE - 1) / WORD_SIZE;
-  cells->type_bitmap =
-      realloc(cells->type_bitmap, new_word_type_size * sizeof(word_t));
-  memset(cells->type_bitmap + cells->type_bitmap_size, 0,
-         (new_word_type_size - cells->type_bitmap_size) * sizeof(word_t));
-  cells->type_bitmap_size = new_word_type_size;
-
-  size_t new_cell_bitmap_size =
-      (new_total_words * CELLS_IN_WORD + WORD_SIZE - 1) / WORD_SIZE;
-  cells->cell_bitmap =
-      realloc(cells->cell_bitmap, new_cell_bitmap_size * sizeof(word_t));
-  memset(cells->cell_bitmap + cells->cell_bitmap_size, 0,
-         (new_cell_bitmap_size - cells->cell_bitmap_size) * sizeof(word_t));
-  cells->cell_bitmap_size = new_cell_bitmap_size;
-
-  cells->words_size = new_total_words;
+uint eval_cells_get(Allocator cells, size_t index) {
+  if (index >= cells->cells_capacity || !get_bit(cells->cells_bitmap, index)) {
+    return ERROR_VALUE;
+  }
+  return get_cell_val(cells, index);
 }
 
-uint eval_cells_new_cell(struct Allocator_impl *cells) {
-  for (size_t i = 0; i < cells->words_size; i++) {
-    if (get_bit(cells->type_bitmap, i) == 0) { // Word used for cells
-      for (size_t k = 0; k < CELLS_IN_WORD; k++) {
-        size_t cell_bit = (i * CELLS_IN_WORD) + k;
-        if (get_bit(cells->cell_bitmap, cell_bit) == 0) {
-          set_bit(cells->cell_bitmap, cell_bit, 1);
-          return (i << CELL_MASK_SIZE) | k; // MSB = 0, word index, cell index
-        }
-      }
-    }
+word_t eval_cells_get_word(Allocator cells, size_t index) {
+  if (index >= cells->cells_capacity || !get_bit(cells->cells_bitmap, index)) {
+    return ERROR_VALUE;
   }
-  grow_pool(cells);
-  return eval_cells_new_cell(cells);
+  int64_t pair_idx = stbds_hmgeti(cells->payload_index, index);
+  if (pair_idx == -1) {
+    return ERROR_VALUE;
+  }
+  size_t payload_idx = cells->payload_index[pair_idx].value;
+  return cells->payloads[payload_idx];
 }
 
-uint eval_cells_new_word(struct Allocator_impl *cells) {
-  for (size_t i = 0; i < cells->words_size; i++) {
-    int all_free = 1;
-    for (size_t k = 0; k < CELLS_IN_WORD; k++) {
-      if (get_bit(cells->cell_bitmap, (i * CELLS_IN_WORD) + k) != 0) {
-        all_free = 0;
-        break;
-      }
+uint eval_cells_set(Allocator cells, size_t index, uint8_t value) {
+  if (index >= cells->cells_capacity) {
+    cells->cells_capacity *= 2;
+    cells->cells = realloc(cells->cells, cells->cells_capacity);
+    if (!cells->cells) {
+      return ERROR_VALUE;
     }
-    if (all_free) {
-      set_bit(cells->type_bitmap, i, 1);
-      for (size_t k = 0; k < CELLS_IN_WORD; k++) {
-        set_bit(cells->cell_bitmap, (i * CELLS_IN_WORD) + k, 1);
-      }
-      return MSB_MASK | (i << CELL_MASK_SIZE); // MSB = 1, word index
+    size_t new_cell_bitmap_size =
+        (cells->cells_capacity * CELLS_PER_WORD + BITS_PER_WORD - 1) /
+        BITS_PER_WORD;
+    cells->cells_bitmap =
+        realloc(cells->cells_bitmap, new_cell_bitmap_size * sizeof(word_t));
+    if (!cells->cells_bitmap) {
+      return ERROR_VALUE;
     }
   }
-  grow_pool(cells);
-  return eval_cells_new_word(cells);
+  set_cell_val(cells, index, value);
+  set_bit(cells->cells_bitmap, index, 1);
+  return 0;
 }
 
-uint eval_cells_next_cell(struct Allocator_impl *cells, uint index) {
-  if (index & MSB_MASK) {
-    return (uint)-1; // Input must be a cell index
+uint eval_cells_set_word(Allocator cells, size_t index, word_t value) {
+  if (index >= cells->cells_capacity || !get_bit(cells->cells_bitmap, index)) {
+    return ERROR_VALUE;
   }
-  size_t w = (index >> CELL_MASK_SIZE) & WORD_INDEX_MASK; // Word index
-  size_t c = index & CELL_INDEX_MASK;                     // Cell index
+  int64_t pair_idx = stbds_hmgeti(cells->payload_index, index);
+  if (pair_idx != -1) {
+    size_t word_idx = cells->payload_index[pair_idx].value;
+    cells->payloads[word_idx] = value;
+    return 0;
+  }
 
-  if (c < CELLS_IN_WORD - 1) {
-    return (w << CELL_MASK_SIZE) | (c + 1); // Next cell in the same word
-  }
-  // Find the next word used for cells
-  for (size_t j = w + 1; j < cells->words_size; j++) {
-    if ((get_bit(cells->type_bitmap, j) == 0) &&
-        (get_bit(cells->cell_bitmap, j * CELLS_IN_WORD) == 1)) {
-      return (j << CELL_MASK_SIZE) | 0; // First cell in the next cell word
-    }
-  }
-  return (uint)-1; // No next cell found
+  size_t word_idx = stbds_arrlenu(cells->payloads);
+  stbds_arrput(cells->payloads, value);
+  stbds_hmput(cells->payload_index, index, word_idx);
+  return 0;
 }
 
-uint eval_cells_next_word(struct Allocator_impl *cells, uint index) {
-  if (index & MSB_MASK) {
-    return (uint)-1; // Input must be a cell index
+uint eval_cells_is_set(Allocator cells, size_t index) {
+  uint result = eval_cells_get(cells, index);
+  if (result == ERROR_VALUE) {
+    return 0;
   }
-  size_t w = (index >> CELL_MASK_SIZE) & WORD_INDEX_MASK; // Word index
-
-  // Find the next word used for a data word
-  for (size_t j = w + 1; j < cells->words_size; j++) {
-    if (get_bit(cells->type_bitmap, j) == 1) {
-      return MSB_MASK | (j << CELL_MASK_SIZE); // Next word index
-    }
-  }
-  return (uint)-1; // No next word found
-}
-
-uint eval_cells_delete(struct Allocator_impl *cells, uint index) {
-  if (index & MSB_MASK) { // Word index
-    size_t w = (index >> CELL_MASK_SIZE) & WORD_INDEX_MASK;
-    if (w >= cells->words_size || !get_bit(cells->type_bitmap, w)) {
-      return 0; // Invalid or not allocated
-    }
-    set_bit(cells->type_bitmap, w, 0);
-    for (size_t k = 0; k < CELLS_IN_WORD; k++) {
-      set_bit(cells->cell_bitmap, (w * CELLS_IN_WORD) + k, 0);
-    }
-    return 1;
-  }
-  // Cell index
-  size_t w = (index >> CELL_MASK_SIZE) & WORD_INDEX_MASK;
-  size_t c = index & CELL_INDEX_MASK;
-  if (w >= cells->words_size || c >= CELLS_IN_WORD ||
-      get_bit(cells->type_bitmap, w)) {
-    return 0; // Invalid or word is not used for cells
-  }
-  size_t cell_bit = (w * CELLS_IN_WORD) + c;
-  if (!get_bit(cells->cell_bitmap, cell_bit)) {
-    return 0; // Not allocated
-  }
-  set_bit(cells->cell_bitmap, cell_bit, 0);
-  return 1;
-}
-
-uint eval_cells_get(struct Allocator_impl *cells, uint index) {
-  if (index & MSB_MASK) { // Word
-    size_t w = (index >> CELL_MASK_SIZE) & WORD_INDEX_MASK;
-    return cells->words[w]; // No bounds checking as per note
-  }
-  // Cell
-  size_t w = (index >> CELL_MASK_SIZE) & WORD_INDEX_MASK;
-  size_t c = index & CELL_INDEX_MASK;
-  word_t word = cells->words[w];
-  return (word >> (c * CELL_SIZE)) & 0x3; // Extract 2-bit cell value
-}
-
-uint eval_cells_is_set(struct Allocator_impl *cells, uint index) {
-  if (index & MSB_MASK) { // Word
-    size_t w = (index >> CELL_MASK_SIZE) & WORD_INDEX_MASK;
-    if (w >= cells->words_size) {
-      return (uint)-1;
-    }
-    return get_bit(cells->type_bitmap, w);
-  }
-  // Cell
-  size_t w = (index >> CELL_MASK_SIZE) & WORD_INDEX_MASK;
-  size_t c = index & CELL_INDEX_MASK;
-  if (w >= cells->words_size || c >= CELLS_IN_WORD) {
-    return (uint)-1;
-  }
-  if (get_bit(cells->type_bitmap, w)) {
-    return 0; // Word used for a data word
-  }
-  return get_bit(cells->cell_bitmap,
-                 (w * CELLS_IN_WORD) + c); // 1 if allocated, 0 if not
-}
-
-uint eval_cells_set(struct Allocator_impl *cells, uint index, uint value) {
-  if (index & MSB_MASK) { // Word index
-    size_t w = (index >> CELL_MASK_SIZE) & WORD_INDEX_MASK;
-    if (w >= cells->words_size || !get_bit(cells->type_bitmap, w)) {
-      return 0;
-    }
-    cells->words[w] = value;
-    return 1;
-  }
-  // Cell index
-  size_t w = (index >> CELL_MASK_SIZE) & WORD_INDEX_MASK;
-  size_t c = index & CELL_INDEX_MASK;
-  if (w >= cells->words_size || c >= CELLS_IN_WORD ||
-      get_bit(cells->type_bitmap, w)) {
-    return 0; // Invalid or word is not used for cells
-  }
-  if (!get_bit(cells->cell_bitmap, (w * CELLS_IN_WORD) + c)) {
-    return 0; // Not allocated
-  }
-  // Clear the 2 bits and set the new value
-  word_t *word = &cells->words[w];
-  *word = (*word & ~(0x3ULL << (c * CELL_SIZE))) |
-          ((value & 0x3) << (c * CELL_SIZE));
   return 1;
 }

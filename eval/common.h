@@ -1,3 +1,6 @@
+#ifndef __EVAL_COMMON__
+#define __EVAL_COMMON__
+
 #include <stddef.h>
 #include <stdint.h>
 #include <sys/types.h>
@@ -39,14 +42,15 @@ uint eval_eval(EvalState state);
 uint eval_get_error(EvalState state, uint *code, char **error);
 
 typedef struct Allocator_impl *Allocator;
+typedef uint64_t word_t;
 
-uint eval_cells_init(Allocator *cells, size_t initial_words);
+uint eval_cells_init(Allocator *cells, size_t words_count);
 uint eval_cells_free(Allocator *cells);
-uint eval_cells_new_cell(Allocator cells);
-uint eval_cells_new_word(Allocator cells);
-uint eval_cells_next_cell(Allocator cells, uint index);
-uint eval_cells_next_word(Allocator cells, uint index);
-uint eval_cells_delete(Allocator cells, uint index);
-uint eval_cells_get(Allocator cells, uint index);
-uint eval_cells_set(Allocator cells, uint index, uint value);
-uint eval_cells_is_set(Allocator cells, uint index);
+uint eval_cells_get(Allocator cells, size_t index);
+uint eval_cells_get_word(Allocator cells, size_t index);
+uint eval_cells_set(Allocator cells, size_t index, uint8_t value);
+uint eval_cells_set_word(Allocator cells, size_t index, word_t value);
+uint eval_cells_is_set(Allocator cells, size_t index);
+
+
+#endif // __EVAL_COMMON__
