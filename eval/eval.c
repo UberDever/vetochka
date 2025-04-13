@@ -1,3 +1,5 @@
+#if 0
+
 #include <assert.h>
 #include <stdarg.h>
 #include <stddef.h>
@@ -192,3 +194,5 @@ uint eval_get_error(EvalState state, uint *code, char **error) {
   *error = state->error;
   return 0;
 }
+
+#endif

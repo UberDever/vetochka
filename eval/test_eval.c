@@ -57,7 +57,7 @@ bool test_memory_many_cells() {
   bool result = true;
 
   Allocator cells;
-  eval_cells_init(&cells, 10);
+  eval_cells_init(&cells, 1);
 
   int seed = time(0);
   srand(seed);
@@ -106,6 +106,30 @@ cleanup:
   return result;
 }
 
+bool test_encode_parse_smoke() {
+  bool result = true;
+
+  const char *programs[] = {
+      "$ ^ ^** ^** ^**", // ^ ^ ^ ^
+      "# 10",            // 10
+  };
+
+  Allocator cells;
+  eval_cells_init(&cells, 4);
+  for (size_t i = 0; i < sizeof(programs) / sizeof(*programs); ++i) {
+    eval_cells_clear(cells);
+    uint res = eval_encode_parse(cells, programs[i]);
+    if (res != 0) {
+      result = false;
+      goto cleanup;
+    }
+  }
+
+cleanup:
+  eval_cells_free(&cells);
+  return result;
+}
+
 #define ADD_TEST(test)                                                         \
   stbds_arrput(tests, test);                                                   \
   stbds_arrput(names, #test);
@@ -115,6 +139,7 @@ int main() {
   const char **names = NULL;
   ADD_TEST(test_memory_smoke);
   ADD_TEST(test_memory_many_cells);
+  ADD_TEST(test_encode_parse_smoke);
 
   for (int i = 0; i < stbds_arrlen(tests); i++) {
     g_test_error = 0; // Reset before each test

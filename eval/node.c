@@ -1,6 +1,7 @@
 #define STB_DS_IMPLEMENTATION
 #include "stb_ds.h"
 
+#if 0
 #include "common.h"
 
 #define NODE_SIZE (sizeof(uint) * 8)
@@ -71,3 +72,5 @@ sint node_rhs(Node node) {
 uint node_data(Node node) {
   return (node >> TAG_SIZE) & DATA_MASK;
 }
+
+#endif
