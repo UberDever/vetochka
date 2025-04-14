@@ -38,11 +38,10 @@ uint eval_eval(EvalState state);
 uint eval_get_error(EvalState state, uint *code, char **error);
 #endif
 
-#define GET_TAG(integer) ((uint8_t)((integer) & 0xFF))
-#define GET_PAYLOAD(integer) ((integer) >> 8)
-#define SET_TAG(integer, tag)                                                  \
-  (((integer) & ~((uint64_t)0xFF)) | ((uint64_t)(tag) & 0xFF))
-#define SET_PAYLOAD(integer, payload) (((payload) << 8) | ((integer) & 0xFF))
+#define EVAL_GET_TAG(integer)              ((uint8_t)((integer) & 0xF))
+#define EVAL_GET_PAYLOAD(integer)          ((integer) >> 4)
+#define EVAL_SET_TAG(integer, tag)         (((integer) & ~((uint64_t)0xF)) | ((uint64_t)(tag) & 0xF))
+#define EVAL_SET_PAYLOAD(integer, payload) (((payload) << 4) | ((integer) & 0xF))
 
 #define EVAL_NIL 0
 #define EVAL_TREE 1
@@ -51,6 +50,7 @@ uint eval_get_error(EvalState state, uint *code, char **error);
 
 #define EVAL_TAG_NUMBER 0
 #define EVAL_TAG_INDEX 1
+#define EVAL_TAG_FUNC   2
 
 typedef struct EvalState_impl *EvalState;
 typedef struct Allocator_impl *Allocator;

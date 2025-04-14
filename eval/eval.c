@@ -68,11 +68,11 @@ static deref_t deref(Allocator cells, size_t *root, uint8_t root_cell) {
   }
 
   word_t word = eval_cells_get_word(cells, *root);
-  uint8_t tag = GET_TAG(word);
+  uint8_t tag = EVAL_GET_TAG(word);
   if (tag != EVAL_TAG_INDEX) {
     return deref_error;
   }
-  *root += GET_PAYLOAD(word);
+  *root += EVAL_GET_PAYLOAD(word);
   return deref_changed;
 }
 

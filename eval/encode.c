@@ -53,9 +53,9 @@ uint eval_encode_parse(Allocator cells, const char *program) {
       }
       uint8_t node = eval_cells_get(cells, index - 1);
       if (node == EVAL_NATIVE) {
-        uint64_t val = SET_PAYLOAD(0, value);
+        uint64_t val = EVAL_SET_PAYLOAD(0, value);
         if (is_index) {
-          val = SET_TAG(val, EVAL_TAG_INDEX);
+          val = EVAL_SET_TAG(val, EVAL_TAG_INDEX);
         }
         uint res = eval_cells_set_word(cells, index - 1, val);
         if (res == (uint)-1) {

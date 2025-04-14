@@ -130,7 +130,7 @@ bool test_encode_parse_smoke(void *_) {
       printf("%hhu ", cell);
       if (cell == EVAL_NATIVE) {
         word_t word = eval_cells_get_word(cells, j);
-        word_t payload = GET_PAYLOAD(word);
+        word_t payload = EVAL_GET_PAYLOAD(word);
         printf("[%zu] ", payload);
       }
       j++;
