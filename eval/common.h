@@ -13,31 +13,6 @@ typedef size_t uint;
   printf("[%s:%d] " fmt "\n", __FILE__, __LINE__, __VA_ARGS__);
 #define debug_s(s) printf("[%s:%d] " s "\n", __FILE__, __LINE__);
 
-#if 0
-Node node_new_tree(sint lhs, sint rhs);
-Node node_new_app(uint lhs, uint rhs);
-Node node_new_data(uint data);
-Node node_new_invalid();
-
-uint node_tag(Node node);
-sint node_lhs(Node node);
-sint node_rhs(Node node);
-uint node_data(Node node);
-
-uint node_tag_tree();
-uint node_tag_app();
-uint node_tag_data();
-
-typedef struct EvalState_impl *EvalState;
-
-uint eval_init(EvalState *state, uint root, const uint *nodes, uint nodes_size);
-uint eval_free(EvalState *state);
-
-uint eval_step(EvalState state);
-uint eval_eval(EvalState state);
-uint eval_get_error(EvalState state, uint *code, char **error);
-#endif
-
 #define EVAL_GET_TAG(integer)              ((uint8_t)((integer) & 0xF))
 #define EVAL_GET_PAYLOAD(integer)          ((integer) >> 4)
 #define EVAL_SET_TAG(integer, tag)         (((integer) & ~((uint64_t)0xF)) | ((uint64_t)(tag) & 0xF))
@@ -58,8 +33,9 @@ typedef uint64_t word_t;
 
 uint eval_init(EvalState *state, const char *program);
 uint eval_free(EvalState *state);
-uint eval_step(EvalState state, bool *matched);
+uint eval_step(EvalState state);
 Allocator eval_get_memory(EvalState state);
+uint8_t eval_get_error(EvalState state, const char** message);
 
 uint eval_cells_init(Allocator *cells, size_t words_count);
 uint eval_cells_free(Allocator *cells);
@@ -68,8 +44,17 @@ uint eval_cells_get_word(Allocator cells, size_t index);
 uint eval_cells_set(Allocator cells, size_t index, uint8_t value);
 uint eval_cells_set_word(Allocator cells, size_t index, word_t value);
 uint eval_cells_is_set(Allocator cells, size_t index);
+uint eval_cells_capacity(Allocator cells);
 uint eval_cells_clear(Allocator cells);
 
 uint eval_encode_parse(Allocator cells, const char *program);
+
+#define BITS_PER_WORD    (sizeof(word_t) * 8)
+#define BITMAP_SIZE(cap) (((cap) + BITS_PER_WORD - 1) / BITS_PER_WORD)
+uint _bitmap_get_bit(const word_t* bitmap, size_t index);
+void _bitmap_set_bit(word_t* bitmap, size_t index, uint value);
+
+#define BITS_PER_CELL  2
+#define CELLS_PER_WORD (BITS_PER_WORD / BITS_PER_CELL)
 
 #endif // __EVAL_COMMON__

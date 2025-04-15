@@ -13,26 +13,35 @@
 #define ERROR_BUF_SIZE 65536
 static char g_error_buf[ERROR_BUF_SIZE] = {};
 
-#define ERROR_PARSE 1
+#define ERROR_PARSE           1
 #define ERROR_STACK_UNDERFLOW 2
-#define ERROR_GENERIC 127
+#define ERROR_DEREF_NONREF    3
+#define ERROR_INVALID_CELL    4
+#define ERROR_INVALID_WORD    5
+#define ERROR_REF_TO_REF      6
+#define ERROR_APPLY_TO_VALUE  7
+#define ERROR_REF_EXPECTED    8
+#define ERROR_GENERIC         127
 
 struct EvalState_impl {
   Allocator cells;
-  size_t *stack;
+  size_t* stack;
+  word_t* free_bitmap;
+  size_t free_capacity;
 
-  int8_t error_code;
-  const char *error;
+  uint8_t error_code;
+  const char* error;
 };
 
-uint eval_init(EvalState *state, const char *program) {
+uint eval_init(EvalState* state, const char* program) {
   EvalState s = calloc(1, sizeof(struct EvalState_impl));
   if (s == NULL) {
     return ERROR_VALUE;
   }
   s->error = g_error_buf;
 
-  uint res = eval_cells_init(&s->cells, 4);
+  uint cells_capacity = 4;
+  uint res = eval_cells_init(&s->cells, cells_capacity);
   if (res == ERROR_VALUE) {
     return res;
   }
@@ -43,110 +52,221 @@ uint eval_init(EvalState *state, const char *program) {
     return res;
   }
   stbds_arrput(s->stack, 0);
+  s->free_capacity = BITMAP_SIZE(cells_capacity * CELLS_PER_WORD);
+  s->free_bitmap = calloc(1, s->free_capacity);
   *state = s;
   return 0;
 }
 
-uint eval_free(EvalState *state) {
+uint eval_free(EvalState* state) {
   EvalState s = *state;
   eval_cells_free(&s->cells);
   stbds_arrfree(s->stack);
+  free(s->free_bitmap);
   free(s);
   *state = NULL;
   return 0;
 }
 
-typedef enum {
-  deref_error,
-  deref_unchanged,
-  deref_changed,
-} deref_t;
+typedef struct {
+  size_t sibling;
+  size_t result;
+} EvalResult;
 
-static deref_t deref(Allocator cells, size_t *root, uint8_t root_cell) {
-  if (root_cell != EVAL_NATIVE) {
-    return deref_unchanged;
-  }
-
-  word_t word = eval_cells_get_word(cells, *root);
-  uint8_t tag = EVAL_GET_TAG(word);
-  if (tag != EVAL_TAG_INDEX) {
-    return deref_error;
-  }
-  *root += EVAL_GET_PAYLOAD(word);
-  return deref_changed;
+static inline EvalResult new_eval_result(size_t sibling, size_t result) {
+  return (EvalResult){
+      .sibling = sibling,
+      .result = result,
+  };
 }
 
-// $ ^ ^** X Y -> X
-static uint first_rule(EvalState state, uint root, bool *matched) {
-  uint root_cell = eval_cells_get(state->cells, root);
-  if (root_cell != EVAL_TREE) {
-    return 0;
+#define EXPECT(cond, code, msg)                                                                    \
+  if (!(cond)) {                                                                                   \
+    state->error_code = (code);                                                                    \
+    sprintf(g_error_buf, "%s", msg);                                                               \
+    goto cleanup;                                                                                  \
   }
-  root++;
-  deref_t deref_result = deref(state->cells, &root, root_cell);
-  if (deref_result == deref_error) {
-    state->error_code = ERROR_GENERIC;
-    g_error_buf[0] = '\0';
-    return ERROR_VALUE;
-  }
-  root_cell = eval_cells_get(state->cells, root++);
-  assert(root_cell == EVAL_TREE);
-  root_cell = eval_cells_get(state->cells, root++);
-  if (root_cell != EVAL_NIL) {
-    return 0;
-  }
-  root_cell = eval_cells_get(state->cells, root++);
-  assert(root_cell == EVAL_NIL);
-  stbds_arrput(state->stack, root);
 
-  *matched = true;
-  return root;
+#define CHECK(state)                                                                               \
+  if (state->error_code) {                                                                         \
+    goto cleanup;                                                                                  \
+  }
+
+#define GET_CELL(index)                                                                            \
+  uint index##_cell = eval_cells_get(state->cells, index);                                         \
+  EXPECT(index##_cell != ERROR_VALUE, ERROR_INVALID_CELL, "");
+
+#define GET_WORD(index)                                                                            \
+  uint index##_word = eval_cells_get_word(state->cells, index);                                    \
+  EXPECT(index##_cell != ERROR_VALUE, ERROR_INVALID_WORD, "");
+
+#define DEREF(index)                                                                               \
+  if (index##_cell == EVAL_NATIVE) {                                                               \
+    GET_WORD(index);                                                                               \
+    uint8_t tag = EVAL_GET_TAG(index##_word);                                                      \
+    EXPECT(tag == EVAL_TAG_INDEX, ERROR_DEREF_NONREF, "");                                         \
+    index += (ssize_t)EVAL_GET_PAYLOAD(index##_word);                                              \
+    size_t new_index = index;                                                                      \
+    GET_CELL(new_index)                                                                            \
+    if (new_index_cell == EVAL_NATIVE) {                                                           \
+      GET_WORD(new_index)                                                                          \
+      uint8_t tag = EVAL_GET_TAG(new_index##_word);                                                \
+      EXPECT(tag != EVAL_TAG_INDEX, ERROR_REF_TO_REF, "");                                         \
+    }                                                                                              \
+  }
+
+static inline bool is_ref(EvalState state, uint index) {
+  GET_CELL(index)
+  if (index_cell == EVAL_NATIVE) {
+    GET_WORD(index)
+    uint8_t tag = EVAL_GET_TAG(index_word);
+    return tag == EVAL_TAG_INDEX;
+  }
+cleanup:
+  return false;
+}
+
+static inline bool is_opaque(EvalState state, uint index) {
+  GET_CELL(index)
+  if (index_cell == EVAL_TREE) {
+    return true;
+  }
+  if (index_cell == EVAL_NATIVE) {
+    // GET_WORD(index)
+    // uint8_t tag = EVAL_GET_TAG(index_word);
+    // return tag != EVAL_TAG_FUNC;
+    return true;
+  }
+cleanup:
+  return false;
+}
+
+static size_t next_vacant_cell(EvalState state) {
+  for (size_t w = 0; w < state->free_capacity; ++w) {
+    if (state->free_bitmap[w] != (word_t)-1) {
+      word_t mask = 1U;
+      for (size_t b = 0; b < BITS_PER_WORD; ++b) {
+        if ((state->free_bitmap[w] & mask) == 0) {
+          return w * BITS_PER_WORD + b;
+        }
+        mask <<= 1;
+      }
+    }
+  }
+  size_t old_cap = state->free_capacity;
+  state->free_capacity *= 2;
+  state->free_bitmap = realloc(state->free_bitmap, state->free_capacity);
+  memset(state->free_bitmap + old_cap, 0, old_cap);
+  return next_vacant_cell(state);
 }
 
 // NOTE: references are second class, we can't have references to references!
-uint eval_step(EvalState state, bool *matched) {
-  if (stbds_arrlenu(state->stack) == 0) {
-    state->error_code = ERROR_STACK_UNDERFLOW;
-    g_error_buf[0] = '\0';
-    return ERROR_VALUE;
-  }
+// Namings: A   B   C   D   E   F   G   H   I       P   Q   R   S   T   U   V
+// Rule 1 : $   ^   ^   *   *   X   Y           ->  X
+// Rule 2 : $   ^   ^   X   *   Y   Z           ->  $   $   X   Z   $   Y   Z
+// Rule 3a: $   ^   ^   W   X   Y   ^   *   *   ->  W
+// Rule 3b: $   ^   ^   W   X   Y   ^   U   *   ->  $   X   U
+// Rule 3c: $   ^   ^   W   X   Y   ^   U   V   ->  $   $   Y   U   V
+// Rule 4 : $   N   X, where N is native function and X is a arbitrary value (tree or native)
+EvalResult eval_step_impl(EvalState state) {
+  EvalResult result = {};
+  EXPECT(stbds_arrlenu(state->stack) > 0, ERROR_STACK_UNDERFLOW, "");
+
   size_t root = stbds_arrpop(state->stack);
-  uint root_cell = eval_cells_get(state->cells, root);
-  if (root_cell == ERROR_VALUE) {
-    state->error_code = ERROR_GENERIC;
-    g_error_buf[0] = '\0';
-    return ERROR_VALUE;
-  }
-  if (root_cell != EVAL_APPLY) {
-    return root;
+  size_t A = root;
+  GET_CELL(A)
+  DEREF(A)
+
+  if (A_cell != EVAL_APPLY) {
+    return new_eval_result(ERROR_VALUE, root);
   }
 
-  uint next_node = root + 1;
-  uint next_cell = eval_cells_get(state->cells, next_node);
-  deref_t deref_result = deref(state->cells, &next_node, next_cell);
-  if (deref_result == deref_error) {
-    state->error_code = ERROR_GENERIC;
-    sprintf(g_error_buf, "cannot apply to a value [%zu] %zu", root,
-            eval_cells_get_word(state->cells, next_node));
-    return ERROR_VALUE;
-  }
-  if (deref_result == deref_changed) {
-    stbds_arrput(state->stack, next_node);
-    next_node = eval_step(state, matched);
-    stbds_arrput(state->stack, next_node);
-    return next_node;
-  }
+  size_t B = A + 1;
+  GET_CELL(B)
+  DEREF(B)
 
-  uint subtree_len = 0;
-  subtree_len = first_rule(state, next_node, matched);
-  if (*matched) {
-    return subtree_len;
+  EXPECT(B != EVAL_NIL, ERROR_GENERIC, "")
+  if (B == EVAL_NATIVE) {
+    GET_WORD(B)
+    uint8_t tag = EVAL_GET_TAG(B_word);
+    EXPECT(tag == EVAL_TAG_FUNC, ERROR_APPLY_TO_VALUE, "")
+    assert(false); // TODO: this
+  } else if (B_cell == EVAL_APPLY) {
+    assert(false);
+    stbds_arrpush(state->stack, B);
+    EvalResult lhs_result = eval_step_impl(state);
+    CHECK(state)
+    size_t rhs = lhs_result.sibling;
+    GET_CELL(rhs)
+    stbds_arrpush(state->stack, rhs);
+    EvalResult rhs_result = eval_step_impl(state);
+    assert(rhs_result.sibling == ERROR_VALUE);
+    // TODO create a $ lhs rhs and put it on the stack
   }
+  assert(B == EVAL_TREE);
 
-  return 1;
+  bool matched = false;
+  size_t new_root = root;
+  do {
+    size_t C = B + 1;
+    GET_CELL(C)
+    DEREF(C)
+    size_t D = C + 1;
+    GET_CELL(D)
+    size_t E = C + 2;
+    GET_CELL(E)
+    if (!(D_cell == EVAL_NIL && E_cell == EVAL_NIL)) {
+      break;
+    }
+    matched = true;
+    size_t F = E + 1;
+    new_root = F;
+  } while (0);
+  CHECK(state)
+  if (matched) {
+    result.result = new_root;
+    goto cleanup;
+  }
+  matched = false;
+
+  do {
+    size_t C = B + 1;
+    GET_CELL(C)
+    DEREF(C)
+    size_t D = C + 1;
+    GET_CELL(D)
+    size_t E = C + 2;
+    GET_CELL(E)
+    if (!(is_opaque(state, D) && E_cell == EVAL_NIL)) {
+      break;
+    }
+
+    size_t F = E + 1;
+    EXPECT(
+        is_ref(state, F),
+        ERROR_REF_EXPECTED,
+        "currently cannot get to other sibling if not ref :(");
+    size_t G = F + 1;
+    size_t Q = next_vacant_cell(state);
+    // TODO: compute references for D and G relative for Q
+  } while (0);
+
+cleanup:
+  return result;
 }
 
-Allocator eval_get_memory(EvalState state) { return state->cells; }
+uint eval_step(EvalState state) {
+  return eval_step_impl(state).result;
+}
+
+Allocator eval_get_memory(EvalState state) {
+  return state->cells;
+}
+
+uint8_t eval_get_error(EvalState state, const char** message) {
+  *message = state->error;
+  return state->error_code;
+}
 
 #if 0
 

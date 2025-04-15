@@ -223,11 +223,17 @@ bool test_eval_first_rule(void *data_ptr) {
   EvalState state = NULL;
   const char *program = data->program;
   eval_init(&state, program);
-  bool matched = false;
-  uint new_root = eval_step(state, &matched);
-  if (new_root == ERROR_VALUE || !matched) {
+  uint new_root = eval_step(state);
+  const char* error_msg = "";
+  uint8_t error_code = eval_get_error(state, &error_msg);
+  if (error_code) {
     result = false;
-    sprintf(g_error_buf, "failed to step for program '%s'", program);
+    sprintf(
+        g_error_buf,
+        "failed to step for program '%s'\ncode: %d msg: '%s'",
+        program,
+        error_code,
+        error_msg);
     goto cleanup;
   }
 
@@ -252,15 +258,12 @@ int main() {
   ADD_TEST(test_memory_many_cells, NULL);
   ADD_TEST(test_encode_parse_smoke, NULL);
 
-  test_eval_data test_eval_first_rule_datum1 = {.program = "$ ^ ^** ^** ^**",
-                                                .expected = "^**"};
-  ADD_TEST(test_eval_first_rule, &test_eval_first_rule_datum1);
-  test_eval_data test_eval_first_rule_datum2 = {.program = "$ ^ ^** # 10 * *",
-                                                .expected = "# 10 *"};
-  ADD_TEST(test_eval_first_rule, &test_eval_first_rule_datum2);
-  test_eval_data test_eval_first_rule_datum3 = {
-      .program = "$ # !2 * ^ ^** # 10 * *", .expected = "# 10 *"};
-  ADD_TEST(test_eval_first_rule, &test_eval_first_rule_datum3);
+#define ADD_TEST_WITH_DATA(testcase, N, prog, exp)                                                 \
+  test_eval_data testcase##_##N = {.program = prog, .expected = exp};                              \
+  ADD_TEST(testcase, &testcase##_##N);
+
+  ADD_TEST_WITH_DATA(test_eval_first_rule, 1, "$ ^ ^** ^** ^**", "^**");
+  ADD_TEST_WITH_DATA(test_eval_first_rule, 2, "$ ^ ^** # 10 * *", "# 10 *");
 
   for (int i = 0; i < stbds_arrlen(tests); i++) {
     g_error_buf[0] = '\0';
