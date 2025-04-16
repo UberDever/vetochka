@@ -9,10 +9,11 @@
 #define ASSERT_TRUE(x)                                                         \
   if (!(x)) {                                                                  \
     result = false;                                                            \
-    sprintf(g_error_buf, "%s", #x);                                            \
+    snprintf(g_error_buf, ERROR_BUF_SIZE, "%s", #x);                           \
     goto cleanup;                                                              \
   }
 
+// TODO(morlovsky): make a stream writing API for this
 #define ERROR_BUF_SIZE 65536
 static char g_error_buf[ERROR_BUF_SIZE] = {};
 
@@ -84,16 +85,16 @@ bool test_memory_many_cells(void *_) {
     uint cell_val = eval_cells_get(cells, idx);
     if (cell_val != set_cells[i].value.cell) {
       result = false;
-      sprintf(g_error_buf, "cell_val %zu != [%zu] %zu", cell_val, idx,
-              set_cells[i].key);
+      snprintf(g_error_buf, ERROR_BUF_SIZE, "cell_val %zu != [%zu] %zu",
+               cell_val, idx, set_cells[i].key);
       goto cleanup;
     }
     if (set_cells[i].value.word != (word_t)-1) {
       word_t word = eval_cells_get_word(cells, idx);
       if (word != set_cells[i].value.word) {
         result = false;
-        sprintf(g_error_buf, "word %zu != [%zu] %zu", word, idx,
-                set_cells[i].value.word);
+        snprintf(g_error_buf, ERROR_BUF_SIZE, "word %zu != [%zu] %zu", word,
+                 idx, set_cells[i].value.word);
         goto cleanup;
       }
     }
@@ -120,7 +121,7 @@ bool test_encode_parse_smoke(void *_) {
     eval_cells_clear(cells);
     uint res = eval_encode_parse(cells, programs[i]);
     if (res != 0) {
-      sprintf(g_error_buf, "failed to parse %s", programs[i]);
+      snprintf(g_error_buf, ERROR_BUF_SIZE, "failed to parse %s", programs[i]);
       result = false;
       goto cleanup;
     }
@@ -147,33 +148,39 @@ bool compare_trees(Allocator lhs, Allocator rhs, size_t lhs_root,
                    size_t rhs_root) {
   uint lhs_cell = eval_cells_get(lhs, lhs_root);
   if (lhs_cell == ERROR_VALUE) {
-    sprintf(g_error_buf, "invalid cell [%zu] %zu", lhs_root, lhs_cell);
+    snprintf(g_error_buf, ERROR_BUF_SIZE, "invalid cell [%zu] %zu", lhs_root,
+             lhs_cell);
     return false;
   }
   uint rhs_cell = eval_cells_get(rhs, rhs_root);
   if (rhs_cell == ERROR_VALUE) {
-    sprintf(g_error_buf, "invalid cell [%zu] %zu", rhs_root, rhs_cell);
+    snprintf(g_error_buf, ERROR_BUF_SIZE, "invalid cell [%zu] %zu", rhs_root,
+             rhs_cell);
     return false;
   }
   if (lhs_cell != rhs_cell) {
-    sprintf(g_error_buf, "cells differ at [%zu] [%zu] %zu != %zu", lhs_root,
-            rhs_root, lhs_cell, rhs_cell);
+    snprintf(g_error_buf, ERROR_BUF_SIZE,
+             "cells differ at [%zu] [%zu] %zu != %zu", lhs_root, rhs_root,
+             lhs_cell, rhs_cell);
     return false;
   }
   if (lhs_cell == EVAL_NATIVE) {
     word_t lhs_word = eval_cells_get_word(lhs, lhs_root);
     if (lhs_word == ERROR_VALUE) {
-      sprintf(g_error_buf, "invalid value [%zu] %zu", lhs_root, lhs_word);
+      snprintf(g_error_buf, ERROR_BUF_SIZE, "invalid value [%zu] %zu", lhs_root,
+               lhs_word);
       return false;
     }
     word_t rhs_word = eval_cells_get_word(rhs, rhs_root);
     if (rhs_word == ERROR_VALUE) {
-      sprintf(g_error_buf, "invalid value [%zu] %zu", rhs_root, rhs_word);
+      snprintf(g_error_buf, ERROR_BUF_SIZE, "invalid value [%zu] %zu", rhs_root,
+               rhs_word);
       return false;
     }
     if (lhs_word != rhs_word) {
-      sprintf(g_error_buf, "words differ at [%zu] [%zu] %zu != %zu", lhs_root,
-              rhs_root, lhs_word, rhs_word);
+      snprintf(g_error_buf, ERROR_BUF_SIZE,
+               "words differ at [%zu] [%zu] %zu != %zu", lhs_root, rhs_root,
+               lhs_word, rhs_word);
       return false;
     }
   }
@@ -192,17 +199,22 @@ bool compare_trees(Allocator lhs, Allocator rhs, size_t lhs_root,
   return true;
 }
 
-bool compare_results(Allocator lhs, size_t lhs_root, const char *expected) {
+static bool compare_results(Allocator lhs, size_t lhs_root,
+                            const char *expected, size_t expected_root) {
   bool result = true;
   Allocator rhs = NULL;
   eval_cells_init(&rhs, 4);
   uint res = eval_encode_parse(rhs, expected);
   if (res != 0) {
-    sprintf(g_error_buf, "failed to parse %s", expected);
+    snprintf(g_error_buf, ERROR_BUF_SIZE, "failed to parse %s", expected);
     result = false;
     goto cleanup;
   }
-  if (!compare_trees(lhs, rhs, lhs_root, 0)) {
+  if (!compare_trees(lhs, rhs, lhs_root, expected_root)) {
+    printf("program state:\n");
+    eval_encode_dump(lhs, lhs_root);
+    printf("expected state:\n");
+    eval_encode_dump(rhs, expected_root);
     result = false;
     goto cleanup;
   }
@@ -214,31 +226,30 @@ cleanup:
 
 typedef struct {
   const char *program;
+  size_t expected_root;
   const char *expected;
 } test_eval_data;
 
-bool test_eval_first_rule(void *data_ptr) {
+bool test_eval_eval(void *data_ptr) {
   bool result = true;
   test_eval_data *data = data_ptr;
   EvalState state = NULL;
   const char *program = data->program;
   eval_init(&state, program);
   uint new_root = eval_step(state);
-  const char* error_msg = "";
+  const char *error_msg = "";
   uint8_t error_code = eval_get_error(state, &error_msg);
   if (error_code) {
     result = false;
-    sprintf(
-        g_error_buf,
-        "failed to step for program '%s'\ncode: %d msg: '%s'",
-        program,
-        error_code,
-        error_msg);
+    snprintf(g_error_buf, ERROR_BUF_SIZE,
+             "failed to step for program '%s'\ncode: %d msg: '%s'", program,
+             error_code, error_msg);
     goto cleanup;
   }
 
   Allocator cells = eval_get_memory(state);
-  result = compare_results(cells, new_root, data->expected);
+  result =
+      compare_results(cells, new_root, data->expected, data->expected_root);
 
 cleanup:
   eval_free(&state);
@@ -258,19 +269,27 @@ int main() {
   ADD_TEST(test_memory_many_cells, NULL);
   ADD_TEST(test_encode_parse_smoke, NULL);
 
-#define ADD_TEST_WITH_DATA(testcase, N, prog, exp)                                                 \
-  test_eval_data testcase##_##N = {.program = prog, .expected = exp};                              \
+#define ADD_TEST_WITH_DATA(testcase, N, prog, exp_root, exp)                   \
+  test_eval_data testcase##_##N = {                                            \
+      .program = prog, .expected_root = exp_root, .expected = exp};            \
   ADD_TEST(testcase, &testcase##_##N);
 
-  ADD_TEST_WITH_DATA(test_eval_first_rule, 1, "$ ^ ^** ^** ^**", "^**");
-  ADD_TEST_WITH_DATA(test_eval_first_rule, 2, "$ ^ ^** # 10 * *", "# 10 *");
+  // first rule
+  ADD_TEST_WITH_DATA(test_eval_eval, 1, "$ ^ ^** ^** ^**", 0, "^**");
+  ADD_TEST_WITH_DATA(test_eval_eval, 2, "$ ^ ^** # 10 * *", 0, "# 10 *");
+
+  // second rule
+  ADD_TEST_WITH_DATA(test_eval_eval, 3,
+                     "$ ^ ^ # !7 * * # !6 * # !6 * # 10 * # 40 * # 20 *", 16,
+                     "$ ^ ^ # !7 * * # !6 * # !6 * # 10 * # 40 * # 20 * "
+                     "$ $ # !-2 * # !-2 * $ # !-2 * # !-2 *");
 
   for (int i = 0; i < stbds_arrlen(tests); i++) {
     g_error_buf[0] = '\0';
     if (tests[i](data[i])) {
       printf("%s: PASSED\n", names[i]);
     } else {
-      printf("%s: FAILED Error: %s\n", names[i], g_error_buf);
+      printf("%s: FAILED Error:\n%s\n", names[i], g_error_buf);
     }
   }
 

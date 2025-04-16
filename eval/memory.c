@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define CELLS_BITMAP_SIZE(cap) BITMAP_SIZE(cap* CELLS_PER_WORD)
+#define CELLS_BITMAP_SIZE(cap) BITMAP_SIZE(cap *CELLS_PER_WORD)
 
 typedef struct {
   size_t key;
@@ -23,17 +23,17 @@ struct Allocator_impl {
   word_t *payloads;
 };
 
-word_t* _bitmap_init(size_t capacity) {
+word_t *_bitmap_init(size_t capacity) {
   return calloc(1, BITMAP_SIZE(capacity) * sizeof(word_t));
 }
 
-uint _bitmap_get_bit(const word_t* bitmap, size_t index) {
+uint _bitmap_get_bit(const word_t *bitmap, size_t index) {
   size_t word_idx = index / BITS_PER_WORD;
   size_t bit_idx = index % BITS_PER_WORD;
   return (bitmap[word_idx] >> bit_idx) & 1;
 }
 
-void _bitmap_set_bit(word_t* bitmap, size_t index, uint value) {
+void _bitmap_set_bit(word_t *bitmap, size_t index, uint value) {
   size_t word_idx = index / BITS_PER_WORD;
   size_t bit_idx = index % BITS_PER_WORD;
   if (value) {
@@ -72,7 +72,8 @@ uint eval_cells_init(Allocator *alloc, size_t words_count) {
     return ERROR_VALUE;
   }
 
-  cells->cells_bitmap = calloc(1, CELLS_BITMAP_SIZE(cells->cells_capacity) * sizeof(word_t));
+  cells->cells_bitmap =
+      calloc(1, CELLS_BITMAP_SIZE(cells->cells_capacity) * sizeof(word_t));
   if (!cells->cells_bitmap) {
     return ERROR_VALUE;
   }
@@ -94,14 +95,16 @@ uint eval_cells_free(Allocator *alloc) {
 }
 
 uint eval_cells_get(Allocator cells, size_t index) {
-  if (!index_valid(index, cells->cells_capacity) || !_bitmap_get_bit(cells->cells_bitmap, index)) {
+  if (!index_valid(index, cells->cells_capacity) ||
+      !_bitmap_get_bit(cells->cells_bitmap, index)) {
     return ERROR_VALUE;
   }
   return get_cell_val(cells, index);
 }
 
 word_t eval_cells_get_word(Allocator cells, size_t index) {
-  if (!index_valid(index, cells->cells_capacity) || !_bitmap_get_bit(cells->cells_bitmap, index)) {
+  if (!index_valid(index, cells->cells_capacity) ||
+      !_bitmap_get_bit(cells->cells_bitmap, index)) {
     return ERROR_VALUE;
   }
   int64_t pair_idx = stbds_hmgeti(cells->payload_index, index);
@@ -120,9 +123,9 @@ uint eval_cells_set(Allocator cells, size_t index, uint8_t value) {
     if (!cells->cells) {
       return ERROR_VALUE;
     }
-    cells->cells_bitmap = realloc(
-        cells->cells_bitmap,
-        CELLS_BITMAP_SIZE(cells->cells_capacity) * sizeof(*cells->cells_bitmap));
+    cells->cells_bitmap =
+        realloc(cells->cells_bitmap, CELLS_BITMAP_SIZE(cells->cells_capacity) *
+                                         sizeof(*cells->cells_bitmap));
     if (!cells->cells_bitmap) {
       return ERROR_VALUE;
     }
@@ -133,7 +136,8 @@ uint eval_cells_set(Allocator cells, size_t index, uint8_t value) {
 }
 
 uint eval_cells_set_word(Allocator cells, size_t index, word_t value) {
-  if (!index_valid(index, cells->cells_capacity) || !_bitmap_get_bit(cells->cells_bitmap, index)) {
+  if (!index_valid(index, cells->cells_capacity) ||
+      !_bitmap_get_bit(cells->cells_bitmap, index)) {
     return ERROR_VALUE;
   }
   int64_t pair_idx = stbds_hmgeti(cells->payload_index, index);
@@ -157,9 +161,7 @@ uint eval_cells_is_set(Allocator cells, size_t index) {
   return 1;
 }
 
-uint eval_cells_capacity(Allocator cells) {
-  return cells->cells_capacity;
-}
+uint eval_cells_capacity(Allocator cells) { return cells->cells_capacity; }
 
 uint eval_cells_clear(Allocator cells) {
   if (!cells->cells) {

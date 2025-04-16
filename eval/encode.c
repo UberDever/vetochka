@@ -1,6 +1,8 @@
 #include "common.h"
 #include "stb_ds.h"
+#include <assert.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <string.h>
 
 static int ENCODE_MAP[] = {
@@ -75,4 +77,32 @@ uint eval_encode_parse(Allocator cells, const char *program) {
 cleanup:
   free(prog);
   return result;
+}
+
+void eval_encode_dump(Allocator cells, size_t root) {
+  size_t index = root;
+  while (eval_cells_is_set(cells, index)) {
+    uint index_cell = eval_cells_get(cells, index);
+    assert(index_cell != ERROR_VALUE);
+    printf("%zu|%zu ", index_cell, index);
+    index++;
+  }
+  printf("\n");
+
+  size_t word_index = root;
+  while (eval_cells_is_set(cells, word_index)) {
+    uint word_index_cell = eval_cells_get(cells, word_index);
+    assert(word_index_cell != ERROR_VALUE);
+    if (word_index_cell != EVAL_NATIVE) {
+      word_index++;
+      continue;
+    }
+    uint word_index_word = eval_cells_get_word(cells, word_index);
+    assert(word_index_word != ERROR_VALUE);
+    uint8_t tag = EVAL_GET_TAG(word_index_word);
+    int64_t payload = EVAL_GET_PAYLOAD(word_index_word);
+    printf("(%d)%ld|%zu ", tag, payload, word_index);
+    word_index++;
+  }
+  printf("\n");
 }
