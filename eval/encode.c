@@ -81,15 +81,18 @@ cleanup:
 }
 
 void eval_encode_dump(Allocator cells, size_t root) {
+  char nodes[] = {'*', '^', '$', '#'};
   size_t index = root;
+  printf("nodes: ");
   while (eval_cells_is_set(cells, index)) {
     sint index_cell = eval_cells_get(cells, index);
     assert(index_cell != ERR_VAL);
-    printf("%zu[%zu] ", index_cell, index);
+    printf("%c[%zu] ", nodes[index_cell], index);
     index++;
   }
   printf("\n");
 
+  printf("words: ");
   size_t word_index = root;
   while (eval_cells_is_set(cells, word_index)) {
     sint word_index_cell = eval_cells_get(cells, word_index);

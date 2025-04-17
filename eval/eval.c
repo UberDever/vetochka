@@ -66,7 +66,7 @@ sint eval_init(EvalState* state, const char* program) {
   res = eval_encode_parse(s->cells, program);
   if (res == ERR_VAL) {
     s->error_code = ERROR_PARSE;
-    _errbuf_write("failed to parse %s", program);
+    _errbuf_write("failed to parse %s\n", program);
     return res;
   }
   stbds_arrput(s->stack, 0);
@@ -106,7 +106,7 @@ static inline EvalResult new_eval_result(sint sibling, size_t result) {
 #define EXPECT(cond, code, msg)                                                                    \
   if (!(cond)) {                                                                                   \
     state->error_code = (code);                                                                    \
-    _errbuf_write("%s %s '%s'", #cond, #code, msg);                                                \
+    _errbuf_write("%s %s %s\n", #cond, #code, msg);                                                \
     goto cleanup;                                                                                  \
   }
 
@@ -115,21 +115,18 @@ static inline EvalResult new_eval_result(sint sibling, size_t result) {
     goto cleanup;                                                                                  \
   }
 
-#define GET_CELL(index)                                                                            \
-  sint index##_cell = eval_cells_get(state->cells, index);                                         \
-  EXPECT(index##_cell != ERR_VAL, ERROR_INVALID_CELL, "");
+#define STATE_GET_CELL(index) GET_CELL(state->cells, index)
 
-#define SET_CELL(index, value)                                                                     \
+#define STATE_SET_CELL(index, value)                                                               \
   do {                                                                                             \
     sint res = eval_cells_set(state->cells, index, value);                                         \
+    _bitmap_set_bit(state->free_bitmap, index, 1);                                                 \
     EXPECT(res != ERR_VAL, ERROR_GENERIC, "");                                                     \
   } while (0)
 
-#define GET_WORD(index)                                                                            \
-  sint index##_word = eval_cells_get_word(state->cells, index);                                    \
-  EXPECT(index##_cell != ERR_VAL, ERROR_INVALID_WORD, "");
+#define STATE_GET_WORD(index) GET_WORD(state->cells, index)
 
-#define SET_WORD(index, tag, payload)                                                              \
+#define STATE_SET_WORD(index, tag, payload)                                                        \
   do {                                                                                             \
     sint word = 0;                                                                                 \
     word = eval_tv_set_tag(word, tag);                                                             \
@@ -138,35 +135,14 @@ static inline EvalResult new_eval_result(sint sibling, size_t result) {
     EXPECT(res != ERR_VAL, ERROR_GENERIC, "");                                                     \
   } while (0)
 
-#define DEREF(index)                                                                               \
-  if (index##_cell == EVAL_NATIVE) {                                                               \
-    GET_WORD(index);                                                                               \
-    u8 tag = eval_tv_get_tag(index##_word);                                                        \
-    EXPECT(tag == EVAL_TAG_INDEX, ERROR_DEREF_NONREF, "");                                         \
-    index += (i64)eval_tv_get_payload_signed(index##_word);                                        \
-    size_t new_index = index;                                                                      \
-    GET_CELL(new_index)                                                                            \
-    if (new_index_cell == EVAL_NATIVE) {                                                           \
-      GET_WORD(new_index)                                                                          \
-      u8 tag = eval_tv_get_tag(new_index##_word);                                                  \
-      EXPECT(tag != EVAL_TAG_INDEX, ERROR_REF_TO_REF, "");                                         \
-    }                                                                                              \
-  }
+#define STATE_DEREF(index) DEREF(state->cells, index)
 
-static inline bool is_ref(EvalState state, size_t index) {
-  GET_CELL(index)
-  size_t lhs = index + 1;
-  GET_CELL(lhs)
-  if (lhs_cell != EVAL_NIL) {
-    return false;
-  }
-  size_t rhs = index + 2;
-  GET_CELL(rhs)
-  if (rhs_cell != EVAL_NIL) {
-    return false;
-  }
+// NOTE: references are second class, we can't have references to references!
+// NOTE: references are represented as single # node with corresponding tagged word node
+static inline bool _eval_is_ref(EvalState state, size_t index) {
+  STATE_GET_CELL(index)
   if (index_cell == EVAL_NATIVE) {
-    GET_WORD(index)
+    STATE_GET_WORD(index)
     u8 tag = eval_tv_get_tag(index_word);
     return tag == EVAL_TAG_INDEX;
   }
@@ -175,7 +151,7 @@ cleanup:
 }
 
 static inline bool is_opaque(EvalState state, size_t index) {
-  GET_CELL(index)
+  STATE_GET_CELL(index)
   if (index_cell == EVAL_TREE) {
     return true;
   }
@@ -209,7 +185,6 @@ static size_t next_n_vacant_cells(EvalState state, size_t n) {
   return next_n_vacant_cells(state, n);
 }
 
-// NOTE: references are second class, we can't have references to references!
 // Namings: A   B   C   D   E   F   G   H   I       P   Q   R   S   T   U   V
 // Rule 1 : $   ^   ^   *   *   X   Y           ->  X
 // Rule 2 : $   ^   ^   X   *   Y   Z           ->  $   $   X   Z   $   Y   Z
@@ -224,20 +199,20 @@ EvalResult eval_step_impl(EvalState state) {
 
   size_t root = stbds_arrpop(state->stack);
   size_t A = root;
-  GET_CELL(A)
-  DEREF(A)
+  STATE_GET_CELL(A)
+  STATE_DEREF(A)
 
   if (A_cell != EVAL_APPLY) {
     return new_eval_result(ERR_VAL, root);
   }
 
   size_t B = A + 1;
-  GET_CELL(B)
-  DEREF(B)
+  STATE_GET_CELL(B)
+  STATE_DEREF(B)
 
   EXPECT(B != EVAL_NIL, ERROR_GENERIC, "")
   if (B == EVAL_NATIVE) {
-    GET_WORD(B)
+    STATE_GET_WORD(B)
     u8 tag = eval_tv_get_tag(B_word);
     EXPECT(tag == EVAL_TAG_FUNC, ERROR_APPLY_TO_VALUE, "")
     assert(false); // TODO: this
@@ -247,7 +222,7 @@ EvalResult eval_step_impl(EvalState state) {
     EvalResult lhs_result = eval_step_impl(state);
     CHECK(state)
     size_t rhs = lhs_result.sibling;
-    GET_CELL(rhs)
+    STATE_GET_CELL(rhs)
     stbds_arrpush(state->stack, rhs);
     EvalResult rhs_result = eval_step_impl(state);
     assert(rhs_result.sibling == ERR_VAL);
@@ -259,12 +234,12 @@ EvalResult eval_step_impl(EvalState state) {
   size_t new_root = root;
   do {
     size_t C = B + 1;
-    GET_CELL(C)
-    DEREF(C)
+    STATE_GET_CELL(C)
+    STATE_DEREF(C)
     size_t D = C + 1;
-    GET_CELL(D)
+    STATE_GET_CELL(D)
     size_t E = C + 2;
-    GET_CELL(E)
+    STATE_GET_CELL(E)
     if (!(D_cell == EVAL_NIL && E_cell == EVAL_NIL)) {
       break;
     }
@@ -281,41 +256,85 @@ EvalResult eval_step_impl(EvalState state) {
 
   do {
     // eval_encode_dump(state->cells, A);
-    const size_t NATIVE_REF_AND_CHILDREN = 3;
+    const size_t REF_SIZE = 1;
     size_t C = B + 1;
-    GET_CELL(C)
-    DEREF(C)
+    STATE_GET_CELL(C)
+    STATE_DEREF(C)
     size_t D = C + 1;
-    GET_CELL(D)
+    STATE_GET_CELL(D)
     EXPECT(
-        is_ref(state, D),
+        _eval_is_ref(state, D),
         ERROR_REF_EXPECTED,
         "currently cannot get to other sibling if not ref :(");
-    size_t E = D + NATIVE_REF_AND_CHILDREN;
-    GET_CELL(E)
+    size_t E = D + REF_SIZE;
+    STATE_GET_CELL(E)
     if (!(is_opaque(state, D) && E_cell == EVAL_NIL)) {
       break;
     }
 
+#define CALCULATE_OFFSET(from, to)                                                                 \
+  sint to##_##from##_ref = to - from;                                                              \
+  {                                                                                                \
+    size_t tmp = from + to##_##from##_ref;                                                         \
+    if (_eval_is_ref(state, tmp)) {                                                                \
+      STATE_GET_CELL(tmp)                                                                          \
+      STATE_DEREF(tmp)                                                                             \
+      to##_##from##_ref = (sint)tmp - (sint)from;                                                  \
+    }                                                                                              \
+  }
+
+    // NOTE: we could allocate whole 7 cells here and reduce dereference need
+    // but for now I stick to reference-based approach
     size_t F = E + 1;
     EXPECT(
-        is_ref(state, F),
+        _eval_is_ref(state, F),
         ERROR_REF_EXPECTED,
         "currently cannot get to other sibling if not ref :(");
-    size_t G = F + NATIVE_REF_AND_CHILDREN;
+    size_t G = F + REF_SIZE;
     size_t Q = next_n_vacant_cells(state, 3);
     size_t R = Q + 1;
     size_t S = R + 1;
-    // TODO: undefined behaviour when trying to shift the negative value :P
-    sint D_ref = (ssize_t)D - (ssize_t)Q;
-    sint G_ref = (ssize_t)G - (ssize_t)Q;
+    CALCULATE_OFFSET(R, D)
+    CALCULATE_OFFSET(S, G)
 
-    SET_CELL(Q, EVAL_APPLY);
-    SET_CELL(R, EVAL_NATIVE);
-    SET_CELL(S, EVAL_NATIVE);
-    SET_WORD(R, EVAL_TAG_INDEX, D_ref);
-    SET_WORD(S, EVAL_TAG_INDEX, G_ref);
+    STATE_SET_CELL(Q, EVAL_APPLY);
+    STATE_SET_CELL(R, EVAL_NATIVE);
+    STATE_SET_CELL(S, EVAL_NATIVE);
+    STATE_SET_WORD(R, EVAL_TAG_INDEX, D_R_ref);
+    STATE_SET_WORD(S, EVAL_TAG_INDEX, G_S_ref);
+
+    size_t T = next_n_vacant_cells(state, 3);
+    size_t U = T + 1;
+    size_t V = U + 1;
+    CALCULATE_OFFSET(U, F)
+    CALCULATE_OFFSET(V, G)
+
+    STATE_SET_CELL(T, EVAL_APPLY);
+    STATE_SET_CELL(U, EVAL_NATIVE);
+    STATE_SET_CELL(V, EVAL_NATIVE);
+    STATE_SET_WORD(U, EVAL_TAG_INDEX, F_U_ref);
+    STATE_SET_WORD(V, EVAL_TAG_INDEX, G_V_ref);
+
+    size_t P = next_n_vacant_cells(state, 3);
+    sint Q_P_1_ref = (sint)Q - (sint)(P + 1);
+    sint T_P_2_ref = (sint)T - (sint)(P + 2);
+
+    STATE_SET_CELL(P, EVAL_APPLY);
+    STATE_SET_CELL(P + 1, EVAL_NATIVE);
+    STATE_SET_CELL(P + 2, EVAL_NATIVE);
+    STATE_SET_WORD(P + 1, EVAL_TAG_INDEX, Q_P_1_ref);
+    STATE_SET_WORD(P + 2, EVAL_TAG_INDEX, T_P_2_ref);
+    new_root = P;
+    matched = true;
+#undef CALCULATE_OFFSET
+
   } while (0);
+  CHECK(state)
+  if (matched) {
+    result.result = new_root;
+    goto cleanup;
+  }
+  matched = false;
 
 cleanup:
   return result;

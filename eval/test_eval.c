@@ -135,50 +135,92 @@ cleanup:
   return result;
 }
 
-bool compare_trees(Allocator lhs, Allocator rhs, size_t lhs_root, size_t rhs_root) {
-  sint lhs_cell = eval_cells_get(lhs, lhs_root);
+#define EXPECT(cond, code, msg)                                                                    \
+  if (!(cond)) {                                                                                   \
+    printf(#cond " failed\n");                                                                     \
+    goto failed;                                                                                   \
+  }
+
+static inline bool is_ref(Allocator cells, size_t index) {
+  GET_CELL(cells, index)
+  if (index_cell == EVAL_NATIVE) {
+    GET_WORD(cells, index)
+    u8 tag = eval_tv_get_tag(index_word);
+    return tag == EVAL_TAG_INDEX;
+  }
+failed:
+  return false;
+}
+
+// NOTE: this function could benefit from skip subtree feature
+// since we don't always want to reference everything to everything in the expected, we only want to
+// compare the nodes of the trees
+bool compare_trees(Allocator lhs_cells, Allocator rhs_cells, size_t lhs, size_t rhs) {
+  sint lhs_cell = eval_cells_get(lhs_cells, lhs);
   if (lhs_cell == ERR_VAL) {
-    printf("invalid cell [%zu] %zu\n", lhs_root, lhs_cell);
+    printf("invalid cell [%zu] %zu\n", lhs, lhs_cell);
     return false;
   }
-  sint rhs_cell = eval_cells_get(rhs, rhs_root);
-  if (rhs_cell == ERR_VAL) {
-    printf("invalid cell [%zu] %zu\n", rhs_root, rhs_cell);
-    return false;
-  }
-  if (lhs_cell != rhs_cell) {
-    printf("cells differ at [%zu] [%zu] %zu != %zu\n", lhs_root, rhs_root, lhs_cell, rhs_cell);
-    return false;
-  }
-  if (lhs_cell == EVAL_NATIVE) {
-    sint lhs_word = eval_cells_get_word(lhs, lhs_root);
-    if (lhs_word == ERR_VAL) {
-      printf("invalid value [%zu] %zu\n", lhs_root, lhs_word);
+  if (is_ref(lhs_cells, lhs)) {
+    DEREF(lhs_cells, lhs)
+    lhs_cell = eval_cells_get(lhs_cells, lhs);
+    if (lhs_cell == ERR_VAL) {
+      printf("invalid cell [%zu] %zu\n", lhs, lhs_cell);
       return false;
     }
-    sint rhs_word = eval_cells_get_word(rhs, rhs_root);
+  }
+
+  sint rhs_cell = eval_cells_get(rhs_cells, rhs);
+  if (rhs_cell == ERR_VAL) {
+    printf("invalid cell [%zu] %zu\n", rhs, rhs_cell);
+    return false;
+  }
+  if (is_ref(rhs_cells, rhs)) {
+    DEREF(rhs_cells, rhs)
+    rhs_cell = eval_cells_get(rhs_cells, rhs);
+    if (rhs_cell == ERR_VAL) {
+      printf("invalid cell [%zu] %zu\n", rhs, rhs_cell);
+      return false;
+    }
+  }
+
+  if (lhs_cell != rhs_cell) {
+    printf("%ld[%zu] != %ld[%zu]\n", lhs_cell, lhs, rhs_cell, rhs);
+    return false;
+  }
+  printf("%ld[%zu] == %ld[%zu]\n", lhs_cell, lhs, rhs_cell, rhs);
+  if (lhs_cell == EVAL_NATIVE) {
+    sint lhs_word = eval_cells_get_word(lhs_cells, lhs);
+    if (lhs_word == ERR_VAL) {
+      printf("invalid value [%zu] %zu\n", lhs, lhs_word);
+      return false;
+    }
+    sint rhs_word = eval_cells_get_word(rhs_cells, rhs);
     if (rhs_word == ERR_VAL) {
-      printf("invalid value [%zu] %zu\n", rhs_root, rhs_word);
+      printf("invalid value [%zu] %zu\n", rhs, rhs_word);
       return false;
     }
     if (lhs_word != rhs_word) {
-      printf("words differ at [%zu] [%zu] %zu != %zu\n", lhs_root, rhs_root, lhs_word, rhs_word);
+      printf("words differ at [%zu] [%zu] %zu != %zu\n", lhs, rhs, lhs_word, rhs_word);
       return false;
     }
   }
 
   if (lhs_cell != EVAL_NIL) {
-    bool result = false;
-    result |= compare_trees(lhs, rhs, lhs_root + 1, rhs_root + 1);
+    bool result = true;
+    result &= compare_trees(lhs_cells, rhs_cells, lhs + 1, rhs + 1);
     if (!result) {
       return result;
     }
-    result |= compare_trees(lhs, rhs, lhs_root + 2, rhs_root + 2);
+    result &= compare_trees(lhs_cells, rhs_cells, lhs + 2, rhs + 2);
     if (!result) {
       return result;
     }
   }
   return true;
+
+failed:
+  return false;
 }
 
 static bool compare_results(
@@ -193,10 +235,10 @@ static bool compare_results(
     goto cleanup;
   }
   if (!compare_trees(lhs, rhs, lhs_root, expected_root)) {
-    printf("program state:\n");
-    eval_encode_dump(lhs, lhs_root);
-    printf("expected state:\n");
-    eval_encode_dump(rhs, expected_root);
+    printf("program state, root = %zu:\n", lhs_root);
+    eval_encode_dump(lhs, 0);
+    printf("expected state, root = %zu:\n", expected_root);
+    eval_encode_dump(rhs, 0);
     result = false;
     goto cleanup;
   }
@@ -261,10 +303,10 @@ int main() {
   ADD_TEST_WITH_DATA(
       test_eval_eval,
       3,
-      "$ ^ ^ # !7 ** * # !6 ** # !6 ** # 10 ** # 40 ** # 20 **",
-      16,
-      "$ ^ ^ # !7 ** * # !6 ** # !6 ** # 10 ** # 40 ** # 20 ** "
-      "$ $ # !-2 ** # !-2 ** $ # !-2 ** # !-2 **");
+      "$ ^ ^ # !4 * # !5 # !7 # 10 ** # 40 ** # 20 **",
+      22,
+      "$ ^ ^ # !4 * # !5 # !7 # 10 ** # 40 ** # 20 ** "
+      "$ # !-10 # !-5 $ # !-10 # !-8 $ # !-7 # !-5");
 
   const char* GREEN = "\033[0;32m";
   const char* CYAN = "\033[0;36m";

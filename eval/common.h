@@ -28,40 +28,6 @@ typedef intptr_t sint;
 #define EVAL_TAG_INDEX  1
 #define EVAL_TAG_FUNC   2
 
-static inline u8 eval_tv_get_tag(u64 tagged_value) {
-  return (u8)(tagged_value & 0xF);
-}
-
-static inline i64 eval_tv_get_payload_signed(u64 tagged_value) {
-  return (i64)(tagged_value & ~0xFULL) >> 4;
-}
-
-static inline u64 eval_tv_get_payload_unsigned(u64 tagged_value) {
-  return tagged_value >> 4;
-}
-
-static inline u64 eval_tv_set_tag(u64 tagged_value, u8 new_tag) {
-  return (tagged_value & ~0xFULL) | (new_tag & 0xF);
-}
-
-static inline u64 eval_tv_set_payload_signed(u64 tagged_value, i64 new_payload) {
-  u64 tag_bits = tagged_value & 0xF;
-  return ((u64)new_payload << 4) | tag_bits;
-}
-
-static inline u64 eval_tv_set_payload_unsigned(u64 tagged_value, u64 new_payload) {
-  u64 tag_bits = tagged_value & 0xF;
-  return (new_payload << 4) | tag_bits;
-}
-
-static inline u64 eval_tv_new_tagged_value_signed(u8 tag, i64 payload) {
-  return ((u64)payload << 4) | (tag & 0xF);
-}
-
-static inline u64 eval_tv_new_tagged_value_unsigned(u8 tag, u64 payload) {
-  return (payload << 4) | (tag & 0xF);
-}
-
 typedef struct EvalState_impl* EvalState;
 typedef struct Allocator_impl* Allocator;
 
@@ -95,5 +61,62 @@ void _bitmap_set_bit(u64* bitmap, size_t index, u8 value);
 
 void _errbuf_clear();
 void _errbuf_write(const char* format, ...);
+
+#define GET_CELL(cells, index)                                                                     \
+  sint index##_cell = eval_cells_get(cells, index);                                                \
+  EXPECT(index##_cell != ERR_VAL, ERROR_INVALID_CELL, "");
+
+#define GET_WORD(cells, index)                                                                     \
+  sint index##_word = eval_cells_get_word(cells, index);                                           \
+  EXPECT(index##_cell != ERR_VAL, ERROR_INVALID_WORD, "");
+
+#define DEREF(cells, index)                                                                        \
+  if (index##_cell == EVAL_NATIVE) {                                                               \
+    GET_WORD(cells, index);                                                                        \
+    u8 tag = eval_tv_get_tag(index##_word);                                                        \
+    EXPECT(tag == EVAL_TAG_INDEX, ERROR_DEREF_NONREF, "");                                         \
+    index += (i64)eval_tv_get_payload_signed(index##_word);                                        \
+    size_t new_index = index;                                                                      \
+    GET_CELL(cells, new_index)                                                                     \
+    if (new_index_cell == EVAL_NATIVE) {                                                           \
+      GET_WORD(cells, new_index)                                                                   \
+      u8 tag = eval_tv_get_tag(new_index##_word);                                                  \
+      EXPECT(tag != EVAL_TAG_INDEX, ERROR_REF_TO_REF, "");                                         \
+    }                                                                                              \
+  }
+
+static inline u8 eval_tv_get_tag(u64 tagged_value) {
+  return (u8)(tagged_value & 0xF);
+}
+
+static inline i64 eval_tv_get_payload_signed(u64 tagged_value) {
+  return (i64)(tagged_value & ~0xFULL) >> 4;
+}
+
+static inline u64 eval_tv_get_payload_unsigned(u64 tagged_value) {
+  return tagged_value >> 4;
+}
+
+static inline u64 eval_tv_set_tag(u64 tagged_value, u8 new_tag) {
+  return (tagged_value & ~0xFULL) | (new_tag & 0xF);
+}
+
+static inline u64 eval_tv_set_payload_signed(u64 tagged_value, i64 new_payload) {
+  u64 tag_bits = tagged_value & 0xF;
+  return ((u64)new_payload << 4) | tag_bits;
+}
+
+static inline u64 eval_tv_set_payload_unsigned(u64 tagged_value, u64 new_payload) {
+  u64 tag_bits = tagged_value & 0xF;
+  return (new_payload << 4) | tag_bits;
+}
+
+static inline u64 eval_tv_new_tagged_value_signed(u8 tag, i64 payload) {
+  return ((u64)payload << 4) | (tag & 0xF);
+}
+
+static inline u64 eval_tv_new_tagged_value_unsigned(u8 tag, u64 payload) {
+  return (payload << 4) | (tag & 0xF);
+}
 
 #endif // __EVAL_COMMON__
