@@ -1,3 +1,11 @@
+If:
+  PathMatch: .*\.h
+
+CompileFlags:
+  Add: [-Wno-unused-function]
+
+---
+
 CompileFlags:
   Add: 
     - -std=c99
@@ -18,3 +26,5 @@ Diagnostics:
       - readability-identifier-length
 Index:
   Background: Build
+
+
