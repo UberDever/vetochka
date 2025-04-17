@@ -16,12 +16,12 @@ static bool char_is_node(char c) {
   return c == '*' || c == '^' || c == '$' || c == '#';
 }
 
-uint eval_encode_parse(Allocator cells, const char *program) {
-  const char *delimiters = " \t\n";
+uint eval_encode_parse(Allocator cells, const char* program) {
+  const char* delimiters = " \t\n";
   int result = 0;
-  char *prog = malloc(sizeof(char) * (strlen(program) + 1));
+  char* prog = malloc(sizeof(char) * (strlen(program) + 1));
   strcpy(prog, program);
-  char *token = strtok(prog, delimiters);
+  char* token = strtok(prog, delimiters);
   size_t index = 0;
   while (token != NULL) {
     if (char_is_node(token[0])) {
@@ -37,7 +37,7 @@ uint eval_encode_parse(Allocator cells, const char *program) {
         }
       }
     } else {
-      char *endptr = NULL;
+      char* endptr = NULL;
       bool is_index = false;
       if (token[0] == '!') {
         is_index = true;

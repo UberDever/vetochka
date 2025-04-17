@@ -13,27 +13,27 @@
 #define ERROR_BUF_SIZE 65536
 static char g_error_buf[ERROR_BUF_SIZE] = {};
 
-#define ERROR_PARSE 1
+#define ERROR_PARSE           1
 #define ERROR_STACK_UNDERFLOW 2
-#define ERROR_DEREF_NONREF 3
-#define ERROR_INVALID_CELL 4
-#define ERROR_INVALID_WORD 5
-#define ERROR_REF_TO_REF 6
-#define ERROR_APPLY_TO_VALUE 7
-#define ERROR_REF_EXPECTED 8
-#define ERROR_GENERIC 127
+#define ERROR_DEREF_NONREF    3
+#define ERROR_INVALID_CELL    4
+#define ERROR_INVALID_WORD    5
+#define ERROR_REF_TO_REF      6
+#define ERROR_APPLY_TO_VALUE  7
+#define ERROR_REF_EXPECTED    8
+#define ERROR_GENERIC         127
 
 struct EvalState_impl {
   Allocator cells;
-  size_t *stack;
-  word_t *free_bitmap;
+  size_t* stack;
+  word_t* free_bitmap;
   size_t free_capacity;
 
   uint8_t error_code;
-  const char *error;
+  const char* error;
 };
 
-uint eval_init(EvalState *state, const char *program) {
+uint eval_init(EvalState* state, const char* program) {
   EvalState s = calloc(1, sizeof(struct EvalState_impl));
   if (s == NULL) {
     return ERROR_VALUE;
@@ -63,7 +63,7 @@ uint eval_init(EvalState *state, const char *program) {
   return 0;
 }
 
-uint eval_free(EvalState *state) {
+uint eval_free(EvalState* state) {
   EvalState s = *state;
   eval_cells_free(&s->cells);
   stbds_arrfree(s->stack);
@@ -85,54 +85,54 @@ static inline EvalResult new_eval_result(size_t sibling, size_t result) {
   };
 }
 
-#define EXPECT(cond, code, msg)                                                \
-  if (!(cond)) {                                                               \
-    state->error_code = (code);                                                \
-    snprintf(g_error_buf, ERROR_BUF_SIZE, "%s %s '%s'", #cond, #code, msg);    \
-    goto cleanup;                                                              \
+#define EXPECT(cond, code, msg)                                                                    \
+  if (!(cond)) {                                                                                   \
+    state->error_code = (code);                                                                    \
+    snprintf(g_error_buf, ERROR_BUF_SIZE, "%s %s '%s'", #cond, #code, msg);                        \
+    goto cleanup;                                                                                  \
   }
 
-#define CHECK(state)                                                           \
-  if (state->error_code) {                                                     \
-    goto cleanup;                                                              \
+#define CHECK(state)                                                                               \
+  if (state->error_code) {                                                                         \
+    goto cleanup;                                                                                  \
   }
 
-#define GET_CELL(index)                                                        \
-  uint index##_cell = eval_cells_get(state->cells, index);                     \
+#define GET_CELL(index)                                                                            \
+  uint index##_cell = eval_cells_get(state->cells, index);                                         \
   EXPECT(index##_cell != ERROR_VALUE, ERROR_INVALID_CELL, "");
 
-#define SET_CELL(index, value)                                                 \
-  do {                                                                         \
-    uint res = eval_cells_set(state->cells, index, value);                     \
-    EXPECT(res != ERROR_VALUE, ERROR_GENERIC, "");                             \
+#define SET_CELL(index, value)                                                                     \
+  do {                                                                                             \
+    uint res = eval_cells_set(state->cells, index, value);                                         \
+    EXPECT(res != ERROR_VALUE, ERROR_GENERIC, "");                                                 \
   } while (0)
 
-#define GET_WORD(index)                                                        \
-  uint index##_word = eval_cells_get_word(state->cells, index);                \
+#define GET_WORD(index)                                                                            \
+  uint index##_word = eval_cells_get_word(state->cells, index);                                    \
   EXPECT(index##_cell != ERROR_VALUE, ERROR_INVALID_WORD, "");
 
-#define SET_WORD(index, tag, payload)                                          \
-  do {                                                                         \
-    ssize_t word = 0;                                                          \
-    word = EVAL_SET_TAG(word, tag);                                            \
-    word = EVAL_SET_PAYLOAD(word, payload);                                    \
-    uint res = eval_cells_set_word(state->cells, index, word);                 \
-    EXPECT(res != ERROR_VALUE, ERROR_GENERIC, "");                             \
+#define SET_WORD(index, tag, payload)                                                              \
+  do {                                                                                             \
+    ssize_t word = 0;                                                                              \
+    word = EVAL_SET_TAG(word, tag);                                                                \
+    word = EVAL_SET_PAYLOAD(word, payload);                                                        \
+    uint res = eval_cells_set_word(state->cells, index, word);                                     \
+    EXPECT(res != ERROR_VALUE, ERROR_GENERIC, "");                                                 \
   } while (0)
 
-#define DEREF(index)                                                           \
-  if (index##_cell == EVAL_NATIVE) {                                           \
-    GET_WORD(index);                                                           \
-    uint8_t tag = EVAL_GET_TAG(index##_word);                                  \
-    EXPECT(tag == EVAL_TAG_INDEX, ERROR_DEREF_NONREF, "");                     \
-    index += (ssize_t)EVAL_GET_PAYLOAD(index##_word);                          \
-    size_t new_index = index;                                                  \
-    GET_CELL(new_index)                                                        \
-    if (new_index_cell == EVAL_NATIVE) {                                       \
-      GET_WORD(new_index)                                                      \
-      uint8_t tag = EVAL_GET_TAG(new_index##_word);                            \
-      EXPECT(tag != EVAL_TAG_INDEX, ERROR_REF_TO_REF, "");                     \
-    }                                                                          \
+#define DEREF(index)                                                                               \
+  if (index##_cell == EVAL_NATIVE) {                                                               \
+    GET_WORD(index);                                                                               \
+    uint8_t tag = EVAL_GET_TAG(index##_word);                                                      \
+    EXPECT(tag == EVAL_TAG_INDEX, ERROR_DEREF_NONREF, "");                                         \
+    index += (ssize_t)EVAL_GET_PAYLOAD(index##_word);                                              \
+    size_t new_index = index;                                                                      \
+    GET_CELL(new_index)                                                                            \
+    if (new_index_cell == EVAL_NATIVE) {                                                           \
+      GET_WORD(new_index)                                                                          \
+      uint8_t tag = EVAL_GET_TAG(new_index##_word);                                                \
+      EXPECT(tag != EVAL_TAG_INDEX, ERROR_REF_TO_REF, "");                                         \
+    }                                                                                              \
   }
 
 static inline bool is_ref(EvalState state, uint index) {
@@ -257,8 +257,10 @@ EvalResult eval_step_impl(EvalState state) {
     DEREF(C)
     size_t D = C + 1;
     GET_CELL(D)
-    EXPECT(is_ref(state, D), ERROR_REF_EXPECTED,
-           "currently cannot get to other sibling if not ref :(");
+    EXPECT(
+        is_ref(state, D),
+        ERROR_REF_EXPECTED,
+        "currently cannot get to other sibling if not ref :(");
     size_t E = D + 2;
     GET_CELL(E)
     if (!(is_opaque(state, D) && E_cell == EVAL_NIL)) {
@@ -266,8 +268,10 @@ EvalResult eval_step_impl(EvalState state) {
     }
 
     size_t F = E + 1;
-    EXPECT(is_ref(state, F), ERROR_REF_EXPECTED,
-           "currently cannot get to other sibling if not ref :(");
+    EXPECT(
+        is_ref(state, F),
+        ERROR_REF_EXPECTED,
+        "currently cannot get to other sibling if not ref :(");
     size_t G = F + 2;
     size_t Q = next_n_vacant_cells(state, 3);
     size_t R = Q + 1;
@@ -287,11 +291,15 @@ cleanup:
   return result;
 }
 
-uint eval_step(EvalState state) { return eval_step_impl(state).result; }
+uint eval_step(EvalState state) {
+  return eval_step_impl(state).result;
+}
 
-Allocator eval_get_memory(EvalState state) { return state->cells; }
+Allocator eval_get_memory(EvalState state) {
+  return state->cells;
+}
 
-uint8_t eval_get_error(EvalState state, const char **message) {
+uint8_t eval_get_error(EvalState state, const char** message) {
   *message = state->error;
   return state->error_code;
 }

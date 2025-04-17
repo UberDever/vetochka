@@ -4,9 +4,9 @@
 #if 0
 #include "common.h"
 
-#define NODE_SIZE (sizeof(uint) * 8)
-#define TAG_SIZE  (uint)2
-#define DATA_SIZE ((NODE_SIZE - TAG_SIZE) / 2)
+#define NODE_SIZE    (sizeof(uint) * 8)
+#define TAG_SIZE     (uint)2
+#define DATA_SIZE    ((NODE_SIZE - TAG_SIZE) / 2)
 /* #define DATA_MAX     ~(1 << DATA_SIZE) */
 #define DATA_INVALID (~(uint)0 & CHILD_MASK)
 
