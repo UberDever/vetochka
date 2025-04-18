@@ -19,10 +19,10 @@ typedef intptr_t sint;
 #define debug(fmt, ...) printf("[%s:%d] " fmt "\n", __FILE__, __LINE__, __VA_ARGS__);
 #define debug_s(s)      printf("[%s:%d] " s "\n", __FILE__, __LINE__);
 
-#define EVAL_NIL    0
-#define EVAL_TREE   1
-#define EVAL_APPLY  2
-#define EVAL_NATIVE 3
+#define EVAL_NIL   0
+#define EVAL_TREE  1
+#define EVAL_APPLY 2
+#define EVAL_REF   3
 
 #define EVAL_TAG_NUMBER 0
 #define EVAL_TAG_INDEX  1
@@ -71,14 +71,14 @@ void _errbuf_write(const char* format, ...);
   EXPECT(index##_cell != ERR_VAL, ERROR_INVALID_WORD, "");
 
 #define DEREF(cells, index)                                                                        \
-  if (index##_cell == EVAL_NATIVE) {                                                               \
+  if (index##_cell == EVAL_REF) {                                                                  \
     GET_WORD(cells, index);                                                                        \
     u8 tag = eval_tv_get_tag(index##_word);                                                        \
     EXPECT(tag == EVAL_TAG_INDEX, ERROR_DEREF_NONREF, "");                                         \
     index += (i64)eval_tv_get_payload_signed(index##_word);                                        \
     size_t new_index = index;                                                                      \
     GET_CELL(cells, new_index)                                                                     \
-    if (new_index_cell == EVAL_NATIVE) {                                                           \
+    if (new_index_cell == EVAL_REF) {                                                              \
       GET_WORD(cells, new_index)                                                                   \
       u8 tag = eval_tv_get_tag(new_index##_word);                                                  \
       EXPECT(tag != EVAL_TAG_INDEX, ERROR_REF_TO_REF, "");                                         \

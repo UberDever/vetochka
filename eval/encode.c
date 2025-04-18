@@ -9,7 +9,7 @@ static int ENCODE_MAP[] = {
     ['*'] = EVAL_NIL,
     ['^'] = EVAL_TREE,
     ['$'] = EVAL_APPLY,
-    ['#'] = EVAL_NATIVE,
+    ['#'] = EVAL_REF,
 };
 
 static bool char_is_node(char c) {
@@ -38,11 +38,6 @@ sint eval_encode_parse(Allocator cells, const char* program) {
       }
     } else {
       char* endptr = NULL;
-      bool is_index = false;
-      if (token[0] == '!') {
-        is_index = true;
-        token++;
-      }
       sint value = strtoull(token, &endptr, 10);
       if (*endptr != '\0') {
         result = -1;
@@ -54,11 +49,8 @@ sint eval_encode_parse(Allocator cells, const char* program) {
         goto cleanup;
       }
       sint node = eval_cells_get(cells, index - 1);
-      if (node == EVAL_NATIVE) {
-        u8 tag = 0;
-        if (is_index) {
-          tag = EVAL_TAG_INDEX;
-        }
+      if (node == EVAL_REF) {
+        u8 tag = EVAL_TAG_INDEX;
         u64 val = eval_tv_new_tagged_value_signed(tag, value);
         sint res = eval_cells_set_word(cells, index - 1, val);
         if (res == ERR_VAL) {
@@ -97,7 +89,7 @@ void eval_encode_dump(Allocator cells, size_t root) {
   while (eval_cells_is_set(cells, word_index)) {
     sint word_index_cell = eval_cells_get(cells, word_index);
     assert(word_index_cell != ERR_VAL);
-    if (word_index_cell != EVAL_NATIVE) {
+    if (word_index_cell != EVAL_REF) {
       word_index++;
       continue;
     }

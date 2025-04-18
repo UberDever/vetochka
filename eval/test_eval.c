@@ -120,7 +120,7 @@ bool test_encode_parse_smoke(void* _) {
     while (eval_cells_is_set(cells, j)) {
       uint8_t cell = eval_cells_get(cells, j);
       printf("%hhu ", cell);
-      if (cell == EVAL_NATIVE) {
+      if (cell == EVAL_REF) {
         sint word = eval_cells_get_word(cells, j);
         sint payload = eval_tv_get_payload_signed(word);
         printf("[%zu] ", payload);
@@ -143,11 +143,7 @@ cleanup:
 
 static inline bool is_ref(Allocator cells, size_t index) {
   GET_CELL(cells, index)
-  if (index_cell == EVAL_NATIVE) {
-    GET_WORD(cells, index)
-    u8 tag = eval_tv_get_tag(index_word);
-    return tag == EVAL_TAG_INDEX;
-  }
+  return (index_cell == EVAL_REF);
 failed:
   return false;
 }
@@ -189,7 +185,7 @@ bool compare_trees(Allocator lhs_cells, Allocator rhs_cells, size_t lhs, size_t 
     return false;
   }
   printf("%ld[%zu] == %ld[%zu]\n", lhs_cell, lhs, rhs_cell, rhs);
-  if (lhs_cell == EVAL_NATIVE) {
+  if (lhs_cell == EVAL_REF) {
     sint lhs_word = eval_cells_get_word(lhs_cells, lhs);
     if (lhs_word == ERR_VAL) {
       printf("invalid value [%zu] %zu\n", lhs, lhs_word);
@@ -297,16 +293,16 @@ int main() {
 
   // first rule
   ADD_TEST_WITH_DATA(test_eval_eval, 1, "$ ^ ^** ^** ^**", 0, "^**");
-  ADD_TEST_WITH_DATA(test_eval_eval, 2, "$ ^ ^** # 10 ** *", 0, "# 10 **");
+  ADD_TEST_WITH_DATA(test_eval_eval, 2, "$ ^ ^** ^** *", 0, "^**");
 
   // second rule
   ADD_TEST_WITH_DATA(
       test_eval_eval,
       3,
-      "$ ^ ^ # !4 * # !5 # !7 # 10 ** # 40 ** # 20 **",
-      22,
-      "$ ^ ^ # !4 * # !5 # !7 # 10 ** # 40 ** # 20 ** "
-      "$ # !-10 # !-5 $ # !-10 # !-8 $ # !-7 # !-5");
+      "$ ^ ^ # 4 * # 5 # 9 ^** ^^*** ^^**^**",
+      28,
+      "$ ^ ^ # 4 * # 5 # 9 ^** ^^*** ^^**^** "
+      "$ # -16 # -9 $ # -16 # -12 $ # -7 # -5");
 
   const char* GREEN = "\033[0;32m";
   const char* CYAN = "\033[0;36m";

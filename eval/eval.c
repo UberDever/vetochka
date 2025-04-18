@@ -141,11 +141,7 @@ static inline EvalResult new_eval_result(sint sibling, size_t result) {
 // NOTE: references are represented as single # node with corresponding tagged word node
 static inline bool _eval_is_ref(EvalState state, size_t index) {
   STATE_GET_CELL(index)
-  if (index_cell == EVAL_NATIVE) {
-    STATE_GET_WORD(index)
-    u8 tag = eval_tv_get_tag(index_word);
-    return tag == EVAL_TAG_INDEX;
-  }
+  return (index_cell == EVAL_REF);
 cleanup:
   return false;
 }
@@ -155,12 +151,12 @@ static inline bool is_opaque(EvalState state, size_t index) {
   if (index_cell == EVAL_TREE) {
     return true;
   }
-  if (index_cell == EVAL_NATIVE) {
-    // GET_WORD(index)
-    // uint8_t tag = EVAL_GET_TAG(index_word);
-    // return tag != EVAL_TAG_FUNC;
-    return true;
-  }
+  // if (index_cell == EVAL_NATIVE) {
+  // GET_WORD(index)
+  // uint8_t tag = EVAL_GET_TAG(index_word);
+  // return tag != EVAL_TAG_FUNC;
+  // return true;
+  // }
 cleanup:
   return false;
 }
@@ -211,12 +207,13 @@ EvalResult eval_step_impl(EvalState state) {
   STATE_DEREF(B)
 
   EXPECT(B != EVAL_NIL, ERROR_GENERIC, "")
-  if (B == EVAL_NATIVE) {
+  /*if (B == EVAL_NATIVE) {
     STATE_GET_WORD(B)
     u8 tag = eval_tv_get_tag(B_word);
     EXPECT(tag == EVAL_TAG_FUNC, ERROR_APPLY_TO_VALUE, "")
     assert(false); // TODO: this
-  } else if (B_cell == EVAL_APPLY) {
+  } else */
+  if (B_cell == EVAL_APPLY) {
     assert(false);
     stbds_arrpush(state->stack, B);
     EvalResult lhs_result = eval_step_impl(state);
@@ -268,6 +265,7 @@ EvalResult eval_step_impl(EvalState state) {
         "currently cannot get to other sibling if not ref :(");
     size_t E = D + REF_SIZE;
     STATE_GET_CELL(E)
+    STATE_DEREF(D);
     if (!(is_opaque(state, D) && E_cell == EVAL_NIL)) {
       break;
     }
@@ -297,9 +295,11 @@ EvalResult eval_step_impl(EvalState state) {
     CALCULATE_OFFSET(R, D)
     CALCULATE_OFFSET(S, G)
 
+    // TODO: also need to put these (x y) and (y z) on the stack and actually evaluate first
+
     STATE_SET_CELL(Q, EVAL_APPLY);
-    STATE_SET_CELL(R, EVAL_NATIVE);
-    STATE_SET_CELL(S, EVAL_NATIVE);
+    STATE_SET_CELL(R, EVAL_REF);
+    STATE_SET_CELL(S, EVAL_REF);
     STATE_SET_WORD(R, EVAL_TAG_INDEX, D_R_ref);
     STATE_SET_WORD(S, EVAL_TAG_INDEX, G_S_ref);
 
@@ -310,8 +310,8 @@ EvalResult eval_step_impl(EvalState state) {
     CALCULATE_OFFSET(V, G)
 
     STATE_SET_CELL(T, EVAL_APPLY);
-    STATE_SET_CELL(U, EVAL_NATIVE);
-    STATE_SET_CELL(V, EVAL_NATIVE);
+    STATE_SET_CELL(U, EVAL_REF);
+    STATE_SET_CELL(V, EVAL_REF);
     STATE_SET_WORD(U, EVAL_TAG_INDEX, F_U_ref);
     STATE_SET_WORD(V, EVAL_TAG_INDEX, G_V_ref);
 
@@ -320,8 +320,8 @@ EvalResult eval_step_impl(EvalState state) {
     sint T_P_2_ref = (sint)T - (sint)(P + 2);
 
     STATE_SET_CELL(P, EVAL_APPLY);
-    STATE_SET_CELL(P + 1, EVAL_NATIVE);
-    STATE_SET_CELL(P + 2, EVAL_NATIVE);
+    STATE_SET_CELL(P + 1, EVAL_REF);
+    STATE_SET_CELL(P + 2, EVAL_REF);
     STATE_SET_WORD(P + 1, EVAL_TAG_INDEX, Q_P_1_ref);
     STATE_SET_WORD(P + 2, EVAL_TAG_INDEX, T_P_2_ref);
     new_root = P;
