@@ -182,7 +182,7 @@ static size_t next_n_vacant_cells(EvalState state, size_t n) {
 // Rule 2 : ^   ^   X   *   Y   Z           ->  X   Z   Y   Z             , new roots: P, R, ?
 // Rule 3a: ^   ^   W   X   Y   ^   *   *   ->  W                         , new roots: P
 // Rule 3b: ^   ^   W   X   Y   ^   U   *   ->  X   U                     , new roots: P
-// Rule 3c: ^   ^   W   X   Y   ^   U   V   ->  Y   U   V                 , new roots: P, ?
+// Rule 3c: ^   ^   W   X   Y   ^   U   V   ->  Y   U   V                , new roots: P, ?
 // Rule 4 : $   N   X, where N is native function and X is a arbitrary value
 // (tree or native)
 void eval_step(EvalState state) {
@@ -242,35 +242,15 @@ void eval_step(EvalState state) {
     if (!(C_cell == EVAL_NIL && D_cell == EVAL_NIL)) {
       break;
     }
+
     stbds_arrput(state->stack, E);
     matched = true;
   } while (0);
   CHECK(state)
   if (matched) {
-    // result.result = new_root;
     goto cleanup;
   }
   matched = false;
-
-  do {
-    // TODO: match further, up until F
-    break;
-
-    // eval_encode_dump(state->cells, A);
-    const size_t REF_SIZE = 1;
-    size_t B = A + 1;
-    STATE_GET_CELL(B)
-    STATE_DEREF(B)
-    size_t C = B + 1;
-    STATE_GET_CELL(C)
-    EXPECT(_eval_is_ref(state, C), ERROR_REF_EXPECTED, "");
-    size_t D = C + REF_SIZE;
-    STATE_GET_CELL(D)
-    STATE_DEREF(C);
-
-    if (!(is_opaque(state, C) && D_cell == EVAL_NIL)) {
-      break;
-    }
 
 #define CALCULATE_OFFSET(from, to)                                                                 \
   sint to##_##from##_ref = to - from;                                                              \
@@ -283,15 +263,32 @@ void eval_step(EvalState state) {
     }                                                                                              \
   }
 
-    // NOTE: we could allocate whole 7 cells here and reduce dereference need
-    // but for now I stick to reference-based approach
-
-    // TODO: also need to put these (x y) and (y z) on the stack and actually evaluate first
-
+  do {
+    // eval_encode_dump(state->cells, A);
+    // const size_t REF_SIZE = 1;
+    size_t B = A + 1;
+    STATE_GET_CELL(B)
+    STATE_DEREF(B)
+    size_t C = B + 1;
+    STATE_GET_CELL(C)
+    if (!_eval_is_ref(state, C)) {
+      break;
+    }
+    size_t D = C + 1;
+    STATE_GET_CELL(D)
+    STATE_DEREF(C);
     size_t E = D + 1;
-    EXPECT(_eval_is_ref(state, E), ERROR_REF_EXPECTED, "");
+    if (!_eval_is_ref(state, E)) {
+      break;
+    }
+    size_t F = E + 1;
+    if (!_eval_is_ref(state, F)) {
+      break;
+    }
+    if (!(is_opaque(state, C) && D_cell == EVAL_NIL)) {
+      break;
+    }
 
-    size_t F = E + REF_SIZE;
     size_t P = next_n_vacant_cells(state, 4);
     size_t Q = P + 1;
     CALCULATE_OFFSET(P, C)
@@ -314,58 +311,16 @@ void eval_step(EvalState state) {
 
     stbds_arrput(state->stack, P);
     stbds_arrput(state->stack, R);
+    // TODO: ?
     stbds_arrput(state->stack, P);
 
-#if 0
-    size_t R = Q + 0;
-    size_t S = R + 1;
-    CALCULATE_OFFSET(R, D)
-    CALCULATE_OFFSET(S, G)
-
-    // STATE_SET_CELL(Q, EVAL_APPLY);
-    STATE_SET_CELL(R, EVAL_REF);
-    STATE_SET_CELL(S, EVAL_REF);
-    STATE_SET_WORD(R, EVAL_TAG_INDEX, D_R_ref);
-    STATE_SET_WORD(S, EVAL_TAG_INDEX, G_S_ref);
-
-    size_t T = next_n_vacant_cells(state, 2);
-    size_t U = T + 0;
-    size_t V = U + 1;
-    CALCULATE_OFFSET(U, F)
-    CALCULATE_OFFSET(V, G)
-
-    // STATE_SET_CELL(T, EVAL_APPLY);
-    STATE_SET_CELL(U, EVAL_REF);
-    STATE_SET_CELL(V, EVAL_REF);
-    STATE_SET_WORD(U, EVAL_TAG_INDEX, F_U_ref);
-    STATE_SET_WORD(V, EVAL_TAG_INDEX, G_V_ref);
-
-    size_t Q_deref = Q;
-    STATE_GET_CELL(Q_deref)
-    STATE_DEREF(Q_deref);
-    size_t T_deref = T;
-    STATE_GET_CELL(T_deref)
-    STATE_DEREF(T_deref);
-
-    size_t P = next_n_vacant_cells(state, 2);
-    sint Q_P_1_ref = (sint)Q_deref - (sint)(P + 0);
-    sint T_P_2_ref = (sint)T_deref - (sint)(P + 1);
-
-    // STATE_SET_CELL(P, EVAL_APPLY);
-    STATE_SET_CELL(P + 0, EVAL_REF);
-    STATE_SET_CELL(P + 1, EVAL_REF);
-    STATE_SET_WORD(P + 0, EVAL_TAG_INDEX, Q_P_1_ref);
-    STATE_SET_WORD(P + 1, EVAL_TAG_INDEX, T_P_2_ref);
-#endif
-    // TODO:
-    // new_root = P;
     matched = true;
-#undef CALCULATE_OFFSET
 
   } while (0);
+#undef CALCULATE_OFFSET
+
   CHECK(state)
   if (matched) {
-    // result.result = new_root;
     goto cleanup;
   }
   matched = false;

@@ -360,8 +360,7 @@ int main() {
   ADD_TEST_WITH_DATA(test_eval_eval, 1, "^ ^** # 2 # 3 ^** ^**", "0", "^**");
   ADD_TEST_WITH_DATA(test_eval_eval, 2, "^ ^** # 2 # 3 ^** *", "0", "^**");
 
-// second rule
-#if 0
+  // second rule
   ADD_TEST_WITH_DATA(
       test_eval_eval,
       3,
@@ -369,7 +368,6 @@ int main() {
       "21 23 21",
       "^ ^ # 4 * # 5 # 9 ^** ^^*** ^^**^** "
       "# -15 # -8 # -14 # -10");
-#endif
 
   const char* GREEN = "\033[0;32m";
   const char* CYAN = "\033[0;36m";
