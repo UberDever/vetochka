@@ -182,7 +182,7 @@ static size_t next_n_vacant_cells(EvalState state, size_t n) {
 // Rule 2 : ^   ^   X   *   Y   Z           ->  X   Z   Y   Z             , new roots: P, R, ?
 // Rule 3a: ^   ^   W   X   Y   ^   *   *   ->  W                         , new roots: P
 // Rule 3b: ^   ^   W   X   Y   ^   U   *   ->  X   U                     , new roots: P
-// Rule 3c: ^   ^   W   X   Y   ^   U   V   ->  Y   U   V                , new roots: P, ?
+// Rule 3c: ^   ^   W   X   Y   ^   U   V   ->  Y   U   V                 , new roots: P, ?
 // Rule 4 : $   N   X, where N is native function and X is a arbitrary value
 // (tree or native)
 void eval_step(EvalState state) {
@@ -248,7 +248,7 @@ void eval_step(EvalState state) {
   } while (0);
   CHECK(state)
   if (matched) {
-    goto cleanup;
+    goto matched;
   }
   matched = false;
 
@@ -321,11 +321,22 @@ void eval_step(EvalState state) {
 
   CHECK(state)
   if (matched) {
-    goto cleanup;
+    goto matched;
   }
   matched = false;
 
+  // TODO: if we haven't matched anything, put 0
+
+  return;
+
 cleanup:
+matched:
+  // NOTE: if after calculating the specified root from the stack
+  // we got an entry in the control stack
+  // then we (1) pop that entry and do the following:
+  // if entry was rule2 -> P' = stack_pop; R = stack_pop; stack_push P'; stack_push R
+  // if entry was rule3c -> P' = stack_pop; ...?
+
   return;
 }
 
