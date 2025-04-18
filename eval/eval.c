@@ -177,12 +177,12 @@ static size_t next_n_vacant_cells(EvalState state, size_t n) {
   return next_n_vacant_cells(state, n);
 }
 
-// Namings: A   B   C   D   E   F   G   H   I       P   Q   R   S   T   U   V
-// Rule 1 : ^   ^   *   *   X   Y               ->  X                         , new roots: X
-// Rule 2 : ^   ^   X   *   Y   Z               ->  X   Z   Y   Z             , new roots: X, Y, X
-// Rule 3a: $   ^   ^   W   X   Y   ^   *   *   ->  W
-// Rule 3b: $   ^   ^   W   X   Y   ^   U   *   ->  $   X   U
-// Rule 3c: $   ^   ^   W   X   Y   ^   U   V   ->  $   $   Y   U   V
+// Namings: A   B   C   D   E   F   G   H       P   Q   R   S   T   U   V
+// Rule 1 : ^   ^   *   *   X   Y           ->  X                         , new roots: P
+// Rule 2 : ^   ^   X   *   Y   Z           ->  X   Z   Y   Z             , new roots: P, R, ?
+// Rule 3a: ^   ^   W   X   Y   ^   *   *   ->  W                         , new roots: P
+// Rule 3b: ^   ^   W   X   Y   ^   U   *   ->  X   U                     , new roots: P
+// Rule 3c: ^   ^   W   X   Y   ^   U   V   ->  Y   U   V                 , new roots: P, ?
 // Rule 4 : $   N   X, where N is native function and X is a arbitrary value
 // (tree or native)
 void eval_step(EvalState state) {
@@ -231,12 +231,19 @@ void eval_step(EvalState state) {
     STATE_GET_CELL(C)
     size_t D = B + 2;
     STATE_GET_CELL(D)
+    size_t E = D + 1;
+    if (!_eval_is_ref(state, E)) {
+      break;
+    }
+    size_t F = E + 1;
+    if (!_eval_is_ref(state, F)) {
+      break;
+    }
     if (!(C_cell == EVAL_NIL && D_cell == EVAL_NIL)) {
       break;
     }
-    matched = true;
-    size_t E = D + 1;
     stbds_arrput(state->stack, E);
+    matched = true;
   } while (0);
   CHECK(state)
   if (matched) {
@@ -246,6 +253,9 @@ void eval_step(EvalState state) {
   matched = false;
 
   do {
+    // TODO: match further, up until F
+    break;
+
     // eval_encode_dump(state->cells, A);
     const size_t REF_SIZE = 1;
     size_t B = A + 1;
@@ -253,13 +263,11 @@ void eval_step(EvalState state) {
     STATE_DEREF(B)
     size_t C = B + 1;
     STATE_GET_CELL(C)
-    EXPECT(
-        _eval_is_ref(state, C),
-        ERROR_REF_EXPECTED,
-        "currently cannot get to other sibling if not ref :(");
+    EXPECT(_eval_is_ref(state, C), ERROR_REF_EXPECTED, "");
     size_t D = C + REF_SIZE;
     STATE_GET_CELL(D)
     STATE_DEREF(C);
+
     if (!(is_opaque(state, C) && D_cell == EVAL_NIL)) {
       break;
     }
@@ -281,10 +289,7 @@ void eval_step(EvalState state) {
     // TODO: also need to put these (x y) and (y z) on the stack and actually evaluate first
 
     size_t E = D + 1;
-    EXPECT(
-        _eval_is_ref(state, E),
-        ERROR_REF_EXPECTED,
-        "currently cannot get to other sibling if not ref :(");
+    EXPECT(_eval_is_ref(state, E), ERROR_REF_EXPECTED, "");
 
     size_t F = E + REF_SIZE;
     size_t P = next_n_vacant_cells(state, 4);

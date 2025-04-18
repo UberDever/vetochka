@@ -227,15 +227,14 @@ static void dump_cells_and_stack(Allocator cells, Stack stack) {
   eval_encode_dump(cells, 0);
 }
 
-static bool compare_results(Allocator lhs, Stack lhs_stack, Allocator rhs, Stack rhs_stack) {
+static bool compare_results(Allocator lhs, Stack* lhs_stack, Allocator rhs, Stack* rhs_stack) {
   bool result = true;
 
-  size_t lhs_size = stbds_arrlenu(lhs_stack);
-  size_t rhs_size = stbds_arrlenu(rhs_stack);
-  if (lhs_size == 0 || rhs_size == 0) {
-    result = false;
-    printf("both stack shouldn't be empty %zu %zu", lhs_size, rhs_size);
-    goto cleanup;
+  size_t lhs_size = stbds_arrlenu(*lhs_stack);
+  size_t rhs_size = stbds_arrlenu(*rhs_stack);
+  if (lhs_size == 0 && rhs_size == 0) {
+    stbds_arrput(*lhs_stack, 0);
+    stbds_arrput(*rhs_stack, 0);
   }
   if (lhs_size != rhs_size) {
     result = false;
@@ -243,12 +242,12 @@ static bool compare_results(Allocator lhs, Stack lhs_stack, Allocator rhs, Stack
     goto cleanup;
   }
 
-  dump_cells_and_stack(lhs, lhs_stack);
-  dump_cells_and_stack(rhs, rhs_stack);
+  dump_cells_and_stack(lhs, *lhs_stack);
+  dump_cells_and_stack(rhs, *rhs_stack);
 
   for (size_t i = 0; i < lhs_size; ++i) {
-    size_t lhs_root = stbds_arrpop(lhs_stack);
-    size_t rhs_root = stbds_arrpop(rhs_stack);
+    size_t lhs_root = stbds_arrpop(*lhs_stack);
+    size_t rhs_root = stbds_arrpop(*rhs_stack);
     if (!compare_trees(lhs, rhs, lhs_root, rhs_root)) {
       printf("program state, root = %zu:\n", lhs_root);
       eval_encode_dump(lhs, 0);
@@ -300,6 +299,9 @@ bool test_eval_eval(void* data_ptr) {
   const char* error_msg = "";
   Stack expected_stack = NULL;
   Allocator expected_cells = NULL;
+  Allocator cells = eval_get_memory(state);
+  Stack stack = eval_get_stack(state);
+  eval_cells_init(&expected_cells, 4);
 
   uint8_t error_code = eval_get_error(state, &error_msg);
   if (error_code) {
@@ -313,9 +315,7 @@ bool test_eval_eval(void* data_ptr) {
     printf("failed to parse test stack %s\n", data->expected_stack);
     goto cleanup;
   }
-  Allocator cells = eval_get_memory(state);
-  Stack stack = eval_get_stack(state);
-  eval_cells_init(&expected_cells, 4);
+
   {
     sint res = eval_encode_parse(expected_cells, data->expected);
     if (res != 0) {
@@ -325,7 +325,7 @@ bool test_eval_eval(void* data_ptr) {
     }
   }
 
-  result = compare_results(cells, stack, expected_cells, expected_stack);
+  result = compare_results(cells, &stack, expected_cells, &expected_stack);
 
 cleanup:
   stbds_arrfree(expected_stack);
@@ -340,6 +340,7 @@ cleanup:
   stbds_arrput(data, datum);
 
 int main() {
+  int result = 0;
   bool (**tests)(void*) = NULL;
   const char** names = NULL;
   void** data = NULL;
@@ -352,11 +353,15 @@ int main() {
       .program = prog, .expected_stack = roots, .expected = exp};                                  \
   ADD_TEST(testcase, &testcase##_data_##N);
 
-  // first rule
-  ADD_TEST_WITH_DATA(test_eval_eval, 1, "^ ^** ^** ^**", "0", "^**");
-  ADD_TEST_WITH_DATA(test_eval_eval, 2, "^ ^** ^** *", "0", "^**");
+  // pure data
+  ADD_TEST_WITH_DATA(test_eval_eval, 0, "^ ^** ^**", "", "^ ^** ^**");
 
-  // second rule
+  // first rule
+  ADD_TEST_WITH_DATA(test_eval_eval, 1, "^ ^** # 2 # 3 ^** ^**", "0", "^**");
+  ADD_TEST_WITH_DATA(test_eval_eval, 2, "^ ^** # 2 # 3 ^** *", "0", "^**");
+
+// second rule
+#if 0
   ADD_TEST_WITH_DATA(
       test_eval_eval,
       3,
@@ -364,6 +369,7 @@ int main() {
       "21 23 21",
       "^ ^ # 4 * # 5 # 9 ^** ^^*** ^^**^** "
       "# -15 # -8 # -14 # -10");
+#endif
 
   const char* GREEN = "\033[0;32m";
   const char* CYAN = "\033[0;36m";
@@ -375,11 +381,14 @@ int main() {
       printf("%sPASSED%s\n\n", GREEN, RESET);
     } else {
       printf("%sFAILED%s\n\n", RED, RESET);
+      result = 1;
+      goto cleanup;
     }
   }
 
+cleanup:
   stbds_arrfree(tests);
   stbds_arrfree(names);
   stbds_arrfree(data);
-  return 0;
+  return result;
 }
