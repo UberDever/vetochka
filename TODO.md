@@ -331,13 +331,16 @@ Vetochka Full:
 
 Misc:
 
+Vetochka 0:
+
+- [ ] Add `$` as a node with payload
+- [x] Remove tagging for references
+- [ ] Write a native func example `[print ^, print ^^]` and assess the output
+
 - [ ] Tokenizer source information
 - [ ] Tokenizer unicode
 - [ ] Tokenizer comments
 - [ ] Tokenizer refactor to be less a mess
-- [ ] Eval Add the "clamp" encoding, to strip unnecessary nodes.
-      So, basically `^^^` would be represented as `0000000000000000000000000000000000000000000000000000000000000000`.
-      We lose index 0 doing this, but this is much better in terms of optimization and index 0 is very cheap to lose
 - [ ] Stdlib
 - [ ] REPL
     - [x] First draft

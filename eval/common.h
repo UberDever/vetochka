@@ -76,18 +76,14 @@ void _errbuf_write(const char* format, ...);
 #define DEREF(cells, index)                                                                        \
   if (index##_cell == EVAL_REF) {                                                                  \
     GET_WORD(cells, index);                                                                        \
-    u8 tag = eval_tv_get_tag(index##_word);                                                        \
-    EXPECT(tag == EVAL_TAG_INDEX, ERROR_DEREF_NONREF, "");                                         \
-    index += (i64)eval_tv_get_payload_signed(index##_word);                                        \
+    index += (sint)index##_word;                                                                   \
     size_t new_index = index;                                                                      \
     GET_CELL(cells, new_index)                                                                     \
-    if (new_index_cell == EVAL_REF) {                                                              \
-      GET_WORD(cells, new_index)                                                                   \
-      u8 tag = eval_tv_get_tag(new_index##_word);                                                  \
-      EXPECT(tag != EVAL_TAG_INDEX, ERROR_REF_TO_REF, "");                                         \
-    }                                                                                              \
+    EXPECT(new_index_cell != EVAL_REF, ERROR_REF_TO_REF, "");                                      \
   }
 
+// NOTE: uncomment when needed
+#if 0
 static inline u8 eval_tv_get_tag(u64 tagged_value) {
   return (u8)(tagged_value & 0xF);
 }
@@ -121,5 +117,6 @@ static inline u64 eval_tv_new_tagged_value_signed(u8 tag, i64 payload) {
 static inline u64 eval_tv_new_tagged_value_unsigned(u8 tag, u64 payload) {
   return (payload << 4) | (tag & 0xF);
 }
+#endif
 
 #endif // __EVAL_COMMON__

@@ -50,9 +50,9 @@ sint eval_encode_parse(Allocator cells, const char* program) {
       }
       sint node = eval_cells_get(cells, index - 1);
       if (node == EVAL_REF) {
-        u8 tag = EVAL_TAG_INDEX;
-        u64 val = eval_tv_new_tagged_value_signed(tag, value);
-        sint res = eval_cells_set_word(cells, index - 1, val);
+        // u8 tag = EVAL_TAG_INDEX;
+        // u64 val = eval_tv_new_tagged_value_signed(tag, value);
+        sint res = eval_cells_set_word(cells, index - 1, value);
         if (res == ERR_VAL) {
           result = -1;
           goto cleanup;
@@ -89,15 +89,13 @@ void eval_encode_dump(Allocator cells, size_t root) {
   while (eval_cells_is_set(cells, word_index)) {
     sint word_index_cell = eval_cells_get(cells, word_index);
     assert(word_index_cell != ERR_VAL);
-    if (word_index_cell != EVAL_REF) {
+    if (word_index_cell == EVAL_REF) {
+      sint word_index_word = eval_cells_get_word(cells, word_index);
+      assert(word_index_word != ERR_VAL);
+      printf("!%ld[%zu] ", word_index_word, word_index);
       word_index++;
       continue;
     }
-    sint word_index_word = eval_cells_get_word(cells, word_index);
-    assert(word_index_word != ERR_VAL);
-    u8 tag = eval_tv_get_tag(word_index_word);
-    i64 payload = eval_tv_get_payload_signed(word_index_word);
-    printf("(%d)%ld[%zu] ", tag, payload, word_index);
     word_index++;
   }
   printf("\n");

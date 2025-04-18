@@ -122,8 +122,7 @@ bool test_encode_parse_smoke(void* _) {
       printf("%hhu ", cell);
       if (cell == EVAL_REF) {
         sint word = eval_cells_get_word(cells, j);
-        sint payload = eval_tv_get_payload_signed(word);
-        printf("[%zu] ", payload);
+        printf("[%zu] ", word);
       }
       j++;
     }

@@ -114,6 +114,13 @@ sint eval_free(EvalState* state) {
 
 #define STATE_GET_WORD(index) GET_WORD(state->cells, index)
 
+#define STATE_SET_REF(index, ref)                                                                  \
+  do {                                                                                             \
+    sint res = eval_cells_set_word(state->cells, index, ref);                                      \
+    EXPECT(res != ERR_VAL, ERROR_GENERIC, "");                                                     \
+  } while (0)
+
+#if 0
 #define STATE_SET_WORD(index, tag, payload)                                                        \
   do {                                                                                             \
     sint word = 0;                                                                                 \
@@ -122,6 +129,7 @@ sint eval_free(EvalState* state) {
     sint res = eval_cells_set_word(state->cells, index, word);                                     \
     EXPECT(res != ERR_VAL, ERROR_GENERIC, "");                                                     \
   } while (0)
+#endif
 
 #define STATE_DEREF(index) DEREF(state->cells, index)
 
@@ -238,7 +246,7 @@ void eval_step(EvalState state) {
   matched = false;
 
   do {
-    //eval_encode_dump(state->cells, A);
+    // eval_encode_dump(state->cells, A);
     const size_t REF_SIZE = 1;
     size_t B = A + 1;
     STATE_GET_CELL(B)
@@ -285,9 +293,9 @@ void eval_step(EvalState state) {
     CALCULATE_OFFSET(Q, F)
 
     STATE_SET_CELL(P, EVAL_REF);
-    STATE_SET_WORD(P, EVAL_TAG_INDEX, C_P_ref);
+    STATE_SET_REF(P, C_P_ref);
     STATE_SET_CELL(Q, EVAL_REF);
-    STATE_SET_WORD(Q, EVAL_TAG_INDEX, F_Q_ref);
+    STATE_SET_REF(Q, F_Q_ref);
 
     size_t R = P + 2;
     size_t S = P + 3;
@@ -295,9 +303,9 @@ void eval_step(EvalState state) {
     CALCULATE_OFFSET(S, F)
 
     STATE_SET_CELL(R, EVAL_REF);
-    STATE_SET_WORD(R, EVAL_TAG_INDEX, E_R_ref);
+    STATE_SET_REF(R, E_R_ref);
     STATE_SET_CELL(S, EVAL_REF);
-    STATE_SET_WORD(S, EVAL_TAG_INDEX, F_S_ref);
+    STATE_SET_REF(S, F_S_ref);
 
     stbds_arrput(state->stack, P);
     stbds_arrput(state->stack, R);
