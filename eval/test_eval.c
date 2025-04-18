@@ -101,9 +101,9 @@ bool test_encode_parse_smoke(void* _) {
   bool result = true;
 
   const char* programs[] = {
-      "$ ^ ^** ^** ^**",             // ^ ^ ^ ^
-      "# 10 *",                      // 10
-      "$ ^ ^ ^** * # 10 * # 12345 *" // ^ (^ ^) 10 12345
+      "^ ^** ^** ^**",             // ^ ^ ^ ^
+      "# 10 *",                    // 10
+      "^ ^ ^** * # 10 * # 12345 *" // ^ (^ ^) 10 12345
   };
 
   Allocator cells;
@@ -219,36 +219,77 @@ failed:
   return false;
 }
 
-static bool compare_results(
-    Allocator lhs, size_t lhs_root, const char* expected, size_t expected_root) {
+static void dump_cells_and_stack(Allocator cells, Stack stack) {
+  printf("stack: ");
+  for (size_t i = 0; i < stbds_arrlenu(stack); ++i) {
+    printf("%zu ", stack[i]);
+  }
+  printf("\n");
+  eval_encode_dump(cells, 0);
+}
+
+static bool compare_results(Allocator lhs, Stack lhs_stack, Allocator rhs, Stack rhs_stack) {
   bool result = true;
-  Allocator rhs = NULL;
-  eval_cells_init(&rhs, 4);
-  sint res = eval_encode_parse(rhs, expected);
-  if (res != 0) {
-    printf("failed to parse %s\n", expected);
+
+  size_t lhs_size = stbds_arrlenu(lhs_stack);
+  size_t rhs_size = stbds_arrlenu(rhs_stack);
+  if (lhs_size == 0 || rhs_size == 0) {
     result = false;
+    printf("both stack shouldn't be empty %zu %zu", lhs_size, rhs_size);
     goto cleanup;
   }
-  if (!compare_trees(lhs, rhs, lhs_root, expected_root)) {
-    printf("program state, root = %zu:\n", lhs_root);
-    eval_encode_dump(lhs, 0);
-    printf("expected state, root = %zu:\n", expected_root);
-    eval_encode_dump(rhs, 0);
+  if (lhs_size != rhs_size) {
     result = false;
+    printf("stack sizes are different: %zu != %zu\n", lhs_size, rhs_size);
     goto cleanup;
   }
 
+  dump_cells_and_stack(lhs, lhs_stack);
+  dump_cells_and_stack(rhs, rhs_stack);
+
+  for (size_t i = 0; i < lhs_size; ++i) {
+    size_t lhs_root = stbds_arrpop(lhs_stack);
+    size_t rhs_root = stbds_arrpop(rhs_stack);
+    if (!compare_trees(lhs, rhs, lhs_root, rhs_root)) {
+      printf("program state, root = %zu:\n", lhs_root);
+      eval_encode_dump(lhs, 0);
+      printf("expected state, root = %zu:\n", rhs_root);
+      eval_encode_dump(rhs, 0);
+      result = false;
+      goto cleanup;
+    }
+  }
+
 cleanup:
-  eval_cells_free(&rhs);
   return result;
 }
 
 typedef struct {
   const char* program;
-  size_t expected_root;
+  const char* expected_stack;
   const char* expected;
 } test_eval_data;
+
+bool parse_test_stack(const char* stack, Stack* out) {
+  bool result = true;
+  const char* delimiters = " \t\n";
+  char* prog = malloc(sizeof(char) * (strlen(stack) + 1));
+  strcpy(prog, stack);
+  char* token = strtok(prog, delimiters);
+  while (token != NULL) {
+    char* endptr = NULL;
+    uint value = strtoull(token, &endptr, 10);
+    if (*endptr != '\0') {
+      result = false;
+      goto cleanup;
+    }
+    stbds_arrput(*out, value);
+    token = strtok(NULL, delimiters);
+  }
+cleanup:
+  free(prog);
+  return result;
+}
 
 bool test_eval_eval(void* data_ptr) {
   bool result = true;
@@ -256,8 +297,11 @@ bool test_eval_eval(void* data_ptr) {
   EvalState state = NULL;
   const char* program = data->program;
   eval_init(&state, program);
-  sint new_root = eval_step(state);
+  eval_step(state);
   const char* error_msg = "";
+  Stack expected_stack = NULL;
+  Allocator expected_cells = NULL;
+
   uint8_t error_code = eval_get_error(state, &error_msg);
   if (error_code) {
     result = false;
@@ -265,10 +309,28 @@ bool test_eval_eval(void* data_ptr) {
     goto cleanup;
   }
 
+  if (!parse_test_stack(data->expected_stack, &expected_stack)) {
+    result = false;
+    printf("failed to parse test stack %s\n", data->expected_stack);
+    goto cleanup;
+  }
   Allocator cells = eval_get_memory(state);
-  result = compare_results(cells, new_root, data->expected, data->expected_root);
+  Stack stack = eval_get_stack(state);
+  eval_cells_init(&expected_cells, 4);
+  {
+    sint res = eval_encode_parse(expected_cells, data->expected);
+    if (res != 0) {
+      result = false;
+      printf("failed to parse %s\n", data->expected);
+      goto cleanup;
+    }
+  }
+
+  result = compare_results(cells, stack, expected_cells, expected_stack);
 
 cleanup:
+  stbds_arrfree(expected_stack);
+  eval_cells_free(&expected_cells);
   eval_free(&state);
   return result;
 }
@@ -286,23 +348,23 @@ int main() {
   ADD_TEST(test_memory_many_cells, NULL);
   ADD_TEST(test_encode_parse_smoke, NULL);
 
-#define ADD_TEST_WITH_DATA(testcase, N, prog, exp_root, exp)                                       \
+#define ADD_TEST_WITH_DATA(testcase, N, prog, roots, exp)                                          \
   test_eval_data testcase##_data_##N = {                                                           \
-      .program = prog, .expected_root = exp_root, .expected = exp};                                \
+      .program = prog, .expected_stack = roots, .expected = exp};                                  \
   ADD_TEST(testcase, &testcase##_data_##N);
 
   // first rule
-  ADD_TEST_WITH_DATA(test_eval_eval, 1, "$ ^ ^** ^** ^**", 0, "^**");
-  ADD_TEST_WITH_DATA(test_eval_eval, 2, "$ ^ ^** ^** *", 0, "^**");
+  ADD_TEST_WITH_DATA(test_eval_eval, 1, "^ ^** ^** ^**", "0", "^**");
+  ADD_TEST_WITH_DATA(test_eval_eval, 2, "^ ^** ^** *", "0", "^**");
 
   // second rule
   ADD_TEST_WITH_DATA(
       test_eval_eval,
       3,
-      "$ ^ ^ # 4 * # 5 # 9 ^** ^^*** ^^**^**",
-      28,
-      "$ ^ ^ # 4 * # 5 # 9 ^** ^^*** ^^**^** "
-      "$ # -16 # -9 $ # -16 # -12 $ # -7 # -5");
+      "^ ^ # 4 * # 5 # 9 ^** ^^*** ^^**^**",
+      "21 23 21",
+      "^ ^ # 4 * # 5 # 9 ^** ^^*** ^^**^** "
+      "# -15 # -8 # -14 # -10");
 
   const char* GREEN = "\033[0;32m";
   const char* CYAN = "\033[0;36m";

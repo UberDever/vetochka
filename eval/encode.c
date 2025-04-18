@@ -8,12 +8,12 @@
 static int ENCODE_MAP[] = {
     ['*'] = EVAL_NIL,
     ['^'] = EVAL_TREE,
-    ['$'] = EVAL_APPLY,
+    //['$'] = EVAL_APPLY,
     ['#'] = EVAL_REF,
 };
 
 static bool char_is_node(char c) {
-  return c == '*' || c == '^' || c == '$' || c == '#';
+  return c == '*' || c == '^' /*|| c == '$'*/ || c == '#';
 }
 
 sint eval_encode_parse(Allocator cells, const char* program) {
@@ -38,7 +38,7 @@ sint eval_encode_parse(Allocator cells, const char* program) {
       }
     } else {
       char* endptr = NULL;
-      sint value = strtoull(token, &endptr, 10);
+      sint value = strtoll(token, &endptr, 10);
       if (*endptr != '\0') {
         result = -1;
         goto cleanup;

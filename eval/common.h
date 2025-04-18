@@ -13,16 +13,17 @@ typedef int8_t i8;
 typedef int32_t i32;
 typedef int64_t i64;
 typedef intptr_t sint;
+typedef uintptr_t uint;
 
 #define ERR_VAL -1
 
 #define debug(fmt, ...) printf("[%s:%d] " fmt "\n", __FILE__, __LINE__, __VA_ARGS__);
 #define debug_s(s)      printf("[%s:%d] " s "\n", __FILE__, __LINE__);
 
-#define EVAL_NIL   0
-#define EVAL_TREE  1
-#define EVAL_APPLY 2
-#define EVAL_REF   3
+#define EVAL_NIL  0
+#define EVAL_TREE 1
+// #define EVAL_APPLY 2
+#define EVAL_REF 3
 
 #define EVAL_TAG_NUMBER 0
 #define EVAL_TAG_INDEX  1
@@ -30,11 +31,13 @@ typedef intptr_t sint;
 
 typedef struct EvalState_impl* EvalState;
 typedef struct Allocator_impl* Allocator;
+typedef size_t* Stack;
 
 sint eval_init(EvalState* state, const char* program);
 sint eval_free(EvalState* state);
-sint eval_step(EvalState state);
+void eval_step(EvalState state);
 Allocator eval_get_memory(EvalState state);
+Stack eval_get_stack(EvalState state);
 u8 eval_get_error(EvalState state, const char** message);
 
 sint eval_cells_init(Allocator* cells, size_t words_count);
