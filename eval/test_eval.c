@@ -221,7 +221,13 @@ failed:
 static void dump_cells_and_stack(Allocator cells, Stack stack) {
   printf("stack: ");
   for (size_t i = 0; i < stbds_arrlenu(stack); ++i) {
-    printf("%zu ", stack[i]);
+    if (stack[i].type == StackEntryType_Index) {
+      printf("%zu ", stack[i].as_index);
+    } else if (stack[i].type == StackEntryType_Calculated) {
+      printf("$%u ", stack[i].as_calculated_index.type);
+    } else {
+      assert(false);
+    }
   }
   printf("\n");
   eval_encode_dump(cells, 0);
@@ -233,8 +239,8 @@ static bool compare_results(Allocator lhs, Stack* lhs_stack, Allocator rhs, Stac
   size_t lhs_size = stbds_arrlenu(*lhs_stack);
   size_t rhs_size = stbds_arrlenu(*rhs_stack);
   if (lhs_size == 0 && rhs_size == 0) {
-    stbds_arrput(*lhs_stack, 0);
-    stbds_arrput(*rhs_stack, 0);
+    stbds_arrput(*lhs_stack, ((StackEntry){.type = StackEntryType_Index, .as_index = 0}));
+    stbds_arrput(*rhs_stack, ((StackEntry){.type = StackEntryType_Index, .as_index = 0}));
   }
   if (lhs_size != rhs_size) {
     result = false;
@@ -246,16 +252,38 @@ static bool compare_results(Allocator lhs, Stack* lhs_stack, Allocator rhs, Stac
   dump_cells_and_stack(rhs, *rhs_stack);
 
   for (size_t i = 0; i < lhs_size; ++i) {
-    size_t lhs_root = stbds_arrpop(*lhs_stack);
-    size_t rhs_root = stbds_arrpop(*rhs_stack);
-    if (!compare_trees(lhs, rhs, lhs_root, rhs_root)) {
-      printf("program state, root = %zu:\n", lhs_root);
-      eval_encode_dump(lhs, 0);
-      printf("expected state, root = %zu:\n", rhs_root);
-      eval_encode_dump(rhs, 0);
-      result = false;
-      goto cleanup;
+    StackEntry lhs_entry = stbds_arrpop(*lhs_stack);
+    StackEntry rhs_entry = stbds_arrpop(*rhs_stack);
+    if (lhs_entry.type == StackEntryType_Calculated
+        && rhs_entry.type == StackEntryType_Calculated) {
+      result = lhs_entry.as_calculated_index.type == rhs_entry.as_calculated_index.type;
+      if (!result) {
+        printf(
+            "different calculated indices %d %d\n",
+            lhs_entry.as_calculated_index.type,
+            rhs_entry.as_calculated_index.type);
+        goto cleanup;
+      }
+      continue;
     }
+
+    if (lhs_entry.type == StackEntryType_Index && rhs_entry.type == StackEntryType_Index) {
+      size_t lhs_root = lhs_entry.as_index;
+      size_t rhs_root = rhs_entry.as_index;
+      if (!compare_trees(lhs, rhs, lhs_root, rhs_root)) {
+        printf("program state, root = %zu:\n", lhs_root);
+        eval_encode_dump(lhs, 0);
+        printf("expected state, root = %zu:\n", rhs_root);
+        eval_encode_dump(rhs, 0);
+        result = false;
+        goto cleanup;
+      }
+      continue;
+    }
+
+    printf("uncomparable indices %d %d\n", lhs_entry.type, rhs_entry.type);
+    result = false;
+    goto cleanup;
   }
 
 cleanup:
@@ -266,6 +294,7 @@ typedef struct {
   const char* program;
   const char* expected_stack;
   const char* expected;
+  i64 steps;
 } test_eval_data;
 
 bool parse_test_stack(const char* stack, Stack* out) {
@@ -275,13 +304,30 @@ bool parse_test_stack(const char* stack, Stack* out) {
   strcpy(prog, stack);
   char* token = strtok(prog, delimiters);
   while (token != NULL) {
+    if (!strcmp(token, "r2")) {
+      stbds_arrput(
+          *out,
+          ((StackEntry){.type = StackEntryType_Calculated,
+                        .as_calculated_index = {.type = CalculatedIndexType_Rule2}}));
+      token = strtok(NULL, delimiters);
+      continue;
+    }
+    if (!strcmp(token, "r3c")) {
+      stbds_arrput(
+          *out,
+          ((StackEntry){.type = StackEntryType_Calculated,
+                        .as_calculated_index = {.type = CalculatedIndexType_Rule3c}}));
+      token = strtok(NULL, delimiters);
+      continue;
+    }
+
     char* endptr = NULL;
-    uint value = strtoull(token, &endptr, 10);
+    size_t value = strtoull(token, &endptr, 10);
     if (*endptr != '\0') {
       result = false;
       goto cleanup;
     }
-    stbds_arrput(*out, value);
+    stbds_arrput(*out, ((StackEntry){.type = StackEntryType_Index, .as_index = value}));
     token = strtok(NULL, delimiters);
   }
 cleanup:
@@ -289,40 +335,51 @@ cleanup:
   return result;
 }
 
-bool test_eval_eval(void* data_ptr) {
+bool prepare_expected(Allocator* expected_cells, Stack* expected_stack, test_eval_data* data) {
   bool result = true;
-  test_eval_data* data = data_ptr;
-  EvalState state = NULL;
-  const char* program = data->program;
-  eval_init(&state, program);
-  eval_step(state);
-  const char* error_msg = "";
-  Stack expected_stack = NULL;
-  Allocator expected_cells = NULL;
-  Allocator cells = eval_get_memory(state);
-  Stack stack = eval_get_stack(state);
-  eval_cells_init(&expected_cells, 4);
-
-  uint8_t error_code = eval_get_error(state, &error_msg);
-  if (error_code) {
-    result = false;
-    printf("failed to step for program '%s'\ncode: %d msg: '%s'\n", program, error_code, error_msg);
-    goto cleanup;
-  }
-
-  if (!parse_test_stack(data->expected_stack, &expected_stack)) {
+  if (!parse_test_stack(data->expected_stack, expected_stack)) {
     result = false;
     printf("failed to parse test stack %s\n", data->expected_stack);
     goto cleanup;
   }
 
-  {
-    sint res = eval_encode_parse(expected_cells, data->expected);
-    if (res != 0) {
-      result = false;
-      printf("failed to parse %s\n", data->expected);
-      goto cleanup;
-    }
+  eval_cells_init(expected_cells, 4);
+  sint res = eval_encode_parse(*expected_cells, data->expected);
+  if (res != 0) {
+    result = false;
+    printf("failed to parse %s\n", data->expected);
+    goto cleanup;
+  }
+
+cleanup:
+  return result;
+}
+
+bool test_eval_eval(void* data_ptr) {
+  bool result = true;
+  test_eval_data* data = data_ptr;
+  // TODO: use step counter
+
+  Stack expected_stack = NULL;
+  Allocator expected_cells = NULL;
+  if (!prepare_expected(&expected_cells, &expected_stack, data)) {
+    result = false;
+    goto cleanup;
+  }
+
+  EvalState state = NULL;
+  const char* program = data->program;
+  eval_init(&state, program);
+  eval_step(state);
+
+  const char* error_msg = "";
+  Allocator cells = eval_get_memory(state);
+  Stack stack = eval_get_stack(state);
+  uint8_t error_code = eval_get_error(state, &error_msg);
+  if (error_code) {
+    result = false;
+    printf("failed to step for program '%s'\ncode: %d msg: '%s'\n", program, error_code, error_msg);
+    goto cleanup;
   }
 
   result = compare_results(cells, &stack, expected_cells, &expected_stack);
@@ -339,6 +396,9 @@ cleanup:
   stbds_arrput(names, #test " $ " #datum);                                                         \
   stbds_arrput(data, datum);
 
+// TODO: it would be nice if we added a evaluation step support
+// i.e. describe input, describe expected steps of evaluation (and IO state presumably), describe
+// step count (too much for C, use different language?)
 int main() {
   int result = 0;
   bool (**tests)(void*) = NULL;
@@ -348,26 +408,28 @@ int main() {
   ADD_TEST(test_memory_many_cells, NULL);
   ADD_TEST(test_encode_parse_smoke, NULL);
 
-#define ADD_TEST_WITH_DATA(testcase, N, prog, roots, exp)                                          \
+#define ADD_TEST_WITH_DATA(testcase, N, prog, roots, exp, steps_n)                                 \
   test_eval_data testcase##_data_##N = {                                                           \
-      .program = prog, .expected_stack = roots, .expected = exp};                                  \
+      .program = prog, .expected_stack = roots, .expected = exp, .steps = steps_n};                \
   ADD_TEST(testcase, &testcase##_data_##N);
 
   // pure data
-  ADD_TEST_WITH_DATA(test_eval_eval, 0, "^ ^** ^**", "", "^ ^** ^**");
+  ADD_TEST_WITH_DATA(test_eval_eval, 0, "^ ^** ^**", "0", "^ ^** ^**", 1);
 
   // first rule
-  ADD_TEST_WITH_DATA(test_eval_eval, 1, "^ ^** # 2 # 3 ^** ^**", "0", "^**");
-  ADD_TEST_WITH_DATA(test_eval_eval, 2, "^ ^** # 2 # 3 ^** *", "0", "^**");
+  ADD_TEST_WITH_DATA(test_eval_eval, 1, "^ ^** # 2 # 3 ^** ^**", "0", "^**", 1);
+  ADD_TEST_WITH_DATA(test_eval_eval, 2, "^ ^** # 2 # 3 ^** *", "0", "^**", 1);
+  ADD_TEST_WITH_DATA(test_eval_eval, 3, "^ ^** # 2 # 3 ^** *", "0", "^**", -1);
 
   // second rule
   ADD_TEST_WITH_DATA(
       test_eval_eval,
-      3,
+      4,
       "^ ^ # 4 * # 5 # 9 ^** ^^*** ^^**^**",
-      "21 23 21",
+      "21 23 r2",
       "^ ^ # 4 * # 5 # 9 ^** ^^*** ^^**^** "
-      "# -15 # -8 # -14 # -10");
+      "# -15 # -8 # -14 # -10",
+      1);
 
   const char* GREEN = "\033[0;32m";
   const char* CYAN = "\033[0;36m";

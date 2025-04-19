@@ -69,7 +69,7 @@ sint eval_init(EvalState* state, const char* program) {
     _errbuf_write("failed to parse %s\n", program);
     return res;
   }
-  stbds_arrput(s->stack, 0);
+  stbds_arrput(s->stack, ((StackEntry){.type = StackEntryType_Index, .as_index = 0}));
   s->free_capacity = BITMAP_SIZE(cells_capacity * CELLS_PER_WORD);
   s->free_bitmap = calloc(1, s->free_capacity * sizeof(u64));
   size_t i = 0;
@@ -177,27 +177,39 @@ static size_t next_n_vacant_cells(EvalState state, size_t n) {
   return next_n_vacant_cells(state, n);
 }
 
+// clang-format off
 // Namings: A   B   C   D   E   F   G   H       P   Q   R   S   T   U   V
 // Rule 1 : ^   ^   *   *   X   Y           ->  X                         , new roots: P
-// Rule 2 : ^   ^   X   *   Y   Z           ->  X   Z   Y   Z             , new roots: P, R, ?
+// Rule 2 : ^   ^   X   *   Y   Z           ->  X   Z   Y   Z             , new roots: eval P, eval R, eval P $ R
 // Rule 3a: ^   ^   W   X   Y   ^   *   *   ->  W                         , new roots: P
 // Rule 3b: ^   ^   W   X   Y   ^   U   *   ->  X   U                     , new roots: P
-// Rule 3c: ^   ^   W   X   Y   ^   U   V   ->  Y   U   V                 , new roots: P, ?
+// Rule 3c: ^   ^   W   X   Y   ^   U   V   ->  Y   U   V                 , new roots: eval P, eval P $ R
 // Rule 4 : $   N   X, where N is native function and X is a arbitrary value
-// (tree or native)
+// clang-format on
 void eval_step(EvalState state) {
   EXPECT(stbds_arrlenu(state->stack) > 0, ERROR_STACK_UNDERFLOW, "");
 
-  size_t root = stbds_arrpop(state->stack);
-  // size_t A = root;
-  // STATE_GET_CELL(A)
-  // STATE_DEREF(A)
+  // TODO: add data (fully evaluated) as stack entry
+  // skip it in simple evaluation until calculated root is found (eval it) or until simple index
+  // is found (eval it and insert)
+  StackEntry root = stbds_arrpop(state->stack);
+  if (root.type == StackEntryType_Calculated) {
+    if (root.as_calculated_index.type == CalculatedIndexType_Rule2) {
+      EXPECT(
+          stbds_arrlenu(state->stack) >= 2,
+          ERROR_STACK_UNDERFLOW,
+          "stack underflow in calculated index rule2");
 
-  // if (A_cell != EVAL_APPLY) {
-  //   return new_eval_result(ERR_VAL, root);
-  // }
+      goto matched;
+    }
+    if (root.as_calculated_index.type == CalculatedIndexType_Rule3c) {
+      goto matched;
+    }
+    assert(false);
+  }
+  assert(root.type == StackEntryType_Index);
 
-  size_t A = /*A + 1*/ root;
+  size_t A = /*A + 1*/ root.as_index;
   STATE_GET_CELL(A)
   STATE_DEREF(A)
 
@@ -243,7 +255,7 @@ void eval_step(EvalState state) {
       break;
     }
 
-    stbds_arrput(state->stack, E);
+    stbds_arrput(state->stack, ((StackEntry){.type = StackEntryType_Index, .as_index = E}));
     matched = true;
   } while (0);
   CHECK(state)
@@ -309,10 +321,12 @@ void eval_step(EvalState state) {
     STATE_SET_CELL(S, EVAL_REF);
     STATE_SET_REF(S, F_S_ref);
 
-    stbds_arrput(state->stack, P);
-    stbds_arrput(state->stack, R);
-    // TODO: ?
-    stbds_arrput(state->stack, P);
+    stbds_arrput(state->stack, ((StackEntry){.type = StackEntryType_Index, .as_index = P}));
+    stbds_arrput(state->stack, ((StackEntry){.type = StackEntryType_Index, .as_index = R}));
+    stbds_arrput(
+        state->stack,
+        ((StackEntry){.type = StackEntryType_Calculated,
+                      .as_calculated_index = {.type = CalculatedIndexType_Rule2}}));
 
     matched = true;
 
@@ -325,7 +339,7 @@ void eval_step(EvalState state) {
   }
   matched = false;
 
-  // TODO: if we haven't matched anything, put 0
+  stbds_arrpush(state->stack, root);
 
   return;
 

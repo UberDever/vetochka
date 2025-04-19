@@ -31,7 +31,32 @@ typedef uintptr_t uint;
 
 typedef struct EvalState_impl* EvalState;
 typedef struct Allocator_impl* Allocator;
-typedef size_t* Stack;
+
+typedef enum {
+  StackEntryType_Invalid,
+  StackEntryType_Index,
+  StackEntryType_Calculated,
+} StackEntryType;
+
+typedef enum {
+  CalculatedIndexType_Invalid = 0,
+  CalculatedIndexType_Rule2 = 2,
+  CalculatedIndexType_Rule3c = 3,
+} CalculatedIndexType;
+
+typedef struct {
+  StackEntryType type;
+
+  union {
+    size_t as_index;
+
+    struct {
+      CalculatedIndexType type;
+    } as_calculated_index;
+  };
+} StackEntry;
+
+typedef StackEntry* Stack;
 
 sint eval_init(EvalState* state, const char* program);
 sint eval_free(EvalState* state);
