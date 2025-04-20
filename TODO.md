@@ -335,6 +335,7 @@ Vetochka 0:
 
 - [ ] Add `$` as a node with payload
 - [x] Remove tagging for references
+- [ ] Migrate from `test_eval.c` to `test_eval.py`
 - [ ] Write a native func example `[print ^, print ^^]` and assess the output
 
 - [ ] Tokenizer source information

@@ -71,7 +71,8 @@ sint eval_cells_init(Allocator* alloc, size_t words_count) {
     return ERR_VAL;
   }
 
-  cells->cells_bitmap = calloc(1, CELLS_BITMAP_SIZE(cells->cells_capacity) * sizeof(u64));
+  cells->cells_bitmap =
+      calloc(1, CELLS_BITMAP_SIZE(cells->cells_capacity) * sizeof(*cells->cells_bitmap));
   if (!cells->cells_bitmap) {
     return ERR_VAL;
   }
@@ -124,6 +125,7 @@ sint eval_cells_set(Allocator cells, size_t index, u8 value) {
     if (!cells->cells_bitmap) {
       return ERR_VAL;
     }
+    return eval_cells_set(cells, index, value);
   }
   set_cell_val(cells, index, value);
   _bitmap_set_bit(cells->cells_bitmap, index, 1);
@@ -177,4 +179,32 @@ sint eval_cells_clear(Allocator cells) {
   }
   memset(cells->payloads, 0, stbds_arrlenu(cells->payloads) * sizeof(*cells->payloads));
   return 0;
+}
+
+sint eval_cells_dump_json(StringBuffer json_out, Allocator cells) {
+  sint result = 0;
+  char mappings[] = {'*', '^', '$', '#'};
+
+  _sb_printf(json_out, "\"cells\": \"");
+  size_t i = 0;
+  while (eval_cells_is_set(cells, i)) {
+    u8 cell = eval_cells_get(cells, i);
+    _sb_append_char(json_out, mappings[cell]);
+    i++;
+  }
+  _sb_printf(json_out, "\",\n");
+
+  _sb_printf(json_out, "\"words\": [");
+  i = 0;
+  while (eval_cells_is_set(cells, i)) {
+    sint i_word = eval_cells_get_word(cells, i);
+    if (i_word != ERR_VAL) {
+      _sb_printf(json_out, "%d, ", i_word);
+    }
+    i++;
+  }
+  _sb_try_chop_suffix(json_out, ", ");
+  _sb_append_str(json_out, "]");
+
+  return result;
 }

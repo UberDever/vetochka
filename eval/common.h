@@ -20,72 +20,33 @@ typedef uintptr_t uint;
 #define debug(fmt, ...) printf("[%s:%d] " fmt "\n", __FILE__, __LINE__, __VA_ARGS__);
 #define debug_s(s)      printf("[%s:%d] " s "\n", __FILE__, __LINE__);
 
-#define EVAL_NIL  0
-#define EVAL_TREE 1
-// #define EVAL_APPLY 2
-#define EVAL_REF 3
-
-#define EVAL_TAG_NUMBER 0
-#define EVAL_TAG_INDEX  1
-#define EVAL_TAG_FUNC   2
-
-typedef struct EvalState_impl* EvalState;
-typedef struct Allocator_impl* Allocator;
-
-typedef enum {
-  StackEntryType_Invalid,
-  StackEntryType_Index,
-  StackEntryType_Calculated,
-} StackEntryType;
-
-typedef enum {
-  CalculatedIndexType_Invalid = 0,
-  CalculatedIndexType_Rule2 = 2,
-  CalculatedIndexType_Rule3c = 3,
-} CalculatedIndexType;
-
-typedef struct {
-  StackEntryType type;
-
-  union {
-    size_t as_index;
-
-    struct {
-      CalculatedIndexType type;
-    } as_calculated_index;
-  };
-} StackEntry;
-
-typedef StackEntry* Stack;
-
-sint eval_init(EvalState* state, const char* program);
-sint eval_free(EvalState* state);
-void eval_step(EvalState state);
-Allocator eval_get_memory(EvalState state);
-Stack eval_get_stack(EvalState state);
-u8 eval_get_error(EvalState state, const char** message);
-
-sint eval_cells_init(Allocator* cells, size_t words_count);
-sint eval_cells_free(Allocator* cells);
-sint eval_cells_get(Allocator cells, size_t index);
-sint eval_cells_get_word(Allocator cells, size_t index);
-sint eval_cells_set(Allocator cells, size_t index, uint8_t value);
-sint eval_cells_set_word(Allocator cells, size_t index, i64 value);
-sint eval_cells_is_set(Allocator cells, size_t index);
-size_t eval_cells_capacity(Allocator cells);
-sint eval_cells_clear(Allocator cells);
-
-sint eval_encode_parse(Allocator cells, const char* program);
-void eval_encode_dump(Allocator cells, size_t root);
-
-// internal stuff
-
 #define BITS_PER_CELL    2
 #define CELLS_PER_WORD   (BITS_PER_WORD / BITS_PER_CELL)
 #define BITS_PER_WORD    (sizeof(u64) * 8)
 #define BITMAP_SIZE(cap) (((cap) + BITS_PER_WORD - 1) / BITS_PER_WORD)
 u8 _bitmap_get_bit(const u64* bitmap, size_t index);
 void _bitmap_set_bit(u64* bitmap, size_t index, u8 value);
+
+int _base64_encode(const u8* src, int srclen, char* dst);
+int _base64_decode(const char* src, int srclen, u8* dst);
+
+typedef struct StringBuf* StringBuffer;
+
+struct StringBuf {
+  char* buf;  // Pointer to allocated data (NUL‑terminated)
+  size_t len; // Number of bytes currently used, excluding final NUL
+  size_t cap; // Total bytes allocated for buf (including space for NUL)
+};
+
+void _sb_init(StringBuffer s);
+void _sb_free(StringBuffer s);
+void _sb_append_data(StringBuffer s, const char* data, size_t n);
+void _sb_append_str(StringBuffer s, const char* str);
+void _sb_append_char(StringBuffer s, char c);
+void _sb_printf(StringBuffer s, const char* fmt, ...);
+const char* _sb_str_view(struct StringBuf s);
+char* _sb_detach(StringBuffer s);
+int _sb_try_chop_suffix(StringBuffer s, const char* suffix);
 
 void _errbuf_clear();
 void _errbuf_write(const char* format, ...);
@@ -143,5 +104,67 @@ static inline u64 eval_tv_new_tagged_value_unsigned(u8 tag, u64 payload) {
   return (payload << 4) | (tag & 0xF);
 }
 #endif
+
+// EXTERNAL API
+
+#define EVAL_NIL  0
+#define EVAL_TREE 1
+// #define EVAL_APPLY 2
+#define EVAL_REF 3
+
+#define EVAL_TAG_NUMBER 0
+#define EVAL_TAG_INDEX  1
+#define EVAL_TAG_FUNC   2
+
+typedef struct EvalState_impl* EvalState;
+typedef struct Allocator_impl* Allocator;
+
+typedef enum {
+  StackEntryType_Invalid,
+  StackEntryType_Index,
+  StackEntryType_Calculated,
+} StackEntryType;
+
+typedef enum {
+  CalculatedIndexType_Invalid,
+  CalculatedIndexType_Rule2,
+  CalculatedIndexType_Rule3c
+} CalculatedIndexType;
+
+typedef struct {
+  StackEntryType type;
+
+  union {
+    size_t as_index;
+
+    struct {
+      CalculatedIndexType type;
+    } as_calculated_index;
+  };
+} StackEntry;
+
+typedef StackEntry* Stack;
+
+sint eval_init(EvalState* state, const char* program);
+sint eval_free(EvalState* state);
+void eval_step(EvalState state);
+Allocator eval_get_memory(EvalState state);
+Stack eval_get_stack(EvalState state);
+u8 eval_get_error(EvalState state, const char** message);
+sint eval_dump_json(StringBuffer json_out, EvalState state);
+
+sint eval_cells_init(Allocator* cells, size_t words_count);
+sint eval_cells_free(Allocator* cells);
+sint eval_cells_get(Allocator cells, size_t index);
+sint eval_cells_get_word(Allocator cells, size_t index);
+sint eval_cells_set(Allocator cells, size_t index, uint8_t value);
+sint eval_cells_set_word(Allocator cells, size_t index, i64 value);
+sint eval_cells_is_set(Allocator cells, size_t index);
+size_t eval_cells_capacity(Allocator cells);
+sint eval_cells_clear(Allocator cells);
+sint eval_cells_dump_json(StringBuffer json_out, Allocator cells);
+
+sint eval_encode_parse(Allocator cells, const char* program);
+void eval_encode_dump(Allocator cells, size_t root);
 
 #endif // __EVAL_COMMON__

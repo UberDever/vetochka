@@ -1,0 +1,70 @@
+{
+    "type": "object",
+    "properties": {
+        "cells": {
+            "type": "string"
+        },
+        "words": {
+            "type": "array",
+            "items": {
+                "type": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "ref": {
+                                "type": "number"
+                            }
+                        }
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "tag": {
+                                "type": "number"
+                            },
+                            "payload": {
+                                "type": "number"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        "control_stack": {
+            "type": "array",
+            "items": {
+                "type": [
+                    "number",
+                    {
+                        "type": "object",
+                        "properties": {
+                            "compute_index": {
+                                "type": "string",
+                                "enum": [
+                                    "rule2",
+                                    "rule3c"
+                                ]
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        "value_stack": {
+            "type": "array",
+            "items": {
+                "type": "number"
+            }
+        },
+        "errors": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "code": "number",
+                    "message": "string"
+                }
+            }
+        }
+    }
+}

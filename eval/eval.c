@@ -43,7 +43,8 @@ void _errbuf_write(const char* format, ...) {
 
 struct EvalState_impl {
   Allocator cells;
-  Stack stack;
+  Stack control_stack;
+  size_t* value_stack;
   u64* free_bitmap;
   size_t free_capacity;
 
@@ -69,7 +70,7 @@ sint eval_init(EvalState* state, const char* program) {
     _errbuf_write("failed to parse %s\n", program);
     return res;
   }
-  stbds_arrput(s->stack, ((StackEntry){.type = StackEntryType_Index, .as_index = 0}));
+  stbds_arrput(s->control_stack, ((StackEntry){.type = StackEntryType_Index, .as_index = 0}));
   s->free_capacity = BITMAP_SIZE(cells_capacity * CELLS_PER_WORD);
   s->free_bitmap = calloc(1, s->free_capacity * sizeof(u64));
   size_t i = 0;
@@ -84,7 +85,8 @@ sint eval_init(EvalState* state, const char* program) {
 sint eval_free(EvalState* state) {
   EvalState s = *state;
   eval_cells_free(&s->cells);
-  stbds_arrfree(s->stack);
+  stbds_arrfree(s->control_stack);
+  stbds_arrfree(s->value_stack);
   free(s->free_bitmap);
   free(s);
   *state = NULL;
@@ -187,16 +189,16 @@ static size_t next_n_vacant_cells(EvalState state, size_t n) {
 // Rule 4 : $   N   X, where N is native function and X is a arbitrary value
 // clang-format on
 void eval_step(EvalState state) {
-  EXPECT(stbds_arrlenu(state->stack) > 0, ERROR_STACK_UNDERFLOW, "");
+  EXPECT(stbds_arrlenu(state->control_stack) > 0, ERROR_STACK_UNDERFLOW, "");
 
   // TODO: add data (fully evaluated) as stack entry
   // skip it in simple evaluation until calculated root is found (eval it) or until simple index
   // is found (eval it and insert)
-  StackEntry root = stbds_arrpop(state->stack);
+  StackEntry root = stbds_arrpop(state->control_stack);
   if (root.type == StackEntryType_Calculated) {
     if (root.as_calculated_index.type == CalculatedIndexType_Rule2) {
       EXPECT(
-          stbds_arrlenu(state->stack) >= 2,
+          stbds_arrlenu(state->control_stack) >= 2,
           ERROR_STACK_UNDERFLOW,
           "stack underflow in calculated index rule2");
 
@@ -255,7 +257,7 @@ void eval_step(EvalState state) {
       break;
     }
 
-    stbds_arrput(state->stack, ((StackEntry){.type = StackEntryType_Index, .as_index = E}));
+    stbds_arrput(state->control_stack, ((StackEntry){.type = StackEntryType_Index, .as_index = E}));
     matched = true;
   } while (0);
   CHECK(state)
@@ -321,10 +323,10 @@ void eval_step(EvalState state) {
     STATE_SET_CELL(S, EVAL_REF);
     STATE_SET_REF(S, F_S_ref);
 
-    stbds_arrput(state->stack, ((StackEntry){.type = StackEntryType_Index, .as_index = P}));
-    stbds_arrput(state->stack, ((StackEntry){.type = StackEntryType_Index, .as_index = R}));
+    stbds_arrput(state->control_stack, ((StackEntry){.type = StackEntryType_Index, .as_index = P}));
+    stbds_arrput(state->control_stack, ((StackEntry){.type = StackEntryType_Index, .as_index = R}));
     stbds_arrput(
-        state->stack,
+        state->control_stack,
         ((StackEntry){.type = StackEntryType_Calculated,
                       .as_calculated_index = {.type = CalculatedIndexType_Rule2}}));
 
@@ -339,7 +341,7 @@ void eval_step(EvalState state) {
   }
   matched = false;
 
-  stbds_arrpush(state->stack, root);
+  stbds_arrpush(state->control_stack, root);
 
   return;
 
@@ -354,15 +356,88 @@ matched:
   return;
 }
 
+#undef EXPECT
+#undef CHECK
+#undef STATE_GET_CELL
+#undef STATE_SET_CELL
+#undef STATE_GET_WORD
+#undef STATE_SET_REF
+#undef STATE_DEREF
+
 Allocator eval_get_memory(EvalState state) {
   return state->cells;
 }
 
 Stack eval_get_stack(EvalState state) {
-  return state->stack;
+  return state->control_stack;
 }
 
 uint8_t eval_get_error(EvalState state, const char** message) {
   *message = state->error;
   return state->error_code;
 }
+
+#define CHECK(cond)                                                                                \
+  if (!(cond)) {                                                                                   \
+    goto cleanup;                                                                                  \
+  }
+
+static sint dump_control_stack(StringBuffer json_out, Stack stack) {
+  sint result = 0;
+  const char* mappings[] = {"INVALID", "rule2", "rule3c"};
+  _sb_printf(json_out, "\"control_stack\": [");
+  for (size_t i = 0; i < stbds_arrlenu(stack); ++i) {
+    StackEntry e = stack[i];
+    if (e.type == StackEntryType_Index) {
+      _sb_printf(json_out, "%d, ", e.as_index);
+    } else if (e.type == StackEntryType_Calculated) {
+      _sb_printf(
+          json_out,
+          "{ \"compute_index\": \"%s\" }, ",
+          mappings[(size_t)e.as_calculated_index.type]);
+    } else {
+      assert(false);
+    }
+  }
+  _sb_try_chop_suffix(json_out, ", ");
+  _sb_append_str(json_out, "]");
+
+  return result;
+}
+
+static sint dump_value_stack(StringBuffer json_out, size_t* stack) {
+  sint result = 0;
+  _sb_printf(json_out, "\"value_stack\": [");
+  for (size_t i = 0; i < stbds_arrlenu(stack); ++i) {
+    _sb_printf(json_out, "%d, ", stack[i]);
+  }
+  _sb_try_chop_suffix(json_out, ", ");
+  _sb_append_str(json_out, "]");
+  return result;
+}
+
+sint eval_dump_json(StringBuffer json_out, EvalState state) {
+  sint result = 0;
+  _sb_append_str(json_out, "{\n");
+
+  result = eval_cells_dump_json(json_out, state->cells);
+  CHECK(result == 0);
+  _sb_append_str(json_out, ",\n");
+
+  result = dump_control_stack(json_out, state->control_stack);
+  CHECK(result == 0);
+  _sb_append_str(json_out, ",\n");
+
+  result = dump_value_stack(json_out, state->value_stack);
+  CHECK(result == 0);
+  _sb_append_str(json_out, ",\n");
+
+  if (_sb_try_chop_suffix(json_out, ",\n")) {
+    _sb_append_char(json_out, '\n');
+  }
+  _sb_append_char(json_out, '}');
+cleanup:
+  return result;
+}
+
+#undef CHECK

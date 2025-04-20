@@ -27,7 +27,7 @@ rule run_test
 # Objects
 build $builddir/eval-release.o: compile eval.c
     extraflags =
-build $builddir/node-release.o: compile node.c
+build $builddir/node-release.o: compile util.c
     extraflags =
 build $builddir/memory-release.o: compile memory.c
     extraflags =
@@ -35,7 +35,7 @@ build $builddir/encode-release.o: compile encode.c
     extraflags =
 
 build $builddir/eval-sanitize.o: compile eval.c
-build $builddir/node-sanitize.o: compile node.c
+build $builddir/node-sanitize.o: compile util.c
 build $builddir/memory-sanitize.o: compile memory.c
 build $builddir/encode-sanitize.o: compile encode.c
 

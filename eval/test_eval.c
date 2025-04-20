@@ -248,8 +248,8 @@ static bool compare_results(Allocator lhs, Stack* lhs_stack, Allocator rhs, Stac
     goto cleanup;
   }
 
-  dump_cells_and_stack(lhs, *lhs_stack);
-  dump_cells_and_stack(rhs, *rhs_stack);
+  // dump_cells_and_stack(lhs, *lhs_stack);
+  // dump_cells_and_stack(rhs, *rhs_stack);
 
   for (size_t i = 0; i < lhs_size; ++i) {
     StackEntry lhs_entry = stbds_arrpop(*lhs_stack);
@@ -382,6 +382,19 @@ bool test_eval_eval(void* data_ptr) {
     goto cleanup;
   }
 
+  {
+    struct StringBuf json_out = {};
+    _sb_init(&json_out);
+    sint dump_result = eval_dump_json(&json_out, state);
+    if (dump_result != 0) {
+      result = false;
+      printf("dump failed %ld", dump_result);
+      goto cleanup;
+    }
+    printf("json: %s\n", _sb_str_view(json_out));
+    _sb_free(&json_out);
+  }
+
   result = compare_results(cells, &stack, expected_cells, &expected_stack);
 
 cleanup:
@@ -404,14 +417,15 @@ int main() {
   bool (**tests)(void*) = NULL;
   const char** names = NULL;
   void** data = NULL;
-  ADD_TEST(test_memory_smoke, NULL);
-  ADD_TEST(test_memory_many_cells, NULL);
-  ADD_TEST(test_encode_parse_smoke, NULL);
 
 #define ADD_TEST_WITH_DATA(testcase, N, prog, roots, exp, steps_n)                                 \
   test_eval_data testcase##_data_##N = {                                                           \
       .program = prog, .expected_stack = roots, .expected = exp, .steps = steps_n};                \
   ADD_TEST(testcase, &testcase##_data_##N);
+
+  ADD_TEST(test_memory_smoke, NULL);
+  ADD_TEST(test_memory_many_cells, NULL);
+  ADD_TEST(test_encode_parse_smoke, NULL);
 
   // pure data
   ADD_TEST_WITH_DATA(test_eval_eval, 0, "^ ^** ^**", "0", "^ ^** ^**", 1);
