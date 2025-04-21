@@ -70,7 +70,7 @@ sint eval_init(EvalState* state, const char* program) {
     _errbuf_write("failed to parse %s\n", program);
     return res;
   }
-  stbds_arrput(s->control_stack, ((StackEntry){.type = StackEntryType_Index, .as_index = 0}));
+  stbds_arrput(s->control_stack, ((struct StackEntry){.type = StackEntryType_Index, .as_index = 0}));
   s->free_capacity = BITMAP_SIZE(cells_capacity * CELLS_PER_WORD);
   s->free_bitmap = calloc(1, s->free_capacity * sizeof(u64));
   size_t i = 0;
@@ -194,7 +194,7 @@ void eval_step(EvalState state) {
   // TODO: add data (fully evaluated) as stack entry
   // skip it in simple evaluation until calculated root is found (eval it) or until simple index
   // is found (eval it and insert)
-  StackEntry root = stbds_arrpop(state->control_stack);
+  struct StackEntry root = stbds_arrpop(state->control_stack);
   if (root.type == StackEntryType_Calculated) {
     if (root.as_calculated_index.type == CalculatedIndexType_Rule2) {
       EXPECT(
@@ -257,7 +257,7 @@ void eval_step(EvalState state) {
       break;
     }
 
-    stbds_arrput(state->control_stack, ((StackEntry){.type = StackEntryType_Index, .as_index = E}));
+    stbds_arrput(state->control_stack, ((struct StackEntry){.type = StackEntryType_Index, .as_index = E}));
     matched = true;
   } while (0);
   CHECK(state)
@@ -323,11 +323,11 @@ void eval_step(EvalState state) {
     STATE_SET_CELL(S, EVAL_REF);
     STATE_SET_REF(S, F_S_ref);
 
-    stbds_arrput(state->control_stack, ((StackEntry){.type = StackEntryType_Index, .as_index = P}));
-    stbds_arrput(state->control_stack, ((StackEntry){.type = StackEntryType_Index, .as_index = R}));
+    stbds_arrput(state->control_stack, ((struct StackEntry){.type = StackEntryType_Index, .as_index = P}));
+    stbds_arrput(state->control_stack, ((struct StackEntry){.type = StackEntryType_Index, .as_index = R}));
     stbds_arrput(
         state->control_stack,
-        ((StackEntry){.type = StackEntryType_Calculated,
+        ((struct StackEntry){.type = StackEntryType_Calculated,
                       .as_calculated_index = {.type = CalculatedIndexType_Rule2}}));
 
     matched = true;
@@ -387,7 +387,7 @@ static sint dump_control_stack(StringBuffer json_out, Stack stack) {
   const char* mappings[] = {"INVALID", "rule2", "rule3c"};
   _sb_printf(json_out, "\"control_stack\": [");
   for (size_t i = 0; i < stbds_arrlenu(stack); ++i) {
-    StackEntry e = stack[i];
+    struct StackEntry e = stack[i];
     if (e.type == StackEntryType_Index) {
       _sb_printf(json_out, "%d, ", e.as_index);
     } else if (e.type == StackEntryType_Calculated) {

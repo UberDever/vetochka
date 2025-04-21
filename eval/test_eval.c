@@ -239,8 +239,8 @@ static bool compare_results(Allocator lhs, Stack* lhs_stack, Allocator rhs, Stac
   size_t lhs_size = stbds_arrlenu(*lhs_stack);
   size_t rhs_size = stbds_arrlenu(*rhs_stack);
   if (lhs_size == 0 && rhs_size == 0) {
-    stbds_arrput(*lhs_stack, ((StackEntry){.type = StackEntryType_Index, .as_index = 0}));
-    stbds_arrput(*rhs_stack, ((StackEntry){.type = StackEntryType_Index, .as_index = 0}));
+    stbds_arrput(*lhs_stack, ((struct StackEntry){.type = StackEntryType_Index, .as_index = 0}));
+    stbds_arrput(*rhs_stack, ((struct StackEntry){.type = StackEntryType_Index, .as_index = 0}));
   }
   if (lhs_size != rhs_size) {
     result = false;
@@ -252,8 +252,8 @@ static bool compare_results(Allocator lhs, Stack* lhs_stack, Allocator rhs, Stac
   // dump_cells_and_stack(rhs, *rhs_stack);
 
   for (size_t i = 0; i < lhs_size; ++i) {
-    StackEntry lhs_entry = stbds_arrpop(*lhs_stack);
-    StackEntry rhs_entry = stbds_arrpop(*rhs_stack);
+    struct StackEntry lhs_entry = stbds_arrpop(*lhs_stack);
+    struct StackEntry rhs_entry = stbds_arrpop(*rhs_stack);
     if (lhs_entry.type == StackEntryType_Calculated
         && rhs_entry.type == StackEntryType_Calculated) {
       result = lhs_entry.as_calculated_index.type == rhs_entry.as_calculated_index.type;
@@ -307,7 +307,7 @@ bool parse_test_stack(const char* stack, Stack* out) {
     if (!strcmp(token, "r2")) {
       stbds_arrput(
           *out,
-          ((StackEntry){.type = StackEntryType_Calculated,
+          ((struct StackEntry){.type = StackEntryType_Calculated,
                         .as_calculated_index = {.type = CalculatedIndexType_Rule2}}));
       token = strtok(NULL, delimiters);
       continue;
@@ -315,7 +315,7 @@ bool parse_test_stack(const char* stack, Stack* out) {
     if (!strcmp(token, "r3c")) {
       stbds_arrput(
           *out,
-          ((StackEntry){.type = StackEntryType_Calculated,
+          ((struct StackEntry){.type = StackEntryType_Calculated,
                         .as_calculated_index = {.type = CalculatedIndexType_Rule3c}}));
       token = strtok(NULL, delimiters);
       continue;
@@ -327,7 +327,7 @@ bool parse_test_stack(const char* stack, Stack* out) {
       result = false;
       goto cleanup;
     }
-    stbds_arrput(*out, ((StackEntry){.type = StackEntryType_Index, .as_index = value}));
+    stbds_arrput(*out, ((struct StackEntry){.type = StackEntryType_Index, .as_index = value}));
     token = strtok(NULL, delimiters);
   }
 cleanup:
