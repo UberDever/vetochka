@@ -11,6 +11,9 @@
                     {
                         "type": "object",
                         "properties": {
+                            "index": {
+                                "type": "number"
+                            },
                             "ref": {
                                 "type": "number"
                             }
@@ -19,6 +22,9 @@
                     {
                         "type": "object",
                         "properties": {
+                            "index": {
+                                "type": "number"
+                            },
                             "tag": {
                                 "type": "number"
                             },

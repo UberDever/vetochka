@@ -199,7 +199,14 @@ sint eval_cells_dump_json(StringBuffer json_out, Allocator cells) {
   while (eval_cells_is_set(cells, i)) {
     sint i_word = eval_cells_get_word(cells, i);
     if (i_word != ERR_VAL) {
-      _sb_printf(json_out, "%d, ", i_word);
+      sint i_cell = eval_cells_get(cells, i);
+      if (i_cell == EVAL_REF) {
+        _sb_printf(json_out, "{ \"index\": %zu, \"ref\": %ld }, ", i, i_word);
+      } else {
+        u8 tag = eval_tv_get_tag(i_word);
+        u64 payload = eval_tv_get_payload_unsigned(i_word);
+        _sb_printf(json_out, "{ \"index\": %zu, \"tag\": %d, \"payload\": %zu }, ", i, tag, payload);
+      }
     }
     i++;
   }

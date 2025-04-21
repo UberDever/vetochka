@@ -68,8 +68,6 @@ void _errbuf_write(const char* format, ...);
     EXPECT(new_index_cell != EVAL_REF, ERROR_REF_TO_REF, "");                                      \
   }
 
-// NOTE: uncomment when needed
-#if 0
 static inline u8 eval_tv_get_tag(u64 tagged_value) {
   return (u8)(tagged_value & 0xF);
 }
@@ -103,7 +101,6 @@ static inline u64 eval_tv_new_tagged_value_signed(u8 tag, i64 payload) {
 static inline u64 eval_tv_new_tagged_value_unsigned(u8 tag, u64 payload) {
   return (payload << 4) | (tag & 0xF);
 }
-#endif
 
 // EXTERNAL API
 
