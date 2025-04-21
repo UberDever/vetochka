@@ -2,7 +2,7 @@ ninja_required_version = 1.10
 
 cc = clang
 cflags = -fPIC --std=c99 -Wall -Wextra -I.
-extraflags = -g -fsanitize=address,undefined,leak -fno-omit-frame-pointer -O0
+extraflags = -g -fsanitize=address,leak,bounds,undefined -fno-omit-frame-pointer -O0
 
 # Define the build directory
 builddir = ../build

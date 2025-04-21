@@ -545,7 +545,8 @@ class LibraryLoader:
             # noinspection PyBroadException
             try:
                 return self.Lookup(path)
-            except Exception:  # pylint: disable=broad-except
+            except Exception as e:  # pylint: disable=broad-except
+                print(e)
                 pass
 
         raise ImportError("Could not load %s." % libname)
@@ -914,21 +915,30 @@ class struct_StackEntry(Structure):
 Stack = POINTER(struct_StackEntry)# /home/m-orlovskiy/dev/tree/eval/api.h: 15
 
 # /home/m-orlovskiy/dev/tree/eval/api.h: 16
-class struct_StringBuf(Structure):
+class struct_StringBuffer_impl(Structure):
     pass
 
-StringBuffer = POINTER(struct_StringBuf)# /home/m-orlovskiy/dev/tree/eval/api.h: 16
+StringBuffer = POINTER(struct_StringBuffer_impl)# /home/m-orlovskiy/dev/tree/eval/api.h: 16
 
 # /home/m-orlovskiy/dev/tree/eval/api.h: 18
 for _lib in _libs.values():
     if not _lib.has("eval_init", "cdecl"):
         continue
     eval_init = _lib.get("eval_init", "cdecl")
-    eval_init.argtypes = [POINTER(EvalState), String]
+    eval_init.argtypes = [POINTER(EvalState)]
     eval_init.restype = sint
     break
 
-# /home/m-orlovskiy/dev/tree/eval/api.h: 19
+# /home/m-orlovskiy/dev/tree/eval/api.h: 20
+for _lib in _libs.values():
+    if not _lib.has("eval_init_from_program", "cdecl"):
+        continue
+    eval_init_from_program = _lib.get("eval_init_from_program", "cdecl")
+    eval_init_from_program.argtypes = [POINTER(EvalState), String]
+    eval_init_from_program.restype = sint
+    break
+
+# /home/m-orlovskiy/dev/tree/eval/api.h: 21
 for _lib in _libs.values():
     if not _lib.has("eval_free", "cdecl"):
         continue
@@ -937,31 +947,13 @@ for _lib in _libs.values():
     eval_free.restype = sint
     break
 
-# /home/m-orlovskiy/dev/tree/eval/api.h: 20
+# /home/m-orlovskiy/dev/tree/eval/api.h: 22
 for _lib in _libs.values():
     if not _lib.has("eval_step", "cdecl"):
         continue
     eval_step = _lib.get("eval_step", "cdecl")
     eval_step.argtypes = [EvalState]
     eval_step.restype = None
-    break
-
-# /home/m-orlovskiy/dev/tree/eval/api.h: 21
-for _lib in _libs.values():
-    if not _lib.has("eval_get_memory", "cdecl"):
-        continue
-    eval_get_memory = _lib.get("eval_get_memory", "cdecl")
-    eval_get_memory.argtypes = [EvalState]
-    eval_get_memory.restype = Allocator
-    break
-
-# /home/m-orlovskiy/dev/tree/eval/api.h: 22
-for _lib in _libs.values():
-    if not _lib.has("eval_get_stack", "cdecl"):
-        continue
-    eval_get_stack = _lib.get("eval_get_stack", "cdecl")
-    eval_get_stack.argtypes = [EvalState]
-    eval_get_stack.restype = Stack
     break
 
 # /home/m-orlovskiy/dev/tree/eval/api.h: 23
@@ -982,7 +974,16 @@ for _lib in _libs.values():
     eval_dump_json.restype = sint
     break
 
-# /home/m-orlovskiy/dev/tree/eval/api.h: 26
+# /home/m-orlovskiy/dev/tree/eval/api.h: 25
+for _lib in _libs.values():
+    if not _lib.has("eval_load_json", "cdecl"):
+        continue
+    eval_load_json = _lib.get("eval_load_json", "cdecl")
+    eval_load_json.argtypes = [String, POINTER(EvalState)]
+    eval_load_json.restype = sint
+    break
+
+# /home/m-orlovskiy/dev/tree/eval/api.h: 27
 for _lib in _libs.values():
     if not _lib.has("eval_cells_init", "cdecl"):
         continue
@@ -991,7 +992,7 @@ for _lib in _libs.values():
     eval_cells_init.restype = sint
     break
 
-# /home/m-orlovskiy/dev/tree/eval/api.h: 27
+# /home/m-orlovskiy/dev/tree/eval/api.h: 28
 for _lib in _libs.values():
     if not _lib.has("eval_cells_free", "cdecl"):
         continue
@@ -1000,7 +1001,7 @@ for _lib in _libs.values():
     eval_cells_free.restype = sint
     break
 
-# /home/m-orlovskiy/dev/tree/eval/api.h: 28
+# /home/m-orlovskiy/dev/tree/eval/api.h: 29
 for _lib in _libs.values():
     if not _lib.has("eval_cells_get", "cdecl"):
         continue
@@ -1009,7 +1010,7 @@ for _lib in _libs.values():
     eval_cells_get.restype = sint
     break
 
-# /home/m-orlovskiy/dev/tree/eval/api.h: 29
+# /home/m-orlovskiy/dev/tree/eval/api.h: 30
 for _lib in _libs.values():
     if not _lib.has("eval_cells_get_word", "cdecl"):
         continue
@@ -1018,7 +1019,7 @@ for _lib in _libs.values():
     eval_cells_get_word.restype = sint
     break
 
-# /home/m-orlovskiy/dev/tree/eval/api.h: 30
+# /home/m-orlovskiy/dev/tree/eval/api.h: 31
 for _lib in _libs.values():
     if not _lib.has("eval_cells_set", "cdecl"):
         continue
@@ -1027,7 +1028,7 @@ for _lib in _libs.values():
     eval_cells_set.restype = sint
     break
 
-# /home/m-orlovskiy/dev/tree/eval/api.h: 31
+# /home/m-orlovskiy/dev/tree/eval/api.h: 32
 for _lib in _libs.values():
     if not _lib.has("eval_cells_set_word", "cdecl"):
         continue
@@ -1036,22 +1037,13 @@ for _lib in _libs.values():
     eval_cells_set_word.restype = sint
     break
 
-# /home/m-orlovskiy/dev/tree/eval/api.h: 32
+# /home/m-orlovskiy/dev/tree/eval/api.h: 33
 for _lib in _libs.values():
     if not _lib.has("eval_cells_is_set", "cdecl"):
         continue
     eval_cells_is_set = _lib.get("eval_cells_is_set", "cdecl")
     eval_cells_is_set.argtypes = [Allocator, c_size_t]
     eval_cells_is_set.restype = sint
-    break
-
-# /home/m-orlovskiy/dev/tree/eval/api.h: 33
-for _lib in _libs.values():
-    if not _lib.has("eval_cells_capacity", "cdecl"):
-        continue
-    eval_cells_capacity = _lib.get("eval_cells_capacity", "cdecl")
-    eval_cells_capacity.argtypes = [Allocator]
-    eval_cells_capacity.restype = c_size_t
     break
 
 # /home/m-orlovskiy/dev/tree/eval/api.h: 34
@@ -1063,22 +1055,13 @@ for _lib in _libs.values():
     eval_cells_clear.restype = sint
     break
 
-# /home/m-orlovskiy/dev/tree/eval/api.h: 35
-for _lib in _libs.values():
-    if not _lib.has("eval_cells_dump_json", "cdecl"):
-        continue
-    eval_cells_dump_json = _lib.get("eval_cells_dump_json", "cdecl")
-    eval_cells_dump_json.argtypes = [StringBuffer, Allocator]
-    eval_cells_dump_json.restype = sint
-    break
-
 EvalState_impl = struct_EvalState_impl# /home/m-orlovskiy/dev/tree/eval/api.h: 13
 
 Allocator_impl = struct_Allocator_impl# /home/m-orlovskiy/dev/tree/eval/api.h: 14
 
 StackEntry = struct_StackEntry# /home/m-orlovskiy/dev/tree/eval/api.h: 15
 
-StringBuf = struct_StringBuf# /home/m-orlovskiy/dev/tree/eval/api.h: 16
+StringBuffer_impl = struct_StringBuffer_impl# /home/m-orlovskiy/dev/tree/eval/api.h: 16
 
 # No inserted files
 

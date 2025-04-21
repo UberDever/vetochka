@@ -1,5 +1,5 @@
 #include "common.h"
-#include "stb_ds.h"
+#include "vendor/stb_ds.h"
 #include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>

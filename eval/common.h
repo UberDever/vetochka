@@ -1,6 +1,7 @@
 #ifndef __EVAL_COMMON__
 #define __EVAL_COMMON__
 
+#include "vendor/json.h"
 #include <stdbool.h>
 #include <stddef.h>
 
@@ -21,7 +22,7 @@ void _bitmap_set_bit(u64* bitmap, size_t index, u8 value);
 int _base64_encode(const u8* src, int srclen, char* dst);
 int _base64_decode(const char* src, int srclen, u8* dst);
 
-struct StringBuf {
+struct StringBuffer_impl {
   char* buf;  // Pointer to allocated data (NUL‑terminated)
   size_t len; // Number of bytes currently used, excluding final NUL
   size_t cap; // Total bytes allocated for buf (including space for NUL)
@@ -33,7 +34,7 @@ void _sb_append_data(StringBuffer s, const char* data, size_t n);
 void _sb_append_str(StringBuffer s, const char* str);
 void _sb_append_char(StringBuffer s, char c);
 void _sb_printf(StringBuffer s, const char* fmt, ...);
-const char* _sb_str_view(struct StringBuf s);
+const char* _sb_str_view(struct StringBuffer_impl s);
 char* _sb_detach(StringBuffer s);
 int _sb_try_chop_suffix(StringBuffer s, const char* suffix);
 
@@ -126,7 +127,14 @@ struct StackEntry {
   };
 };
 
+struct json_object_s;
+
 sint eval_encode_parse(Allocator cells, const char* program);
 void eval_encode_dump(Allocator cells, size_t root);
+
+Allocator eval_get_memory(EvalState state);
+Stack eval_get_stack(EvalState state);
+sint eval_cells_dump_json(StringBuffer json_out, Allocator cells);
+sint eval_cells_load_json(struct json_object_s* object, Allocator* cells);
 
 #endif // __EVAL_COMMON__

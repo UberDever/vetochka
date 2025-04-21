@@ -1,5 +1,5 @@
 #include "common.h"
-#include "stb_ds.h"
+#include "vendor/stb_ds.h"
 
 #include <assert.h>
 #include <stdbool.h>
@@ -157,10 +157,6 @@ sint eval_cells_is_set(Allocator cells, size_t index) {
   return 1;
 }
 
-size_t eval_cells_capacity(Allocator cells) {
-  return cells->cells_capacity;
-}
-
 sint eval_cells_clear(Allocator cells) {
   if (!cells->cells) {
     return ERR_VAL;
@@ -205,7 +201,8 @@ sint eval_cells_dump_json(StringBuffer json_out, Allocator cells) {
       } else {
         u8 tag = eval_tv_get_tag(i_word);
         u64 payload = eval_tv_get_payload_unsigned(i_word);
-        _sb_printf(json_out, "{ \"index\": %zu, \"tag\": %d, \"payload\": %zu }, ", i, tag, payload);
+        _sb_printf(
+            json_out, "{ \"index\": %zu, \"tag\": %d, \"payload\": %zu }, ", i, tag, payload);
       }
     }
     i++;
@@ -214,4 +211,10 @@ sint eval_cells_dump_json(StringBuffer json_out, Allocator cells) {
   _sb_append_str(json_out, "]");
 
   return result;
+}
+
+sint eval_cells_load_json(struct json_object_s* object, Allocator* cells) {
+  (void)object;
+  (void)cells;
+  return 0;
 }

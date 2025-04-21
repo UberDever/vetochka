@@ -4,7 +4,7 @@
 #include <time.h>
 
 #include "common.h"
-#include "stb_ds.h"
+#include "vendor/stb_ds.h"
 
 #define ASSERT_TRUE(x)                                                                             \
   if (!(x)) {                                                                                      \
@@ -307,16 +307,18 @@ bool parse_test_stack(const char* stack, Stack* out) {
     if (!strcmp(token, "r2")) {
       stbds_arrput(
           *out,
-          ((struct StackEntry){.type = StackEntryType_Calculated,
-                        .as_calculated_index = {.type = CalculatedIndexType_Rule2}}));
+          ((struct StackEntry){
+              .type = StackEntryType_Calculated,
+              .as_calculated_index = {.type = CalculatedIndexType_Rule2}}));
       token = strtok(NULL, delimiters);
       continue;
     }
     if (!strcmp(token, "r3c")) {
       stbds_arrput(
           *out,
-          ((struct StackEntry){.type = StackEntryType_Calculated,
-                        .as_calculated_index = {.type = CalculatedIndexType_Rule3c}}));
+          ((struct StackEntry){
+              .type = StackEntryType_Calculated,
+              .as_calculated_index = {.type = CalculatedIndexType_Rule3c}}));
       token = strtok(NULL, delimiters);
       continue;
     }
@@ -369,7 +371,7 @@ bool test_eval_eval(void* data_ptr) {
 
   EvalState state = NULL;
   const char* program = data->program;
-  eval_init(&state, program);
+  eval_init_from_program(&state, program);
   eval_step(state);
 
   const char* error_msg = "";
@@ -383,7 +385,7 @@ bool test_eval_eval(void* data_ptr) {
   }
 
   {
-    struct StringBuf json_out = {};
+    struct StringBuffer_impl json_out = {};
     _sb_init(&json_out);
     sint dump_result = eval_dump_json(&json_out, state);
     if (dump_result != 0) {

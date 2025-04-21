@@ -25,9 +25,18 @@ class TestEval(unittest.TestCase):
 
     def test(self):
         state = ctypes.c_void_p()
-        ret = self.lib.eval_init(ctypes.byref(state), '')
-        assert ret == 0
-        self.lib.eval_free(ctypes.byref(state))
+        try:
+            ret = self.lib.eval_load_json("""
+                {
+                    "cells": "^^**^**",
+                    "words": [],
+                    "control_stack": [0],
+                    "value_stack": []                                  
+                }
+                """, ctypes.byref(state))
+            assert ret == 0
+        finally:
+            self.lib.eval_free(ctypes.byref(state))
 
 if __name__ == "__main__":
     unittest.main()

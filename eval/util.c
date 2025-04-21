@@ -5,7 +5,7 @@
 #include "common.h"
 
 #define STB_DS_IMPLEMENTATION
-#include "stb_ds.h"
+#include "vendor/stb_ds.h"
 
 static const char base64_table[65] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -164,7 +164,7 @@ void _sb_printf(StringBuffer s, const char* fmt, ...) {
   va_end(ap);
 }
 
-const char* _sb_str_view(struct StringBuf s) {
+const char* _sb_str_view(struct StringBuffer_impl s) {
   return s.buf;
 }
 
@@ -192,3 +192,7 @@ int _sb_try_chop_suffix(StringBuffer s, const char* suffix) {
   }
   return 0; // No match, unchanged
 }
+
+// NOTE: just shut the fuck up ctypes
+// apparently, my gcc/clang (or core) version is old enough to not have this
+void __ubsan_handle_function_type_mismatch(void) {}

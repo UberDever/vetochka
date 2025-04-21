@@ -8,7 +8,7 @@
 
    To use this library, do this in *one* C or C++ file:
       #define STB_DS_IMPLEMENTATION
-      #include "stb_ds.h"
+      #include "vendor/stb_ds.h"
 
 TABLE OF CONTENTS
 

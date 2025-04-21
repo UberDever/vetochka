@@ -5,10 +5,11 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <unistd.h>
 
 #include "common.h"
-#include "stb_ds.h"
-#include <unistd.h>
+#include "vendor/json.h"
+#include "vendor/stb_ds.h"
 
 #define ERROR_BUF_SIZE 65536
 static char g_error_buf[ERROR_BUF_SIZE] = {};
@@ -52,7 +53,7 @@ struct EvalState_impl {
   const char* error;
 };
 
-sint eval_init(EvalState* state, const char* program) {
+sint eval_init_from_program(EvalState* state, const char* program) {
   EvalState s = calloc(1, sizeof(struct EvalState_impl));
   if (s == NULL) {
     return ERR_VAL;
@@ -70,7 +71,33 @@ sint eval_init(EvalState* state, const char* program) {
     _errbuf_write("failed to parse %s\n", program);
     return res;
   }
-  stbds_arrput(s->control_stack, ((struct StackEntry){.type = StackEntryType_Index, .as_index = 0}));
+  stbds_arrput(
+      s->control_stack, ((struct StackEntry){.type = StackEntryType_Index, .as_index = 0}));
+  s->free_capacity = BITMAP_SIZE(cells_capacity * CELLS_PER_WORD);
+  s->free_bitmap = calloc(1, s->free_capacity * sizeof(u64));
+  size_t i = 0;
+  while (eval_cells_is_set(s->cells, i)) {
+    _bitmap_set_bit(s->free_bitmap, i, 1);
+    i++;
+  }
+  *state = s;
+  return 0;
+}
+
+sint eval_init(EvalState* state) {
+  EvalState s = calloc(1, sizeof(struct EvalState_impl));
+  if (s == NULL) {
+    return ERR_VAL;
+  }
+  s->error = g_error_buf;
+
+  size_t cells_capacity = 4;
+  sint res = eval_cells_init(&s->cells, cells_capacity);
+  if (res == ERR_VAL) {
+    return res;
+  }
+  stbds_arrput(
+      s->control_stack, ((struct StackEntry){.type = StackEntryType_Index, .as_index = 0}));
   s->free_capacity = BITMAP_SIZE(cells_capacity * CELLS_PER_WORD);
   s->free_bitmap = calloc(1, s->free_capacity * sizeof(u64));
   size_t i = 0;
@@ -257,7 +284,8 @@ void eval_step(EvalState state) {
       break;
     }
 
-    stbds_arrput(state->control_stack, ((struct StackEntry){.type = StackEntryType_Index, .as_index = E}));
+    stbds_arrput(
+        state->control_stack, ((struct StackEntry){.type = StackEntryType_Index, .as_index = E}));
     matched = true;
   } while (0);
   CHECK(state)
@@ -323,12 +351,15 @@ void eval_step(EvalState state) {
     STATE_SET_CELL(S, EVAL_REF);
     STATE_SET_REF(S, F_S_ref);
 
-    stbds_arrput(state->control_stack, ((struct StackEntry){.type = StackEntryType_Index, .as_index = P}));
-    stbds_arrput(state->control_stack, ((struct StackEntry){.type = StackEntryType_Index, .as_index = R}));
+    stbds_arrput(
+        state->control_stack, ((struct StackEntry){.type = StackEntryType_Index, .as_index = P}));
+    stbds_arrput(
+        state->control_stack, ((struct StackEntry){.type = StackEntryType_Index, .as_index = R}));
     stbds_arrput(
         state->control_stack,
-        ((struct StackEntry){.type = StackEntryType_Calculated,
-                      .as_calculated_index = {.type = CalculatedIndexType_Rule2}}));
+        ((struct StackEntry){
+            .type = StackEntryType_Calculated,
+            .as_calculated_index = {.type = CalculatedIndexType_Rule2}}));
 
     matched = true;
 
@@ -438,6 +469,31 @@ sint eval_dump_json(StringBuffer json_out, EvalState state) {
   _sb_append_char(json_out, '}');
 cleanup:
   return result;
+}
+
+sint eval_load_json(const char* json, EvalState* state) {
+  sint err = eval_init(state);
+  if (err == ERR_VAL) {
+    printf("err %ld", err);
+    return err;
+  }
+
+  struct json_parse_result_s result = {};
+  struct json_value_s* root = json_parse_ex(json, strlen(json), 0, NULL, NULL, &result);
+  if (result.error != json_parse_error_none) {
+    printf("error while parsing json at %zu %zu\n", result.error_line_no, result.error_row_no);
+    return result.error;
+  }
+  struct json_object_s* object = json_value_as_object(root);
+
+  err = eval_cells_load_json(object, &(*state)->cells);
+  if (err) {
+    goto cleanup;
+  }
+
+cleanup:
+  free(root);
+  return 0;
 }
 
 #undef CHECK
