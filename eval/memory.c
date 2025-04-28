@@ -1,8 +1,10 @@
 #include "common.h"
+#include "vendor/json.h"
 #include "vendor/stb_ds.h"
 
 #include <assert.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -177,7 +179,7 @@ sint eval_cells_clear(Allocator cells) {
   return 0;
 }
 
-sint eval_cells_dump_json(StringBuffer json_out, Allocator cells) {
+sint _eval_cells_dump_json(StringBuffer json_out, Allocator cells) {
   sint result = 0;
   char mappings[] = {'*', '^', '$', '#'};
 
@@ -213,8 +215,59 @@ sint eval_cells_dump_json(StringBuffer json_out, Allocator cells) {
   return result;
 }
 
-sint eval_cells_load_json(struct json_object_s* object, Allocator* cells) {
-  (void)object;
-  (void)cells;
-  return 0;
+static u8 get_cell(char symbol) {
+  if (symbol == '*') {
+    return 0;
+  }
+  if (symbol == '^') {
+    return 1;
+  }
+  if (symbol == '$') {
+    return 2;
+  }
+  if (symbol == '#') {
+    return 3;
+  }
+  assert(false && "unreachable");
+}
+
+sint _eval_cells_load_json(struct json_object_s* object, Allocator* cells) {
+  sint err = 0;
+  struct json_object_element_s* cells_it = object->start;
+  if (0 != strcmp(((struct json_string_s*)cells_it->name)->string, "state")) {
+    err = 1;
+    printf("expected 'state' field");
+    goto cleanup;
+  }
+  struct json_string_s* state = json_value_as_string(cells_it->value);
+  for (size_t i = 0; i < state->string_size; ++i) {
+    eval_cells_set(*cells, i, get_cell(state->string[i]));
+  }
+
+  cells_it = cells_it->next;
+
+  if (0 != strcmp(((struct json_string_s*)cells_it->name)->string, "words")) {
+    err = 1;
+    printf("expected 'words' field");
+    goto cleanup;
+  }
+
+  struct json_array_s* words = json_value_as_array(cells_it->value);
+  struct json_array_element_s* words_it = words->start;
+  for (size_t i = 0; i < words->length; ++i, words_it = words_it->next) {
+    struct json_object_s* word = json_value_as_object(words_it->value);
+    struct json_object_element_s* word_it = word->start;
+    // TODO: write a "find key" routine
+    bool word_is_ref = false;
+    for (size_t j = 0; j < word->length; ++j) {
+      const char* name = word_it->name;
+      if (0 == strcmp(name, "ref")) {
+        word_is_ref = true;
+        break;
+      }
+    }
+  }
+
+cleanup:
+  return err;
 }

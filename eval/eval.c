@@ -52,7 +52,7 @@ struct EvalState_impl {
   uint8_t error_code;
   const char* error;
 };
-
+#if 0
 sint eval_init_from_program(EvalState* state, const char* program) {
   EvalState s = calloc(1, sizeof(struct EvalState_impl));
   if (s == NULL) {
@@ -83,6 +83,7 @@ sint eval_init_from_program(EvalState* state, const char* program) {
   *state = s;
   return 0;
 }
+#endif
 
 sint eval_init(EvalState* state) {
   EvalState s = calloc(1, sizeof(struct EvalState_impl));
@@ -451,7 +452,7 @@ sint eval_dump_json(StringBuffer json_out, EvalState state) {
   sint result = 0;
   _sb_append_str(json_out, "{\n");
 
-  result = eval_cells_dump_json(json_out, state->cells);
+  result = _eval_cells_dump_json(json_out, state->cells);
   CHECK(result == 0);
   _sb_append_str(json_out, ",\n");
 
@@ -463,6 +464,8 @@ sint eval_dump_json(StringBuffer json_out, EvalState state) {
   CHECK(result == 0);
   _sb_append_str(json_out, ",\n");
 
+  // TODO: rest of the json scheme
+
   if (_sb_try_chop_suffix(json_out, ",\n")) {
     _sb_append_char(json_out, '\n');
   }
@@ -472,7 +475,7 @@ cleanup:
 }
 
 sint eval_load_json(const char* json, EvalState* state) {
-  sint err = eval_init(state);
+  sint err = 0;
   if (err == ERR_VAL) {
     printf("err %ld", err);
     return err;
@@ -484,9 +487,8 @@ sint eval_load_json(const char* json, EvalState* state) {
     printf("error while parsing json at %zu %zu\n", result.error_line_no, result.error_row_no);
     return result.error;
   }
-  struct json_object_s* object = json_value_as_object(root);
 
-  err = eval_cells_load_json(object, &(*state)->cells);
+  err = _eval_load_json(json_value_as_object(root), state);
   if (err) {
     goto cleanup;
   }
@@ -494,6 +496,27 @@ sint eval_load_json(const char* json, EvalState* state) {
 cleanup:
   free(root);
   return 0;
+}
+
+sint _eval_load_json(struct json_object_s* root, EvalState* state) {
+  sint err = 0;
+  struct json_object_element_s* cells_it = root->start;
+  if (0 != strcmp(((struct json_string_s*)cells_it->name)->string, "cells")) {
+    err = 1;
+    printf("expected 'cells' field");
+    goto cleanup;
+  }
+
+  struct json_object_s* cells_obj = json_value_as_object(cells_it->value);
+  err = _eval_cells_load_json(cells_obj, &(*state)->cells);
+  if (err) {
+    goto cleanup;
+  }
+
+  // TODO: rest of the json scheme
+
+cleanup:
+  return err;
 }
 
 #undef CHECK

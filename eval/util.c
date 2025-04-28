@@ -164,8 +164,8 @@ void _sb_printf(StringBuffer s, const char* fmt, ...) {
   va_end(ap);
 }
 
-const char* _sb_str_view(struct StringBuffer_impl s) {
-  return s.buf;
+const char* _sb_str_view(StringBuffer s) {
+  return s->buf;
 }
 
 char* _sb_detach(StringBuffer s) {
@@ -192,7 +192,3 @@ int _sb_try_chop_suffix(StringBuffer s, const char* suffix) {
   }
   return 0; // No match, unchanged
 }
-
-// NOTE: just shut the fuck up ctypes
-// apparently, my gcc/clang (or core) version is old enough to not have this
-void __ubsan_handle_function_type_mismatch(void) {}

@@ -28,13 +28,17 @@ struct StringBuffer_impl {
   size_t cap; // Total bytes allocated for buf (including space for NUL)
 };
 
+#define _sb_new(name)                                                                              \
+  struct StringBuffer_impl name##_impl;                                                            \
+  StringBuffer name = &name##_impl;
+
 void _sb_init(StringBuffer s);
 void _sb_free(StringBuffer s);
 void _sb_append_data(StringBuffer s, const char* data, size_t n);
 void _sb_append_str(StringBuffer s, const char* str);
 void _sb_append_char(StringBuffer s, char c);
 void _sb_printf(StringBuffer s, const char* fmt, ...);
-const char* _sb_str_view(struct StringBuffer_impl s);
+const char* _sb_str_view(StringBuffer s);
 char* _sb_detach(StringBuffer s);
 int _sb_try_chop_suffix(StringBuffer s, const char* suffix);
 
@@ -129,12 +133,16 @@ struct StackEntry {
 
 struct json_object_s;
 
+#if 0
 sint eval_encode_parse(Allocator cells, const char* program);
 void eval_encode_dump(Allocator cells, size_t root);
-
 Allocator eval_get_memory(EvalState state);
 Stack eval_get_stack(EvalState state);
-sint eval_cells_dump_json(StringBuffer json_out, Allocator cells);
-sint eval_cells_load_json(struct json_object_s* object, Allocator* cells);
+#endif
+
+sint _eval_load_json(struct json_object_s* root, EvalState* state);
+
+sint _eval_cells_dump_json(StringBuffer json_out, Allocator cells);
+sint _eval_cells_load_json(struct json_object_s* object, Allocator* cells);
 
 #endif // __EVAL_COMMON__

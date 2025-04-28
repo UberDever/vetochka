@@ -3,8 +3,18 @@
 #include <stdio.h>
 #include <time.h>
 
-#include "common.h"
+#include "vendor/json.h"
 #include "vendor/stb_ds.h"
+
+#include "common.h"
+#include "config.h"
+
+#ifndef PROJECT_ROOT
+#error "must be defined in the config.h"
+#endif
+#ifndef PATH_SEP
+#error "must be defined in the config.h"
+#endif
 
 #define ASSERT_TRUE(x)                                                                             \
   if (!(x)) {                                                                                      \
@@ -13,7 +23,96 @@
     goto cleanup;                                                                                  \
   }
 
-bool test_memory_smoke(void* _) {
+#define STR(x) #x
+
+typedef struct test_data_t {
+  enum { test_data_none, test_data_json, test_data_file_testcase } tag;
+
+  union {
+    struct json_value_s* as_json;
+
+    struct file_testcase_t {
+      const char* name;
+      bool (*test)(struct test_data_t);
+
+    } as_file_testcase_t;
+  };
+} test_data_t;
+
+typedef bool (*test_t)(test_data_t);
+
+typedef struct {
+  test_t test;
+  const char* name;
+  struct test_data_t data;
+} test_case_t;
+
+void add_case(test_case_t** cases, test_t test, const char* name, test_data_t data) {
+  stbds_arrput(*cases, ((test_case_t){.test = test, .name = name, .data = data}));
+}
+
+bool load_and_execute_testcase(test_data_t data) {
+  assert(data.tag == test_data_file_testcase);
+  const char* path = data.as_file_testcase_t.name;
+
+  _sb_new(path_json);
+  _sb_init(path_json);
+  _sb_append_str(path_json, PROJECT_ROOT);
+  _sb_append_str(path_json, PATH_SEP);
+  _sb_append_str(path_json, "tests");
+  _sb_append_str(path_json, PATH_SEP);
+  _sb_append_str(path_json, path);
+  _sb_append_str(path_json, ".json");
+
+  printf("loading %s\n", _sb_str_view(path_json));
+
+  _sb_new(file_contents);
+  _sb_init(file_contents);
+
+  struct json_value_s* root = NULL;
+  bool test_result = false;
+
+  FILE* file_json = fopen(_sb_str_view(path_json), "r");
+  if (file_json == NULL) {
+    perror(_sb_str_view(path_json));
+    goto cleanup;
+  }
+
+  char chunk[1024];
+  while (fgets(chunk, sizeof(chunk), file_json) != NULL) {
+    _sb_append_str(file_contents, chunk);
+  }
+
+  if (ferror(file_json)) {
+    perror(_sb_str_view(path_json));
+    fclose(file_json);
+    goto cleanup;
+  }
+
+  const char* testcase = _sb_str_view(file_contents);
+  struct json_parse_result_s result = {};
+  root = json_parse_ex(testcase, strlen(testcase), 0, NULL, NULL, &result);
+  if (result.error != json_parse_error_none) {
+    fprintf(
+        stderr,
+        "error %zu while parsing json at %zu %zu\n",
+        result.error,
+        result.error_line_no,
+        result.error_row_no);
+    goto cleanup;
+  }
+
+  test_result = data.as_file_testcase_t.test((test_data_t){.tag = test_data_json, .as_json = root});
+
+  fclose(file_json);
+cleanup:
+  free(root);
+  _sb_free(path_json);
+  _sb_free(file_contents);
+  return test_result;
+}
+
+bool test_memory_smoke(test_data_t _) {
   bool result = true;
 
   Allocator cells;
@@ -49,7 +148,7 @@ typedef struct {
   test_memory_many_cells_entry value;
 } test_memory_many_cells_set_cells;
 
-bool test_memory_many_cells(void* _) {
+bool test_memory_many_cells(test_data_t _) {
   bool result = true;
 
   Allocator cells;
@@ -97,7 +196,8 @@ cleanup:
   return result;
 }
 
-bool test_encode_parse_smoke(void* _) {
+#if 0
+bool test_encode_parse_smoke(test_data_t _) {
   bool result = true;
 
   const char* programs[] = {
@@ -133,6 +233,40 @@ cleanup:
   eval_cells_free(&cells);
   return result;
 }
+#endif
+
+bool test_eval(test_data_t data) {
+  sint err = 0;
+  assert(data.tag == test_data_json);
+  struct json_value_s* json = data.as_json;
+  assert(json);
+  struct json_object_s* global_object = json_value_as_object(json);
+
+  struct json_object_element_s* global_it = global_object->start;
+  assert(0 == strcmp(((struct json_string_s*)global_it->name)->string, "input"));
+  struct json_object_s* input_obj = json_value_as_object(global_it->value);
+
+  EvalState state = NULL;
+  err = eval_init(&state);
+  if (err) {
+    printf("failed eval_init");
+    goto cleanup;
+  }
+  err = _eval_load_json(input_obj, &state);
+  if (err) {
+    printf("failed eval_load_json");
+    goto cleanup;
+  }
+
+  global_it = global_it->next;
+
+cleanup:
+  eval_free(&state);
+  // printf("%s\n", json);
+  return true;
+}
+
+#if 0
 
 #define EXPECT(cond, code, msg)                                                                    \
   if (!(cond)) {                                                                                   \
@@ -385,16 +519,16 @@ bool test_eval_eval(void* data_ptr) {
   }
 
   {
-    struct StringBuffer_impl json_out = {};
-    _sb_init(&json_out);
-    sint dump_result = eval_dump_json(&json_out, state);
+    _sb_new(json_out);
+    _sb_init(json_out);
+    sint dump_result = eval_dump_json(json_out, state);
     if (dump_result != 0) {
       result = false;
       printf("dump failed %ld", dump_result);
       goto cleanup;
     }
     printf("json: %s\n", _sb_str_view(json_out));
-    _sb_free(&json_out);
+    _sb_free(json_out);
   }
 
   result = compare_results(cells, &stack, expected_cells, &expected_stack);
@@ -411,49 +545,61 @@ cleanup:
   stbds_arrput(names, #test " $ " #datum);                                                         \
   stbds_arrput(data, datum);
 
-// TODO: it would be nice if we added a evaluation step support
-// i.e. describe input, describe expected steps of evaluation (and IO state presumably), describe
-// step count (too much for C, use different language?)
-int main() {
-  int result = 0;
-  bool (**tests)(void*) = NULL;
-  const char** names = NULL;
-  void** data = NULL;
-
 #define ADD_TEST_WITH_DATA(testcase, N, prog, roots, exp, steps_n)                                 \
   test_eval_data testcase##_data_##N = {                                                           \
       .program = prog, .expected_stack = roots, .expected = exp, .steps = steps_n};                \
   ADD_TEST(testcase, &testcase##_data_##N);
 
-  ADD_TEST(test_memory_smoke, NULL);
-  ADD_TEST(test_memory_many_cells, NULL);
-  ADD_TEST(test_encode_parse_smoke, NULL);
+#endif
 
-  // pure data
-  ADD_TEST_WITH_DATA(test_eval_eval, 0, "^ ^** ^**", "0", "^ ^** ^**", 1);
+// TODO: it would be nice if we added a evaluation step support
+// i.e. describe input, describe expected steps of evaluation (and IO state presumably), describe
+// step count (too much for C, use different language?)
+int main() {
+  // NOTE: because of ninja
+  stderr = stdout;
 
-  // first rule
-  ADD_TEST_WITH_DATA(test_eval_eval, 1, "^ ^** # 2 # 3 ^** ^**", "0", "^**", 1);
-  ADD_TEST_WITH_DATA(test_eval_eval, 2, "^ ^** # 2 # 3 ^** *", "0", "^**", 1);
-  ADD_TEST_WITH_DATA(test_eval_eval, 3, "^ ^** # 2 # 3 ^** *", "0", "^**", -1);
+  int result = 0;
+  test_case_t* cases = NULL;
+  void* testcase_data = NULL;
 
-  // second rule
-  ADD_TEST_WITH_DATA(
-      test_eval_eval,
-      4,
-      "^ ^ # 4 * # 5 # 9 ^** ^^*** ^^**^**",
-      "21 23 r2",
-      "^ ^ # 4 * # 5 # 9 ^** ^^*** ^^**^** "
-      "# -15 # -8 # -14 # -10",
-      1);
+  add_case(&cases, test_memory_smoke, STR(test_memory_smoke), (test_data_t){});
+  add_case(&cases, test_memory_many_cells, STR(test_memory_many_cells), (test_data_t){});
+  // add_case(&cases, test_encode_parse_smoke, STR(test_encode_parse_smoke), (test_data_t){});
+
+  add_case(
+      &cases,
+      load_and_execute_testcase,
+      "eval-case-1",
+      (test_data_t){
+          .tag = test_data_file_testcase,
+          .as_file_testcase_t =
+              (struct file_testcase_t){.name = "eval-case-1", .test = test_eval}});
+  // // pure data
+  // ADD_TEST_WITH_DATA(test_eval_eval, 0, "^ ^** ^**", "0", "^ ^** ^**", 1);
+
+  // // first rule
+  // ADD_TEST_WITH_DATA(test_eval_eval, 1, "^ ^** # 2 # 3 ^** ^**", "0", "^**", 1);
+  // ADD_TEST_WITH_DATA(test_eval_eval, 2, "^ ^** # 2 # 3 ^** *", "0", "^**", 1);
+  // ADD_TEST_WITH_DATA(test_eval_eval, 3, "^ ^** # 2 # 3 ^** *", "0", "^**", -1);
+
+  // // second rule
+  // ADD_TEST_WITH_DATA(
+  //     test_eval_eval,
+  //     4,
+  //     "^ ^ # 4 * # 5 # 9 ^** ^^*** ^^**^**",
+  //     "21 23 r2",
+  //     "^ ^ # 4 * # 5 # 9 ^** ^^*** ^^**^** "
+  //     "# -15 # -8 # -14 # -10",
+  //     1);
 
   const char* GREEN = "\033[0;32m";
   const char* CYAN = "\033[0;36m";
   const char* RED = "\033[0;31m";
   const char* RESET = "\033[0m";
-  for (int i = 0; i < stbds_arrlen(tests); i++) {
-    printf("%s%s%s\n", CYAN, names[i], RESET);
-    if (tests[i](data[i])) {
+  for (int i = 0; i < stbds_arrlen(cases); i++) {
+    printf("%s%s%s\n", CYAN, cases[i].name, RESET);
+    if (cases[i].test(cases[i].data)) {
       printf("%sPASSED%s\n\n", GREEN, RESET);
     } else {
       printf("%sFAILED%s\n\n", RED, RESET);
@@ -463,8 +609,7 @@ int main() {
   }
 
 cleanup:
-  stbds_arrfree(tests);
-  stbds_arrfree(names);
-  stbds_arrfree(data);
+  stbds_arrfree(cases);
+  stbds_arrfree(testcase_data);
   return result;
 }

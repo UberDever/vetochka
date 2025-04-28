@@ -2,38 +2,41 @@
     "type": "object",
     "properties": {
         "cells": {
-            "type": "string"
-        },
-        "words": {
-            "type": "array",
-            "items": {
-                "type": [
-                    {
-                        "type": "object",
-                        "properties": {
-                            "index": {
-                                "type": "number"
+            "type": "object",
+            "properties": {
+                "state": "string",
+                "words": {
+                    "type": "array",
+                    "items": {
+                        "type": [
+                            {
+                                "type": "object",
+                                "properties": {
+                                    "ref": {
+                                        "type": "number"
+                                    },
+                                    "index": {
+                                        "type": "number"
+                                    }
+                                }
                             },
-                            "ref": {
-                                "type": "number"
+                            {
+                                "type": "object",
+                                "properties": {
+                                    "index": {
+                                        "type": "number"
+                                    },
+                                    "tag": {
+                                        "type": "number"
+                                    },
+                                    "payload": {
+                                        "type": "number"
+                                    }
+                                }
                             }
-                        }
-                    },
-                    {
-                        "type": "object",
-                        "properties": {
-                            "index": {
-                                "type": "number"
-                            },
-                            "tag": {
-                                "type": "number"
-                            },
-                            "payload": {
-                                "type": "number"
-                            }
-                        }
+                        ]
                     }
-                ]
+                }
             }
         },
         "control_stack": {

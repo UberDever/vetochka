@@ -3,3 +3,4 @@ build/
 **/__pycache__
 docs/spec/output.pdf
 scratch.tree
+eval/config.h

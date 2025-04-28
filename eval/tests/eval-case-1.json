@@ -1,0 +1,24 @@
+{
+    "input": {
+        "cells": {
+            "state": "^^**^**",
+            "words": []
+        },
+        "control_stack": [
+            0
+        ],
+        "value_stack": []
+    },
+    "output": [
+        {
+            "cells": {
+                "state": "^^**^**",
+                "words": []
+            },
+            "control_stack": [
+                0
+            ],
+            "value_stack": []
+        }
+    ]
+}

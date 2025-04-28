@@ -24,20 +24,28 @@ rule run_test
   command = $builddir/test_runner
   description = Running tests
 
+rule gen_config
+  command     = sh generate_config.sh
+  generator   = 1
+  description = Generating config.h
+
 # Objects
-build $builddir/eval-release.o: compile eval.c
+
+build config.h: gen_config
+
+build $builddir/eval-release.o: compile eval.c | config.h
     extraflags =
-build $builddir/node-release.o: compile util.c
+build $builddir/node-release.o: compile util.c | config.h
     extraflags =
-build $builddir/memory-release.o: compile memory.c
+build $builddir/memory-release.o: compile memory.c | config.h
     extraflags =
-build $builddir/encode-release.o: compile encode.c
+build $builddir/encode-release.o: compile encode.c | config.h
     extraflags =
 
-build $builddir/eval-sanitize.o: compile eval.c
-build $builddir/node-sanitize.o: compile util.c
-build $builddir/memory-sanitize.o: compile memory.c
-build $builddir/encode-sanitize.o: compile encode.c
+build $builddir/eval-sanitize.o: compile eval.c | config.h
+build $builddir/node-sanitize.o: compile util.c | config.h
+build $builddir/memory-sanitize.o: compile memory.c | config.h
+build $builddir/encode-sanitize.o: compile encode.c | config.h
 
 # Libs
 build $builddir/libeval-release.so: link_lib $builddir/eval-release.o $builddir/node-release.o $builddir/memory-release.o $builddir/encode-release.o

@@ -16,8 +16,6 @@ typedef struct StackEntry* Stack;
 typedef struct StringBuffer_impl* StringBuffer;
 
 sint eval_init(EvalState* state);
-// TODO: remove
-sint eval_init_from_program(EvalState* state, const char* program);
 sint eval_free(EvalState* state);
 void eval_step(EvalState state);
 u8 eval_get_error(EvalState state, const char** message);
