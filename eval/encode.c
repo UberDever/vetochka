@@ -46,7 +46,7 @@ void _json_parser_free(json_parser_t* parser) {
 }
 
 bool _json_parser_match(json_parser_t* parser, enum json_token_t token) {
-  if (parser->was_err_or_eof) {
+  if (parser->was_err || parser->at_eof) {
     return false;
   }
   jsmntok_t t = parser->tokens[parser->cur_token];
@@ -71,7 +71,7 @@ bool _json_parser_match(json_parser_t* parser, enum json_token_t token) {
     case JSON_TOKEN_OBJECT: {
       return t.type == JSMN_OBJECT;
     }
-    default: parser->was_err_or_eof = true; return false;
+    default: parser->was_err = true; return false;
   }
 }
 
@@ -82,40 +82,36 @@ static void json_digest(json_parser_t* parser) {
   parser->entries_count = 0;
 
   jsmntok_t t = parser->tokens[parser->cur_token];
-  parser->cur_token++;
-  if (parser->cur_token >= parser->tokens_len) {
-    parser->was_err_or_eof = true;
-  }
 
   switch (t.type) {
     case JSMN_UNDEFINED: {
-      parser->was_err_or_eof = true;
-      return;
+      parser->was_err = true;
+      goto cleanup;
     }
     case JSMN_OBJECT: {
       parser->digested = JSON_DIGESTED_OBJECT;
       parser->entries_count = t.size;
-      return;
+      goto cleanup;
     }
     case JSMN_ARRAY: {
       parser->digested = JSON_DIGESTED_ARRAY;
       parser->entries_count = t.size;
-      return;
+      goto cleanup;
     }
     case JSMN_STRING: {
       parser->digested = JSON_DIGESTED_STRING;
       _sb_append_data(&parser->digested_string, &parser->json[t.start], t.end - t.start);
-      return;
+      goto cleanup;
     }
     case JSMN_PRIMITIVE: {
       if (_json_parser_match(parser, JSON_TOKEN_NULL)) {
         parser->digested = JSON_DIGESTED_NULL;
-        return;
+        goto cleanup;
       }
       if (_json_parser_match(parser, JSON_TOKEN_BOOL)) {
         parser->digested = JSON_TOKEN_BOOL;
         parser->digested_bool = parser->json[t.start] == 't';
-        return;
+        goto cleanup;
       }
       if (_json_parser_match(parser, JSON_TOKEN_NUMBER)) {
         parser->digested = JSON_TOKEN_NUMBER;
@@ -126,20 +122,26 @@ static void json_digest(json_parser_t* parser) {
         parser->digested_number = strtod(tok_str, &endptr);
         _sb_clear(&parser->digested_string);
         if (errno == ERANGE || endptr == tok_str || *endptr != '\0') {
-          parser->was_err_or_eof = true;
-          return;
+          parser->was_err = true;
+          goto cleanup;
         }
       }
     }
   }
+
+cleanup:
+  parser->cur_token++;
+  if (parser->cur_token >= parser->tokens_len) {
+    parser->at_eof = true;
+  }
 }
 
 bool _json_parser_eat(json_parser_t* parser, enum json_token_t token) {
-  if (parser->was_err_or_eof) {
+  if (parser->was_err || parser->at_eof) {
     return false;
   }
   bool res = _json_parser_match(parser, token);
-  if (res == false || parser->was_err_or_eof) {
+  if (res == false || parser->was_err || parser->at_eof) {
     return false;
   }
   json_digest(parser);
@@ -147,7 +149,7 @@ bool _json_parser_eat(json_parser_t* parser, enum json_token_t token) {
 }
 
 const char* _json_parser_get_string(json_parser_t* parser) {
-  if (parser->was_err_or_eof || parser->digested != JSON_DIGESTED_STRING) {
+  if (parser->was_err || parser->at_eof || parser->digested != JSON_DIGESTED_STRING) {
     return NULL;
   }
   return _sb_str_view(&parser->digested_string);
@@ -187,23 +189,34 @@ sint _eval_load_json(json_parser_t* parser, EvalState state) {
 
   _JSON_PARSER_EAT_KEY("control_stack", 1)
   _JSON_PARSER_EAT(ARRAY, 1);
-  for (size_t i = 0; i < parser->entries_count; ++i) {
+  size_t control_count = parser->entries_count;
+  for (size_t i = 0; i < control_count; ++i) {
     if (_json_parser_match(parser, JSON_TOKEN_NUMBER)) {
       _JSON_PARSER_EAT(NUMBER, 1);
-      // TODO: push to control stack
+      _eval_control_stack_push_index(state, parser->digested_number);
       continue;
     }
     _JSON_PARSER_EAT(OBJECT, 1);
     _JSON_PARSER_EAT_KEY("compute_index", 1)
     _JSON_PARSER_EAT(STRING, 1);
-    // TODO: push to control stack
+    if (strcmp(_json_parser_get_string(parser), "rule2") == 0) {
+      _eval_control_stack_push_calculated(state, CALCULATED_INDEX_RULE2);
+      continue;
+    }
+    if (strcmp(_json_parser_get_string(parser), "rule3c") == 0) {
+      _eval_control_stack_push_calculated(state, CALCULATED_INDEX_RULE3C);
+      continue;
+    }
+    err = 1;
+    goto cleanup;
   }
 
   _JSON_PARSER_EAT_KEY("value_stack", 1)
   _JSON_PARSER_EAT(ARRAY, 1);
-  for (size_t i = 0; i < parser->entries_count; ++i) {
+  size_t value_count = parser->entries_count;
+  for (size_t i = 0; i < value_count; ++i) {
     _JSON_PARSER_EAT(NUMBER, 1);
-    // TODO: push to value stack
+    _eval_value_stack_push(state, parser->digested_number);
   }
 
 cleanup:
@@ -238,7 +251,8 @@ sint _eval_cells_load_json(struct json_parser_t* parser, Allocator cells) {
 
   _JSON_PARSER_EAT_KEY("words", 1)
   _JSON_PARSER_EAT(ARRAY, 1);
-  for (size_t i = 0; i < parser->entries_count; ++i) {
+  size_t words_count = parser->entries_count;
+  for (size_t i = 0; i < words_count; ++i) {
     _JSON_PARSER_EAT(OBJECT, 1);
     _JSON_PARSER_EAT(STRING, 1);
     if (strcmp(_json_parser_get_string(parser), "ref") == 0) {
@@ -383,13 +397,10 @@ static sint dump_control_stack(struct string_buffer_t* json_out, Stack stack) {
   _sb_printf(json_out, "\"control_stack\": [");
   for (size_t i = 0; i < stbds_arrlenu(stack); ++i) {
     struct StackEntry e = stack[i];
-    if (e.type == StackEntryType_Index) {
+    if (e.tag == STACK_ENTRY_INDEX) {
       _sb_printf(json_out, "%d, ", e.as_index);
-    } else if (e.type == StackEntryType_Calculated) {
-      _sb_printf(
-          json_out,
-          "{ \"compute_index\": \"%s\" }, ",
-          mappings[(size_t)e.as_calculated_index.type]);
+    } else if (e.tag == STACK_ENTRY_CALCULATED) {
+      _sb_printf(json_out, "{ \"compute_index\": \"%s\" }, ", mappings[(size_t)e.as_calculated]);
     } else {
       assert(false);
     }

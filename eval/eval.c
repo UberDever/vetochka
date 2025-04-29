@@ -53,8 +53,7 @@ sint eval_init(EvalState* state) {
   if (res == ERR_VAL) {
     return res;
   }
-  stbds_arrput(
-      s->control_stack, ((struct StackEntry){.type = StackEntryType_Index, .as_index = 0}));
+  _eval_control_stack_push_index(s, 0);
   s->free_capacity = BITMAP_SIZE(cells_capacity * CELLS_PER_WORD);
   s->free_bitmap = calloc(1, s->free_capacity * sizeof(u64));
   size_t i = 0;
@@ -179,8 +178,8 @@ void eval_step(EvalState state) {
   // skip it in simple evaluation until calculated root is found (eval it) or until simple index
   // is found (eval it and insert)
   struct StackEntry root = stbds_arrpop(state->control_stack);
-  if (root.type == StackEntryType_Calculated) {
-    if (root.as_calculated_index.type == CalculatedIndexType_Rule2) {
+  if (root.tag == STACK_ENTRY_CALCULATED) {
+    if (root.as_calculated == CALCULATED_INDEX_RULE2) {
       EXPECT(
           stbds_arrlenu(state->control_stack) >= 2,
           ERROR_STACK_UNDERFLOW,
@@ -188,12 +187,12 @@ void eval_step(EvalState state) {
 
       goto matched;
     }
-    if (root.as_calculated_index.type == CalculatedIndexType_Rule3c) {
+    if (root.as_calculated == CALCULATED_INDEX_RULE3C) {
       goto matched;
     }
     assert(false);
   }
-  assert(root.type == StackEntryType_Index);
+  assert(root.tag == STACK_ENTRY_INDEX);
 
   size_t A = /*A + 1*/ root.as_index;
   STATE_GET_CELL(A)
@@ -241,8 +240,7 @@ void eval_step(EvalState state) {
       break;
     }
 
-    stbds_arrput(
-        state->control_stack, ((struct StackEntry){.type = StackEntryType_Index, .as_index = E}));
+    _eval_control_stack_push_index(state, E);
     matched = true;
   } while (0);
   CHECK(state)
@@ -308,15 +306,9 @@ void eval_step(EvalState state) {
     STATE_SET_CELL(S, EVAL_REF);
     STATE_SET_REF(S, F_S_ref);
 
-    stbds_arrput(
-        state->control_stack, ((struct StackEntry){.type = StackEntryType_Index, .as_index = P}));
-    stbds_arrput(
-        state->control_stack, ((struct StackEntry){.type = StackEntryType_Index, .as_index = R}));
-    stbds_arrput(
-        state->control_stack,
-        ((struct StackEntry){
-            .type = StackEntryType_Calculated,
-            .as_calculated_index = {.type = CalculatedIndexType_Rule2}}));
+    _eval_control_stack_push_index(state, P);
+    _eval_control_stack_push_index(state, R);
+    _eval_control_stack_push_calculated(state, CALCULATED_INDEX_RULE2);
 
     matched = true;
 
@@ -352,15 +344,17 @@ matched:
 #undef STATE_SET_REF
 #undef STATE_DEREF
 
-Allocator eval_get_memory(EvalState state) {
-  return state->cells;
+void _eval_control_stack_push_index(EvalState state, size_t index) {
+  stbds_arrput(
+      state->control_stack, ((struct StackEntry){.tag = STACK_ENTRY_INDEX, .as_index = index}));
 }
 
-Stack eval_get_stack(EvalState state) {
-  return state->control_stack;
+void _eval_control_stack_push_calculated(EvalState state, u8 type) {
+  stbds_arrput(
+      state->control_stack,
+      ((struct StackEntry){.tag = STACK_ENTRY_CALCULATED, .as_calculated = type}));
 }
 
-uint8_t eval_get_error(EvalState state, const char** message) {
-  *message = state->error;
-  return state->error_code;
+void _eval_value_stack_push(EvalState state, size_t value) {
+  stbds_arrput(state->value_stack, value);
 }

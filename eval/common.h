@@ -101,27 +101,24 @@ static inline u64 eval_tv_new_tagged_value_unsigned(u8 tag, u64 payload) {
 #define EVAL_TAG_INDEX  1
 #define EVAL_TAG_FUNC   2
 
-typedef enum {
-  StackEntryType_Invalid,
-  StackEntryType_Index,
-  StackEntryType_Calculated,
-} StackEntryType;
+typedef enum stack_entry_t {
+  STACK_ENTRY_INVALID,
+  STACK_ENTRY_INDEX,
+  STACK_ENTRY_CALCULATED
+} stack_entry_t;
 
-typedef enum {
-  CalculatedIndexType_Invalid,
-  CalculatedIndexType_Rule2,
-  CalculatedIndexType_Rule3c
-} CalculatedIndexType;
+typedef enum calculated_index_t {
+  CALCULATED_INDEX_INVALID,
+  CALCULATED_INDEX_RULE2,
+  CALCULATED_INDEX_RULE3C
+} calculated_index_t;
 
 struct StackEntry {
-  StackEntryType type;
+  stack_entry_t tag;
 
   union {
     size_t as_index;
-
-    struct {
-      CalculatedIndexType type;
-    } as_calculated_index;
+    calculated_index_t as_calculated;
   };
 };
 
@@ -138,6 +135,9 @@ struct EvalState_impl {
   const char* error;
 };
 
+void _eval_control_stack_push_index(EvalState state, size_t index);
+void _eval_control_stack_push_calculated(EvalState state, u8 type);
+void _eval_value_stack_push(EvalState state, size_t value);
 sint _eval_load_json(struct json_parser_t* parser, EvalState state);
 sint _eval_cells_load_json(struct json_parser_t* parser, Allocator cells);
 
@@ -174,7 +174,8 @@ typedef struct json_parser_t {
   struct jsmntok* tokens;
   size_t tokens_len;
   size_t cur_token;
-  bool was_err_or_eof;
+  bool was_err;
+  bool at_eof;
 
   size_t entries_count;
 
@@ -205,8 +206,11 @@ const char* _json_parser_get_string(json_parser_t* parser);
 
 #define _JSON_PARSER_EAT(type, errval)                                                             \
   _json_parser_eat(parser, JSON_TOKEN_##type);                                                     \
-  if (parser->was_err_or_eof) {                                                                    \
+  if (parser->was_err) {                                                                           \
     err = errval;                                                                                  \
+    goto cleanup;                                                                                  \
+  }                                                                                                \
+  if (parser->at_eof) {                                                                            \
     goto cleanup;                                                                                  \
   }
 

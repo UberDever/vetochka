@@ -1,0 +1,70 @@
+{
+    "input": {
+        "cells": {
+            "state": "^^#*##^**^^***^^**^**",
+            "words": [
+                {
+                    "ref": 4,
+                    "index": 2
+                },
+                {
+                    "ref": 5,
+                    "index": 4
+                },
+                {
+                    "ref": 9,
+                    "index": 5
+                }
+            ]
+        },
+        "control_stack": [
+            0
+        ],
+        "value_stack": []
+    },
+    "output": [
+        {
+            "cells": {
+                "state": "^^#*##^**^^***^^**^**####",
+                "words": [
+                    {
+                        "ref": 4,
+                        "index": 2
+                    },
+                    {
+                        "ref": 5,
+                        "index": 4
+                    },
+                    {
+                        "ref": 9,
+                        "index": 5
+                    },
+                    {
+                        "ref": -15,
+                        "index": 21
+                    },
+                    {
+                        "ref": -8,
+                        "index": 22
+                    },
+                    {
+                        "ref": -14,
+                        "index": 23
+                    },
+                    {
+                        "ref": -10,
+                        "index": 24
+                    }
+                ]
+            },
+            "control_stack": [
+                21,
+                23,
+                {
+                    "compute_index": "rule2"
+                }
+            ],
+            "value_stack": []
+        }
+    ]
+}

@@ -36,6 +36,8 @@ typedef struct test_data_t {
 
     } as_file_testcase_t;
   };
+
+  const char* name;
 } test_data_t;
 
 typedef bool (*test_t)(test_data_t);
@@ -227,6 +229,7 @@ bool test_eval(test_data_t data) {
   assert(data.tag == test_data_json);
   const char* json = data.as_json;
   EvalState state = NULL;
+  EvalState reference_state = NULL;
 
   json_parser_t parser_ = {};
   json_parser_t* parser = &parser_;
@@ -236,23 +239,54 @@ bool test_eval(test_data_t data) {
     logg_s("failed eval_init");
     goto cleanup;
   }
+  err = eval_init(&reference_state);
+  if (err) {
+    logg_s("failed eval_init");
+    goto cleanup;
+  }
 
   _json_parser_init(json, parser);
   _JSON_PARSER_EAT(OBJECT, 1);
   _JSON_PARSER_EAT_KEY("input", 1);
 
+  json_parser_t parser_copy_ = parser_;
+  parser = &parser_copy_;
   err = _eval_load_json(parser, state);
   if (err) {
     logg_s("failed eval_load_json");
     goto cleanup;
   }
 
-  // TODO: parse output
+  parser = &parser_;
+  err = _eval_load_json(parser, reference_state);
+  if (err) {
+    logg_s("failed eval_load_json");
+    goto cleanup;
+  }
+
+  _JSON_PARSER_EAT_KEY("output", 1);
+  _JSON_PARSER_EAT(ARRAY, 1);
+  size_t output_count = parser->entries_count;
+  for (size_t step_count = 0; step_count < output_count; ++step_count) {
+    eval_step(state);
+    if (state->error_code) {
+      logg("%s", state->error);
+      goto cleanup;
+    }
+    err = _eval_load_json(parser, reference_state);
+    if (err) {
+      logg_s("failed eval_load_json");
+      goto cleanup;
+    }
+
+    // TODO: compare reference and actual
+  }
 
 cleanup:
   _json_parser_free(parser);
   eval_free(&state);
-  return true;
+  eval_free(&reference_state);
+  return err == 0;
 }
 
 #if 0
@@ -541,6 +575,16 @@ cleanup:
 
 #endif
 
+#define add_file_case(casename)                                                                    \
+  add_case(                                                                                        \
+      &cases,                                                                                      \
+      load_and_execute_testcase,                                                                   \
+      (casename),                                                                                  \
+      (test_data_t){                                                                               \
+          .tag = test_data_file_testcase,                                                          \
+          .as_file_testcase_t = (struct file_testcase_t){.name = (casename), .test = test_eval},   \
+          .name = (casename)})
+
 // TODO: it would be nice if we added a evaluation step support
 // i.e. describe input, describe expected steps of evaluation (and IO state presumably), describe
 // step count (too much for C, use different language?)
@@ -552,18 +596,23 @@ int main() {
   test_case_t* cases = NULL;
   void* testcase_data = NULL;
 
-  add_case(&cases, test_memory_smoke, STR(test_memory_smoke), (test_data_t){});
-  add_case(&cases, test_memory_many_cells, STR(test_memory_many_cells), (test_data_t){});
-  // add_case(&cases, test_encode_parse_smoke, STR(test_encode_parse_smoke), (test_data_t){});
-
   add_case(
       &cases,
-      load_and_execute_testcase,
-      "eval-case-1",
-      (test_data_t){
-          .tag = test_data_file_testcase,
-          .as_file_testcase_t =
-              (struct file_testcase_t){.name = "eval-case-1", .test = test_eval}});
+      test_memory_smoke,
+      STR(test_memory_smoke),
+      (test_data_t){.name = STR(test_memory_smoke)});
+  add_case(
+      &cases,
+      test_memory_many_cells,
+      STR(test_memory_many_cells),
+      (test_data_t){.name = STR(test_memory_many_cells)});
+  // add_case(&cases, test_encode_parse_smoke, STR(test_encode_parse_smoke), (test_data_t){});
+
+  add_file_case("eval-pure-1");
+  add_file_case("eval-first-1");
+  add_file_case("eval-first-2");
+  add_file_case("eval-second-1");
+
   // // pure data
   // ADD_TEST_WITH_DATA(test_eval_eval, 0, "^ ^** ^**", "0", "^ ^** ^**", 1);
 
@@ -593,11 +642,10 @@ int main() {
     } else {
       printf("%sFAILED%s\n\n", RED, RESET);
       result = 1;
-      goto cleanup;
+      // goto cleanup;
     }
   }
 
-cleanup:
   stbds_arrfree(cases);
   stbds_arrfree(testcase_data);
   return result;
