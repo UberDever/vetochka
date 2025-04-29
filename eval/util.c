@@ -7,6 +7,8 @@
 #define STB_DS_IMPLEMENTATION
 #include "vendor/stb_ds.h"
 
+#include "vendor/jsmn.h"
+
 static const char base64_table[65] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
@@ -91,7 +93,7 @@ int _base64_decode(const char* src, int srclen, u8* dst) {
 }
 
 // Initialize an empty buffer with a small initial capacity
-void _sb_init(StringBuffer s) {
+void _sb_init(struct string_buffer_t* s) {
   s->len = 0;
   s->cap = 64; // or any small power of two
   s->buf = malloc(s->cap);
@@ -102,14 +104,19 @@ void _sb_init(StringBuffer s) {
 }
 
 // Free the buffer when done
-void _sb_free(StringBuffer s) {
+void _sb_free(struct string_buffer_t* s) {
   free(s->buf);
   s->buf = NULL;
   s->len = s->cap = 0;
 }
 
+void _sb_clear(struct string_buffer_t* s) {
+  s->buf[0] = '\0';
+  s->len = 0;
+}
+
 // Ensure there's room for at least `needed` more bytes (excluding NUL)
-static void sb_ensure(StringBuffer s, size_t needed) {
+static void sb_ensure(struct string_buffer_t* s, size_t needed) {
   if (s->len + needed + 1 > s->cap) {
     size_t newcap = s->cap;
     while (newcap < s->len + needed + 1) {
@@ -125,7 +132,7 @@ static void sb_ensure(StringBuffer s, size_t needed) {
 }
 
 // Append a raw block of data (not necessarily NUL‑terminated)
-void _sb_append_data(StringBuffer s, const char* data, size_t n) {
+void _sb_append_data(struct string_buffer_t* s, const char* data, size_t n) {
   sb_ensure(s, n);
   memcpy(s->buf + s->len, data, n);
   s->len += n;
@@ -133,19 +140,19 @@ void _sb_append_data(StringBuffer s, const char* data, size_t n) {
 }
 
 // Append a C‑string
-void _sb_append_str(StringBuffer s, const char* str) {
+void _sb_append_str(struct string_buffer_t* s, const char* str) {
   _sb_append_data(s, str, strlen(str));
 }
 
 // Append a single character
-void _sb_append_char(StringBuffer s, char c) {
+void _sb_append_char(struct string_buffer_t* s, char c) {
   sb_ensure(s, 1);
   s->buf[s->len++] = c;
   s->buf[s->len] = '\0';
 }
 
 // Append formatted text like printf()
-void _sb_printf(StringBuffer s, const char* fmt, ...) {
+void _sb_printf(struct string_buffer_t* s, const char* fmt, ...) {
   va_list ap;
   va_start(ap, fmt);
 
@@ -164,11 +171,11 @@ void _sb_printf(StringBuffer s, const char* fmt, ...) {
   va_end(ap);
 }
 
-const char* _sb_str_view(StringBuffer s) {
+const char* _sb_str_view(struct string_buffer_t* s) {
   return s->buf;
 }
 
-char* _sb_detach(StringBuffer s) {
+char* _sb_detach(struct string_buffer_t* s) {
   char* ret = s->buf; // grab the pointer
   s->buf = NULL;      // reset struct to empty state
   s->len = 0;
@@ -178,7 +185,7 @@ char* _sb_detach(StringBuffer s) {
 
 // Remove the suffix from s if s->buf ends with 'suffix'.
 // Returns 1 if the suffix was found and removed, 0 otherwise.
-int _sb_try_chop_suffix(StringBuffer s, const char* suffix) {
+int _sb_try_chop_suffix(struct string_buffer_t* s, const char* suffix) {
   size_t slen = strlen(suffix);
   if (s->len < slen) {
     return 0; // Buffer shorter than suffix => no match

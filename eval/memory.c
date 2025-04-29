@@ -1,5 +1,4 @@
 #include "common.h"
-#include "vendor/json.h"
 #include "vendor/stb_ds.h"
 
 #include <assert.h>
@@ -9,21 +8,6 @@
 #include <string.h>
 
 #define CELLS_BITMAP_SIZE(cap) BITMAP_SIZE(cap* CELLS_PER_WORD)
-
-typedef struct {
-  size_t key;
-  size_t value;
-} cell_word;
-
-struct Allocator_impl {
-  u64* cells;
-  u64* cells_bitmap;
-  size_t cells_capacity;
-
-  cell_word* payload_index;
-
-  i64* payloads;
-};
 
 u64* _bitmap_init(size_t capacity) {
   return calloc(1, BITMAP_SIZE(capacity) * sizeof(u64));
@@ -177,97 +161,4 @@ sint eval_cells_clear(Allocator cells) {
   }
   memset(cells->payloads, 0, stbds_arrlenu(cells->payloads) * sizeof(*cells->payloads));
   return 0;
-}
-
-sint _eval_cells_dump_json(StringBuffer json_out, Allocator cells) {
-  sint result = 0;
-  char mappings[] = {'*', '^', '$', '#'};
-
-  _sb_printf(json_out, "\"cells\": \"");
-  size_t i = 0;
-  while (eval_cells_is_set(cells, i)) {
-    u8 cell = eval_cells_get(cells, i);
-    _sb_append_char(json_out, mappings[cell]);
-    i++;
-  }
-  _sb_printf(json_out, "\",\n");
-
-  _sb_printf(json_out, "\"words\": [");
-  i = 0;
-  while (eval_cells_is_set(cells, i)) {
-    sint i_word = eval_cells_get_word(cells, i);
-    if (i_word != ERR_VAL) {
-      sint i_cell = eval_cells_get(cells, i);
-      if (i_cell == EVAL_REF) {
-        _sb_printf(json_out, "{ \"index\": %zu, \"ref\": %ld }, ", i, i_word);
-      } else {
-        u8 tag = eval_tv_get_tag(i_word);
-        u64 payload = eval_tv_get_payload_unsigned(i_word);
-        _sb_printf(
-            json_out, "{ \"index\": %zu, \"tag\": %d, \"payload\": %zu }, ", i, tag, payload);
-      }
-    }
-    i++;
-  }
-  _sb_try_chop_suffix(json_out, ", ");
-  _sb_append_str(json_out, "]");
-
-  return result;
-}
-
-static u8 get_cell(char symbol) {
-  if (symbol == '*') {
-    return 0;
-  }
-  if (symbol == '^') {
-    return 1;
-  }
-  if (symbol == '$') {
-    return 2;
-  }
-  if (symbol == '#') {
-    return 3;
-  }
-  assert(false && "unreachable");
-}
-
-sint _eval_cells_load_json(struct json_object_s* object, Allocator* cells) {
-  sint err = 0;
-  struct json_object_element_s* cells_it = object->start;
-  if (0 != strcmp(((struct json_string_s*)cells_it->name)->string, "state")) {
-    err = 1;
-    printf("expected 'state' field");
-    goto cleanup;
-  }
-  struct json_string_s* state = json_value_as_string(cells_it->value);
-  for (size_t i = 0; i < state->string_size; ++i) {
-    eval_cells_set(*cells, i, get_cell(state->string[i]));
-  }
-
-  cells_it = cells_it->next;
-
-  if (0 != strcmp(((struct json_string_s*)cells_it->name)->string, "words")) {
-    err = 1;
-    printf("expected 'words' field");
-    goto cleanup;
-  }
-
-  struct json_array_s* words = json_value_as_array(cells_it->value);
-  struct json_array_element_s* words_it = words->start;
-  for (size_t i = 0; i < words->length; ++i, words_it = words_it->next) {
-    struct json_object_s* word = json_value_as_object(words_it->value);
-    struct json_object_element_s* word_it = word->start;
-    // TODO: write a "find key" routine
-    bool word_is_ref = false;
-    for (size_t j = 0; j < word->length; ++j) {
-      const char* name = word_it->name;
-      if (0 == strcmp(name, "ref")) {
-        word_is_ref = true;
-        break;
-      }
-    }
-  }
-
-cleanup:
-  return err;
 }

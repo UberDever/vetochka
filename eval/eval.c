@@ -8,7 +8,6 @@
 #include <unistd.h>
 
 #include "common.h"
-#include "vendor/json.h"
 #include "vendor/stb_ds.h"
 
 #define ERROR_BUF_SIZE 65536
@@ -41,49 +40,6 @@ void _errbuf_write(const char* format, ...) {
 #define ERROR_APPLY_TO_VALUE  7
 #define ERROR_REF_EXPECTED    8
 #define ERROR_GENERIC         127
-
-struct EvalState_impl {
-  Allocator cells;
-  Stack control_stack;
-  size_t* value_stack;
-  u64* free_bitmap;
-  size_t free_capacity;
-
-  uint8_t error_code;
-  const char* error;
-};
-#if 0
-sint eval_init_from_program(EvalState* state, const char* program) {
-  EvalState s = calloc(1, sizeof(struct EvalState_impl));
-  if (s == NULL) {
-    return ERR_VAL;
-  }
-  s->error = g_error_buf;
-
-  size_t cells_capacity = 4;
-  sint res = eval_cells_init(&s->cells, cells_capacity);
-  if (res == ERR_VAL) {
-    return res;
-  }
-  res = eval_encode_parse(s->cells, program);
-  if (res == ERR_VAL) {
-    s->error_code = ERROR_PARSE;
-    _errbuf_write("failed to parse %s\n", program);
-    return res;
-  }
-  stbds_arrput(
-      s->control_stack, ((struct StackEntry){.type = StackEntryType_Index, .as_index = 0}));
-  s->free_capacity = BITMAP_SIZE(cells_capacity * CELLS_PER_WORD);
-  s->free_bitmap = calloc(1, s->free_capacity * sizeof(u64));
-  size_t i = 0;
-  while (eval_cells_is_set(s->cells, i)) {
-    _bitmap_set_bit(s->free_bitmap, i, 1);
-    i++;
-  }
-  *state = s;
-  return 0;
-}
-#endif
 
 sint eval_init(EvalState* state) {
   EvalState s = calloc(1, sizeof(struct EvalState_impl));
@@ -408,115 +364,3 @@ uint8_t eval_get_error(EvalState state, const char** message) {
   *message = state->error;
   return state->error_code;
 }
-
-#define CHECK(cond)                                                                                \
-  if (!(cond)) {                                                                                   \
-    goto cleanup;                                                                                  \
-  }
-
-static sint dump_control_stack(StringBuffer json_out, Stack stack) {
-  sint result = 0;
-  const char* mappings[] = {"INVALID", "rule2", "rule3c"};
-  _sb_printf(json_out, "\"control_stack\": [");
-  for (size_t i = 0; i < stbds_arrlenu(stack); ++i) {
-    struct StackEntry e = stack[i];
-    if (e.type == StackEntryType_Index) {
-      _sb_printf(json_out, "%d, ", e.as_index);
-    } else if (e.type == StackEntryType_Calculated) {
-      _sb_printf(
-          json_out,
-          "{ \"compute_index\": \"%s\" }, ",
-          mappings[(size_t)e.as_calculated_index.type]);
-    } else {
-      assert(false);
-    }
-  }
-  _sb_try_chop_suffix(json_out, ", ");
-  _sb_append_str(json_out, "]");
-
-  return result;
-}
-
-static sint dump_value_stack(StringBuffer json_out, size_t* stack) {
-  sint result = 0;
-  _sb_printf(json_out, "\"value_stack\": [");
-  for (size_t i = 0; i < stbds_arrlenu(stack); ++i) {
-    _sb_printf(json_out, "%d, ", stack[i]);
-  }
-  _sb_try_chop_suffix(json_out, ", ");
-  _sb_append_str(json_out, "]");
-  return result;
-}
-
-sint eval_dump_json(StringBuffer json_out, EvalState state) {
-  sint result = 0;
-  _sb_append_str(json_out, "{\n");
-
-  result = _eval_cells_dump_json(json_out, state->cells);
-  CHECK(result == 0);
-  _sb_append_str(json_out, ",\n");
-
-  result = dump_control_stack(json_out, state->control_stack);
-  CHECK(result == 0);
-  _sb_append_str(json_out, ",\n");
-
-  result = dump_value_stack(json_out, state->value_stack);
-  CHECK(result == 0);
-  _sb_append_str(json_out, ",\n");
-
-  // TODO: rest of the json scheme
-
-  if (_sb_try_chop_suffix(json_out, ",\n")) {
-    _sb_append_char(json_out, '\n');
-  }
-  _sb_append_char(json_out, '}');
-cleanup:
-  return result;
-}
-
-sint eval_load_json(const char* json, EvalState* state) {
-  sint err = 0;
-  if (err == ERR_VAL) {
-    printf("err %ld", err);
-    return err;
-  }
-
-  struct json_parse_result_s result = {};
-  struct json_value_s* root = json_parse_ex(json, strlen(json), 0, NULL, NULL, &result);
-  if (result.error != json_parse_error_none) {
-    printf("error while parsing json at %zu %zu\n", result.error_line_no, result.error_row_no);
-    return result.error;
-  }
-
-  err = _eval_load_json(json_value_as_object(root), state);
-  if (err) {
-    goto cleanup;
-  }
-
-cleanup:
-  free(root);
-  return 0;
-}
-
-sint _eval_load_json(struct json_object_s* root, EvalState* state) {
-  sint err = 0;
-  struct json_object_element_s* cells_it = root->start;
-  if (0 != strcmp(((struct json_string_s*)cells_it->name)->string, "cells")) {
-    err = 1;
-    printf("expected 'cells' field");
-    goto cleanup;
-  }
-
-  struct json_object_s* cells_obj = json_value_as_object(cells_it->value);
-  err = _eval_cells_load_json(cells_obj, &(*state)->cells);
-  if (err) {
-    goto cleanup;
-  }
-
-  // TODO: rest of the json scheme
-
-cleanup:
-  return err;
-}
-
-#undef CHECK

@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <time.h>
 
-#include "vendor/json.h"
 #include "vendor/stb_ds.h"
 
 #include "common.h"
@@ -29,7 +28,7 @@ typedef struct test_data_t {
   enum { test_data_none, test_data_json, test_data_file_testcase } tag;
 
   union {
-    struct json_value_s* as_json;
+    const char* as_json;
 
     struct file_testcase_t {
       const char* name;
@@ -55,60 +54,48 @@ bool load_and_execute_testcase(test_data_t data) {
   assert(data.tag == test_data_file_testcase);
   const char* path = data.as_file_testcase_t.name;
 
-  _sb_new(path_json);
-  _sb_init(path_json);
-  _sb_append_str(path_json, PROJECT_ROOT);
-  _sb_append_str(path_json, PATH_SEP);
-  _sb_append_str(path_json, "tests");
-  _sb_append_str(path_json, PATH_SEP);
-  _sb_append_str(path_json, path);
-  _sb_append_str(path_json, ".json");
+  string_buffer_t path_json;
+  _sb_init(&path_json);
+  _sb_append_str(&path_json, PROJECT_ROOT);
+  _sb_append_str(&path_json, PATH_SEP);
+  _sb_append_str(&path_json, "tests");
+  _sb_append_str(&path_json, PATH_SEP);
+  _sb_append_str(&path_json, path);
+  _sb_append_str(&path_json, ".json");
 
-  printf("loading %s\n", _sb_str_view(path_json));
+  logg("loading %s", _sb_str_view(&path_json));
 
-  _sb_new(file_contents);
-  _sb_init(file_contents);
+  string_buffer_t file_contents;
+  _sb_init(&file_contents);
 
-  struct json_value_s* root = NULL;
   bool test_result = false;
 
-  FILE* file_json = fopen(_sb_str_view(path_json), "r");
+  FILE* file_json = fopen(_sb_str_view(&path_json), "r");
   if (file_json == NULL) {
-    perror(_sb_str_view(path_json));
+    perror(_sb_str_view(&path_json));
     goto cleanup;
   }
 
   char chunk[1024];
   while (fgets(chunk, sizeof(chunk), file_json) != NULL) {
-    _sb_append_str(file_contents, chunk);
+    _sb_append_str(&file_contents, chunk);
   }
 
   if (ferror(file_json)) {
-    perror(_sb_str_view(path_json));
+    perror(_sb_str_view(&path_json));
     fclose(file_json);
     goto cleanup;
   }
 
-  const char* testcase = _sb_str_view(file_contents);
-  struct json_parse_result_s result = {};
-  root = json_parse_ex(testcase, strlen(testcase), 0, NULL, NULL, &result);
-  if (result.error != json_parse_error_none) {
-    fprintf(
-        stderr,
-        "error %zu while parsing json at %zu %zu\n",
-        result.error,
-        result.error_line_no,
-        result.error_row_no);
-    goto cleanup;
-  }
+  const char* testcase = _sb_str_view(&file_contents);
 
-  test_result = data.as_file_testcase_t.test((test_data_t){.tag = test_data_json, .as_json = root});
+  test_result =
+      data.as_file_testcase_t.test((test_data_t){.tag = test_data_json, .as_json = testcase});
 
   fclose(file_json);
 cleanup:
-  free(root);
-  _sb_free(path_json);
-  _sb_free(file_contents);
+  _sb_free(&path_json);
+  _sb_free(&file_contents);
   return test_result;
 }
 
@@ -156,7 +143,7 @@ bool test_memory_many_cells(test_data_t _) {
 
   int seed = time(0);
   srand(seed);
-  printf("seed: %d\n", seed);
+  logg("seed: %d", seed);
   size_t cell_count = 1024 * 1024;
   test_memory_many_cells_set_cells* set_cells = NULL;
   for (size_t i = 0; i < cell_count; ++i) {
@@ -177,14 +164,14 @@ bool test_memory_many_cells(test_data_t _) {
     sint cell_val = eval_cells_get(cells, idx);
     if (cell_val != set_cells[i].value.cell) {
       result = false;
-      printf("cell_val %zu != [%zu] %zu\n", cell_val, idx, set_cells[i].key);
+      logg("cell_val %zu != [%zu] %zu", cell_val, idx, set_cells[i].key);
       goto cleanup;
     }
     if (set_cells[i].value.word != (sint)-1) {
       sint word = eval_cells_get_word(cells, idx);
       if (word != set_cells[i].value.word) {
         result = false;
-        printf("word %zu != [%zu] %zu\n", word, idx, set_cells[i].value.word);
+        logg("word %zu != [%zu] %zu", word, idx, set_cells[i].value.word);
         goto cleanup;
       }
     }
@@ -238,31 +225,33 @@ cleanup:
 bool test_eval(test_data_t data) {
   sint err = 0;
   assert(data.tag == test_data_json);
-  struct json_value_s* json = data.as_json;
-  assert(json);
-  struct json_object_s* global_object = json_value_as_object(json);
-
-  struct json_object_element_s* global_it = global_object->start;
-  assert(0 == strcmp(((struct json_string_s*)global_it->name)->string, "input"));
-  struct json_object_s* input_obj = json_value_as_object(global_it->value);
-
+  const char* json = data.as_json;
   EvalState state = NULL;
+
+  json_parser_t parser_ = {};
+  json_parser_t* parser = &parser_;
+
   err = eval_init(&state);
   if (err) {
-    printf("failed eval_init");
-    goto cleanup;
-  }
-  err = _eval_load_json(input_obj, &state);
-  if (err) {
-    printf("failed eval_load_json");
+    logg_s("failed eval_init");
     goto cleanup;
   }
 
-  global_it = global_it->next;
+  _json_parser_init(json, parser);
+  _JSON_PARSER_EAT(OBJECT, 1);
+  _JSON_PARSER_EAT_KEY("input", 1);
+
+  err = _eval_load_json(parser, state);
+  if (err) {
+    logg_s("failed eval_load_json");
+    goto cleanup;
+  }
+
+  // TODO: parse output
 
 cleanup:
+  _json_parser_free(parser);
   eval_free(&state);
-  // printf("%s\n", json);
   return true;
 }
 
