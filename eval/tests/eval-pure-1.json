@@ -15,10 +15,10 @@
                 "state": "^^**^**",
                 "words": []
             },
-            "control_stack": [
+            "control_stack": [],
+            "value_stack": [
                 0
-            ],
-            "value_stack": []
+            ]
         }
     ]
 }

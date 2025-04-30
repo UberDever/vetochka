@@ -101,6 +101,127 @@ cleanup:
   return test_result;
 }
 
+#define EXPECT(cond, code, msg)                                                                    \
+  if (!(cond)) {                                                                                   \
+    logg_s(#cond " failed\n");                                                                     \
+    goto failed;                                                                                   \
+  }
+
+static inline bool is_ref(Allocator cells, size_t index) {
+  GET_CELL(cells, index)
+  return (index_cell == EVAL_REF);
+failed:
+  return false;
+}
+
+// NOTE: this function could benefit from skip subtree feature
+// since we don't always want to reference everything to everything in the expected, we only want to
+// compare the nodes of the trees
+bool compare_trees(Allocator lhs_cells, Allocator rhs_cells, size_t lhs, size_t rhs) {
+  sint lhs_cell = eval_cells_get(lhs_cells, lhs);
+  if (lhs_cell == ERR_VAL) {
+    logg("invalid cell [%zu] %zu", lhs, lhs_cell);
+    return false;
+  }
+  if (is_ref(lhs_cells, lhs)) {
+    DEREF(lhs_cells, lhs)
+    lhs_cell = eval_cells_get(lhs_cells, lhs);
+    if (lhs_cell == ERR_VAL) {
+      logg("invalid cell [%zu] %zu", lhs, lhs_cell);
+      return false;
+    }
+  }
+
+  sint rhs_cell = eval_cells_get(rhs_cells, rhs);
+  if (rhs_cell == ERR_VAL) {
+    logg("invalid cell [%zu] %zu", rhs, rhs_cell);
+    return false;
+  }
+  if (is_ref(rhs_cells, rhs)) {
+    DEREF(rhs_cells, rhs)
+    rhs_cell = eval_cells_get(rhs_cells, rhs);
+    if (rhs_cell == ERR_VAL) {
+      logg("invalid cell [%zu] %zu", rhs, rhs_cell);
+      return false;
+    }
+  }
+
+  if (lhs_cell != rhs_cell) {
+    logg("%ld[%zu] != %ld[%zu]", lhs_cell, lhs, rhs_cell, rhs);
+    return false;
+  }
+  if (lhs_cell == EVAL_REF) {
+    sint lhs_word = eval_cells_get_word(lhs_cells, lhs);
+    if (lhs_word == ERR_VAL) {
+      logg("invalid value [%zu] %zu", lhs, lhs_word);
+      return false;
+    }
+    sint rhs_word = eval_cells_get_word(rhs_cells, rhs);
+    if (rhs_word == ERR_VAL) {
+      logg("invalid value [%zu] %zu", rhs, rhs_word);
+      return false;
+    }
+    if (lhs_word != rhs_word) {
+      logg("words differ at [%zu] [%zu] %zu != %zu", lhs, rhs, lhs_word, rhs_word);
+      return false;
+    }
+  }
+
+  if (lhs_cell != EVAL_NIL) {
+    bool result = true;
+    result &= compare_trees(lhs_cells, rhs_cells, lhs + 1, rhs + 1);
+    if (!result) {
+      return result;
+    }
+    result &= compare_trees(lhs_cells, rhs_cells, lhs + 2, rhs + 2);
+    if (!result) {
+      return result;
+    }
+  }
+  return true;
+
+failed:
+  return false;
+}
+
+bool compare_states(EvalState actual, EvalState expected) {
+  bool trees_result = compare_trees(actual->cells, expected->cells, 0, 0);
+  if (!trees_result) {
+    return false;
+  }
+  {
+    size_t lhs_size = stbds_arrlenu(actual->control_stack);
+    size_t rhs_size = stbds_arrlenu(expected->control_stack);
+    if (lhs_size != rhs_size) {
+      return false;
+    }
+    for (size_t i = 0; i < lhs_size; ++i) {
+      if (actual->control_stack[i].tag != expected->control_stack[i].tag) {
+        return false;
+      }
+      if (actual->control_stack[i].tag == STACK_ENTRY_INDEX) {
+        return actual->control_stack[i].as_index == expected->control_stack[i].as_index;
+      }
+      return actual->control_stack[i].as_calculated == expected->control_stack[i].as_calculated;
+    }
+  }
+  {
+    size_t lhs_size = stbds_arrlenu(actual->value_stack);
+    size_t rhs_size = stbds_arrlenu(expected->value_stack);
+    if (lhs_size != rhs_size) {
+      return false;
+    }
+    for (size_t i = 0; i < lhs_size; ++i) {
+      if (actual->value_stack[i] != expected->value_stack[i]) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+// ********************** TESTCASES **********************
+
 bool test_memory_smoke(test_data_t _) {
   bool result = true;
 
@@ -249,40 +370,54 @@ bool test_eval(test_data_t data) {
   _JSON_PARSER_EAT(OBJECT, 1);
   _JSON_PARSER_EAT_KEY("input", 1);
 
-  json_parser_t parser_copy_ = parser_;
-  parser = &parser_copy_;
   err = _eval_load_json(parser, state);
   if (err) {
     logg_s("failed eval_load_json");
     goto cleanup;
   }
 
-  parser = &parser_;
-  err = _eval_load_json(parser, reference_state);
-  if (err) {
-    logg_s("failed eval_load_json");
-    goto cleanup;
-  }
+  string_buffer_t debug_buffer;
+  _sb_init(&debug_buffer);
+  sint fully_evaluated = 0;
 
   _JSON_PARSER_EAT_KEY("output", 1);
   _JSON_PARSER_EAT(ARRAY, 1);
   size_t output_count = parser->entries_count;
   for (size_t step_count = 0; step_count < output_count; ++step_count) {
-    eval_step(state);
-    if (state->error_code) {
-      logg("%s", state->error);
-      goto cleanup;
-    }
+    _eval_debug_dump(state, &debug_buffer);
+    printf("%s", _sb_str_view(&debug_buffer));
+    _sb_clear(&debug_buffer);
+
     err = _eval_load_json(parser, reference_state);
     if (err) {
       logg_s("failed eval_load_json");
       goto cleanup;
     }
 
-    // TODO: compare reference and actual
+    fully_evaluated = eval_step(state);
+    if (state->error_code) {
+      logg("%s", state->error);
+      err = state->error_code;
+      goto cleanup;
+    }
+
+    if (!compare_states(state, reference_state)) {
+      err = 1;
+      logg_s("states differ");
+      goto cleanup;
+    }
+  }
+  if (!fully_evaluated) {
+    err = 1;
+    logg_s("not fully evaluated");
+    goto cleanup;
   }
 
+  _eval_debug_dump(state, &debug_buffer);
+  printf("%s", _sb_str_view(&debug_buffer));
+
 cleanup:
+  _sb_free(&debug_buffer);
   _json_parser_free(parser);
   eval_free(&state);
   eval_free(&reference_state);
@@ -585,9 +720,6 @@ cleanup:
           .as_file_testcase_t = (struct file_testcase_t){.name = (casename), .test = test_eval},   \
           .name = (casename)})
 
-// TODO: it would be nice if we added a evaluation step support
-// i.e. describe input, describe expected steps of evaluation (and IO state presumably), describe
-// step count (too much for C, use different language?)
 int main() {
   // NOTE: because of ninja
   stderr = stdout;
@@ -613,24 +745,6 @@ int main() {
   add_file_case("eval-first-2");
   add_file_case("eval-second-1");
 
-  // // pure data
-  // ADD_TEST_WITH_DATA(test_eval_eval, 0, "^ ^** ^**", "0", "^ ^** ^**", 1);
-
-  // // first rule
-  // ADD_TEST_WITH_DATA(test_eval_eval, 1, "^ ^** # 2 # 3 ^** ^**", "0", "^**", 1);
-  // ADD_TEST_WITH_DATA(test_eval_eval, 2, "^ ^** # 2 # 3 ^** *", "0", "^**", 1);
-  // ADD_TEST_WITH_DATA(test_eval_eval, 3, "^ ^** # 2 # 3 ^** *", "0", "^**", -1);
-
-  // // second rule
-  // ADD_TEST_WITH_DATA(
-  //     test_eval_eval,
-  //     4,
-  //     "^ ^ # 4 * # 5 # 9 ^** ^^*** ^^**^**",
-  //     "21 23 r2",
-  //     "^ ^ # 4 * # 5 # 9 ^** ^^*** ^^**^** "
-  //     "# -15 # -8 # -14 # -10",
-  //     1);
-
   const char* GREEN = "\033[0;32m";
   const char* CYAN = "\033[0;36m";
   const char* RED = "\033[0;31m";
@@ -644,6 +758,10 @@ int main() {
       result = 1;
       // goto cleanup;
     }
+  }
+
+  if (result) {
+    printf("%sYou have failed tests :(%s\n\n", RED, RESET);
   }
 
   stbds_arrfree(cases);

@@ -53,6 +53,7 @@ void _errbuf_write(const char* format, ...);
   if (index##_cell == EVAL_REF) {                                                                  \
     GET_WORD(cells, index);                                                                        \
     index += (sint)index##_word;                                                                   \
+    index##_cell = eval_cells_get(cells, index);                                                   \
     size_t new_index = index;                                                                      \
     GET_CELL(cells, new_index)                                                                     \
     EXPECT(new_index_cell != EVAL_REF, ERROR_REF_TO_REF, "");                                      \
@@ -135,11 +136,14 @@ struct EvalState_impl {
   const char* error;
 };
 
+sint _eval_reset_cells(EvalState state);
 void _eval_control_stack_push_index(EvalState state, size_t index);
 void _eval_control_stack_push_calculated(EvalState state, u8 type);
 void _eval_value_stack_push(EvalState state, size_t value);
 sint _eval_load_json(struct json_parser_t* parser, EvalState state);
 sint _eval_cells_load_json(struct json_parser_t* parser, Allocator cells);
+
+void _eval_debug_dump(EvalState state, string_buffer_t* buffer);
 
 typedef struct {
   size_t key;
@@ -205,12 +209,12 @@ bool _json_parser_eat(json_parser_t* parser, enum json_token_t token);
 const char* _json_parser_get_string(json_parser_t* parser);
 
 #define _JSON_PARSER_EAT(type, errval)                                                             \
+  if (parser->at_eof) {                                                                            \
+    goto cleanup;                                                                                  \
+  }                                                                                                \
   _json_parser_eat(parser, JSON_TOKEN_##type);                                                     \
   if (parser->was_err) {                                                                           \
     err = errval;                                                                                  \
-    goto cleanup;                                                                                  \
-  }                                                                                                \
-  if (parser->at_eof) {                                                                            \
     goto cleanup;                                                                                  \
   }
 

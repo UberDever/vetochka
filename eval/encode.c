@@ -11,6 +11,8 @@
 
 #include "common.h"
 
+static char CELL_TO_CHAR[] = {'*', '^', '$', '#'};
+
 // NOTE: doesn't take ownership of json
 sint _json_parser_init(const char* json, json_parser_t* parser) {
   *parser = (json_parser_t){};
@@ -179,44 +181,70 @@ cleanup:
 
 sint _eval_load_json(json_parser_t* parser, EvalState state) {
   sint err = 0;
+
+  state->error_code = 0;
+
   _JSON_PARSER_EAT(OBJECT, 1);
   _JSON_PARSER_EAT_KEY("cells", 1)
+  if (_json_parser_match(parser, JSON_TOKEN_NULL)) {
+    _JSON_PARSER_EAT(NULL, 1);
+  } else {
+    err = _eval_reset_cells(state);
+    if (err) {
+      goto cleanup;
+    }
+    err = _eval_cells_load_json(parser, state->cells);
+    if (err) {
+      goto cleanup;
+    }
 
-  err = _eval_cells_load_json(parser, state->cells);
-  if (err) {
-    goto cleanup;
+    size_t i = 0;
+    while (eval_cells_is_set(state->cells, i)) {
+      _bitmap_set_bit(state->free_bitmap, i, 1);
+      i++;
+    }
   }
 
   _JSON_PARSER_EAT_KEY("control_stack", 1)
-  _JSON_PARSER_EAT(ARRAY, 1);
-  size_t control_count = parser->entries_count;
-  for (size_t i = 0; i < control_count; ++i) {
-    if (_json_parser_match(parser, JSON_TOKEN_NUMBER)) {
-      _JSON_PARSER_EAT(NUMBER, 1);
-      _eval_control_stack_push_index(state, parser->digested_number);
-      continue;
+  if (_json_parser_match(parser, JSON_TOKEN_NULL)) {
+    _JSON_PARSER_EAT(NULL, 1);
+  } else {
+    stbds_arrsetlen(state->control_stack, 0);
+    _JSON_PARSER_EAT(ARRAY, 1);
+    size_t control_count = parser->entries_count;
+    for (size_t i = 0; i < control_count; ++i) {
+      if (_json_parser_match(parser, JSON_TOKEN_NUMBER)) {
+        _JSON_PARSER_EAT(NUMBER, 1);
+        _eval_control_stack_push_index(state, parser->digested_number);
+        continue;
+      }
+      _JSON_PARSER_EAT(OBJECT, 1);
+      _JSON_PARSER_EAT_KEY("compute_index", 1)
+      _JSON_PARSER_EAT(STRING, 1);
+      if (strcmp(_json_parser_get_string(parser), "rule2") == 0) {
+        _eval_control_stack_push_calculated(state, CALCULATED_INDEX_RULE2);
+        continue;
+      }
+      if (strcmp(_json_parser_get_string(parser), "rule3c") == 0) {
+        _eval_control_stack_push_calculated(state, CALCULATED_INDEX_RULE3C);
+        continue;
+      }
+      err = 1;
+      goto cleanup;
     }
-    _JSON_PARSER_EAT(OBJECT, 1);
-    _JSON_PARSER_EAT_KEY("compute_index", 1)
-    _JSON_PARSER_EAT(STRING, 1);
-    if (strcmp(_json_parser_get_string(parser), "rule2") == 0) {
-      _eval_control_stack_push_calculated(state, CALCULATED_INDEX_RULE2);
-      continue;
-    }
-    if (strcmp(_json_parser_get_string(parser), "rule3c") == 0) {
-      _eval_control_stack_push_calculated(state, CALCULATED_INDEX_RULE3C);
-      continue;
-    }
-    err = 1;
-    goto cleanup;
   }
 
   _JSON_PARSER_EAT_KEY("value_stack", 1)
-  _JSON_PARSER_EAT(ARRAY, 1);
-  size_t value_count = parser->entries_count;
-  for (size_t i = 0; i < value_count; ++i) {
-    _JSON_PARSER_EAT(NUMBER, 1);
-    _eval_value_stack_push(state, parser->digested_number);
+  if (_json_parser_match(parser, JSON_TOKEN_NULL)) {
+    _JSON_PARSER_EAT(NULL, 1);
+  } else {
+    stbds_arrsetlen(state->value_stack, 0);
+    _JSON_PARSER_EAT(ARRAY, 1);
+    size_t value_count = parser->entries_count;
+    for (size_t i = 0; i < value_count; ++i) {
+      _JSON_PARSER_EAT(NUMBER, 1);
+      _eval_value_stack_push(state, parser->digested_number);
+    }
   }
 
 cleanup:
@@ -355,33 +383,109 @@ cleanup:
   return result;
 }
 
-void eval_encode_dump(Allocator cells, size_t root) {
-  char nodes[] = {'*', '^', '$', '#'};
-  size_t index = root;
-  logg_s("nodes: ");
-  while (eval_cells_is_set(cells, index)) {
-    sint index_cell = eval_cells_get(cells, index);
-    assert(index_cell != ERR_VAL);
-    logg("%c[%zu] ", nodes[index_cell], index);
-    index++;
-  }
-  logg_s("\n");
+// void eval_encode_dump(Allocator cells, size_t root) {
+//   char nodes[] = {'*', '^', '$', '#'};
+//   size_t index = root;
+//   logg_s("nodes: ");
+//   while (eval_cells_is_set(cells, index)) {
+//     sint index_cell = eval_cells_get(cells, index);
+//     assert(index_cell != ERR_VAL);
+//     logg("%c[%zu] ", nodes[index_cell], index);
+//     index++;
+//   }
+//   logg_s("\n");
 
-  logg_s("words: ");
-  size_t word_index = root;
-  while (eval_cells_is_set(cells, word_index)) {
-    sint word_index_cell = eval_cells_get(cells, word_index);
-    assert(word_index_cell != ERR_VAL);
-    if (word_index_cell == EVAL_REF) {
-      sint word_index_word = eval_cells_get_word(cells, word_index);
-      assert(word_index_word != ERR_VAL);
-      logg("!%ld[%zu] ", word_index_word, word_index);
-      word_index++;
-      continue;
+//   logg_s("words: ");
+//   size_t word_index = root;
+//   while (eval_cells_is_set(cells, word_index)) {
+//     sint word_index_cell = eval_cells_get(cells, word_index);
+//     assert(word_index_cell != ERR_VAL);
+//     if (word_index_cell == EVAL_REF) {
+//       sint word_index_word = eval_cells_get_word(cells, word_index);
+//       assert(word_index_word != ERR_VAL);
+//       logg("!%ld[%zu] ", word_index_word, word_index);
+//       word_index++;
+//       continue;
+//     }
+//     word_index++;
+//   }
+//   logg_s("\n");
+// }
+
+void _eval_debug_dump(EvalState state, string_buffer_t* buffer) {
+  const size_t WINDOW_SIZE = 4;
+  const size_t LINE_LEN = 120;
+  const size_t WINDOWS_LINE = LINE_LEN / WINDOW_SIZE;
+  const char* control_names[] = {"INVALID", "r2", "r3c"};
+
+#define DUMP_BUFFER                                                                                \
+  _sb_append_str(buffer, _sb_str_view(&indices_line));                                             \
+  _sb_append_char(buffer, '\n');                                                                   \
+  _sb_append_str(buffer, _sb_str_view(&cells_line));                                               \
+  _sb_append_char(buffer, '\n');                                                                   \
+  _sb_append_str(buffer, _sb_str_view(&words_line));                                               \
+  _sb_append_char(buffer, '\n');                                                                   \
+  _sb_printf(buffer, "control: ");                                                                 \
+  for (size_t i = 0; i < stbds_arrlenu(state->control_stack); ++i) {                               \
+    struct StackEntry e = state->control_stack[i];                                                 \
+    if (e.tag == STACK_ENTRY_INDEX) {                                                              \
+      _sb_printf(buffer, "%zu ", e.as_index);                                                      \
+    } else if (e.tag == STACK_ENTRY_CALCULATED) {                                                  \
+      _sb_printf(buffer, "%s ", control_names[e.as_calculated]);                                   \
+    } else {                                                                                       \
+      assert(false && "unreachable");                                                              \
+    }                                                                                              \
+  }                                                                                                \
+  _sb_append_char(buffer, '\n');                                                                   \
+  _sb_printf(buffer, "value: ");                                                                   \
+  for (size_t i = 0; i < stbds_arrlenu(state->value_stack); ++i) {                                 \
+    _sb_printf(buffer, "%zu ", state->value_stack[i]);                                             \
+  }                                                                                                \
+  _sb_append_char(buffer, '\n');                                                                   \
+  _sb_append_str(buffer, "---------\n");
+
+  string_buffer_t indices_line;
+  _sb_init(&indices_line);
+  string_buffer_t cells_line;
+  _sb_init(&cells_line);
+  string_buffer_t words_line;
+  _sb_init(&words_line);
+
+  char num_format[20];
+  snprintf(num_format, sizeof(num_format), "%%-%zud", WINDOW_SIZE);
+  char char_format[20];
+  snprintf(char_format, sizeof(char_format), "%%-%zuc", WINDOW_SIZE);
+
+  size_t i = 0;
+  while (eval_cells_is_set(state->cells, i)) {
+    if ((i % WINDOWS_LINE == 0) && i > 0) {
+      DUMP_BUFFER
+      _sb_clear(&indices_line);
+      _sb_clear(&cells_line);
+      _sb_clear(&words_line);
     }
-    word_index++;
+    _sb_printf(&indices_line, num_format, i);
+    u8 cell = eval_cells_get(state->cells, i);
+    _sb_printf(&cells_line, char_format, CELL_TO_CHAR[cell]);
+    if (cell == EVAL_REF) {
+      i64 ref = eval_cells_get_word(state->cells, i);
+      u64 ref_index = ref + i;
+      _sb_printf(&words_line, num_format, ref_index);
+    } else {
+      for (size_t j = 0; j < WINDOW_SIZE; ++j) {
+        _sb_append_char(&words_line, ' ');
+      }
+    }
+    i++;
   }
-  logg_s("\n");
+
+  DUMP_BUFFER
+
+#undef DUMP_BUFFER
+
+  _sb_free(&indices_line);
+  _sb_free(&cells_line);
+  _sb_free(&words_line);
 }
 
 // ********************** JSON DUMPING **********************

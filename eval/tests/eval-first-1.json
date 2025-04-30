@@ -37,6 +37,13 @@
                 4
             ],
             "value_stack": []
+        },
+        {
+            "cells": null,
+            "control_stack": [],
+            "value_stack": [
+                4
+            ]
         }
     ]
 }

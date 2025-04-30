@@ -53,14 +53,9 @@ sint eval_init(EvalState* state) {
   if (res == ERR_VAL) {
     return res;
   }
-  _eval_control_stack_push_index(s, 0);
+
   s->free_capacity = BITMAP_SIZE(cells_capacity * CELLS_PER_WORD);
   s->free_bitmap = calloc(1, s->free_capacity * sizeof(u64));
-  size_t i = 0;
-  while (eval_cells_is_set(s->cells, i)) {
-    _bitmap_set_bit(s->free_bitmap, i, 1);
-    i++;
-  }
   *state = s;
   return 0;
 }
@@ -73,6 +68,26 @@ sint eval_free(EvalState* state) {
   free(s->free_bitmap);
   free(s);
   *state = NULL;
+  return 0;
+}
+
+sint _eval_reset_cells(EvalState state) {
+  sint err = eval_cells_reset(state->cells);
+  memset(state->free_bitmap, 0, state->free_capacity * sizeof(*state->free_bitmap));
+  return err;
+}
+
+sint eval_reset(EvalState state) {
+  if (!state) {
+    return ERR_VAL;
+  }
+  sint err = _eval_reset_cells(state);
+  if (err) {
+    return err;
+  }
+  stbds_arrsetlen(state->control_stack, 0);
+  stbds_arrsetlen(state->value_stack, 0);
+  state->error_code = 0;
   return 0;
 }
 
@@ -121,14 +136,18 @@ sint eval_free(EvalState* state) {
 // NOTE: references are second class, we can't have references to references!
 // NOTE: references are represented as single # node with corresponding tagged word node
 static inline bool _eval_is_ref(EvalState state, size_t index) {
-  STATE_GET_CELL(index)
+  sint index_cell = eval_cells_get(state->cells, index);
+  if (index_cell == ERR_VAL) {
+    return false;
+  }
   return (index_cell == EVAL_REF);
-cleanup:
-  return false;
 }
 
 static inline bool is_opaque(EvalState state, size_t index) {
-  STATE_GET_CELL(index)
+  sint index_cell = eval_cells_get(state->cells, index);
+  if (index_cell == ERR_VAL) {
+    return false;
+  }
   if (index_cell == EVAL_TREE) {
     return true;
   }
@@ -138,7 +157,6 @@ static inline bool is_opaque(EvalState state, size_t index) {
   // return tag != EVAL_TAG_FUNC;
   // return true;
   // }
-cleanup:
   return false;
 }
 
@@ -162,6 +180,17 @@ static size_t next_n_vacant_cells(EvalState state, size_t n) {
   return next_n_vacant_cells(state, n);
 }
 
+#define CALCULATE_OFFSET(from, to)                                                                 \
+  sint to##_##from##_ref = to - from;                                                              \
+  {                                                                                                \
+    size_t tmp = from + to##_##from##_ref;                                                         \
+    if (_eval_is_ref(state, tmp)) {                                                                \
+      STATE_GET_CELL(tmp)                                                                          \
+      STATE_DEREF(tmp)                                                                             \
+      to##_##from##_ref = (sint)tmp - (sint)from;                                                  \
+    }                                                                                              \
+  }
+
 // clang-format off
 // Namings: A   B   C   D   E   F   G   H       P   Q   R   S   T   U   V
 // Rule 1 : ^   ^   *   *   X   Y           ->  X                         , new roots: P
@@ -171,7 +200,11 @@ static size_t next_n_vacant_cells(EvalState state, size_t n) {
 // Rule 3c: ^   ^   W   X   Y   ^   U   V   ->  Y   U   V                 , new roots: eval P, eval P $ R
 // Rule 4 : $   N   X, where N is native function and X is a arbitrary value
 // clang-format on
-void eval_step(EvalState state) {
+sint eval_step(EvalState state) {
+  if (stbds_arrlenu(state->control_stack) == 0 && stbds_arrlenu(state->value_stack) > 0) {
+    return 1;
+  }
+
   EXPECT(stbds_arrlenu(state->control_stack) > 0, ERROR_STACK_UNDERFLOW, "");
 
   // TODO: add data (fully evaluated) as stack entry
@@ -181,42 +214,40 @@ void eval_step(EvalState state) {
   if (root.tag == STACK_ENTRY_CALCULATED) {
     if (root.as_calculated == CALCULATED_INDEX_RULE2) {
       EXPECT(
-          stbds_arrlenu(state->control_stack) >= 2,
+          stbds_arrlenu(state->value_stack) >= 2,
           ERROR_STACK_UNDERFLOW,
           "stack underflow in calculated index rule2");
+      size_t R = stbds_arrpop(state->value_stack);
+      STATE_GET_CELL(R);
+      STATE_DEREF(R);
+      size_t P = stbds_arrpop(state->value_stack);
+      STATE_GET_CELL(P);
+      STATE_DEREF(P);
+      size_t P$R = next_n_vacant_cells(state, 2);
+      CALCULATE_OFFSET(P$R, P);
+      size_t P$R_2 = P$R + 1;
+      CALCULATE_OFFSET(P$R_2, R);
+      STATE_SET_CELL(P$R, EVAL_REF);
+      STATE_SET_REF(P$R, P_P$R_ref);
+      STATE_SET_CELL(P$R_2, EVAL_REF);
+      STATE_SET_REF(P$R_2, R_P$R_2_ref);
+      _eval_control_stack_push_index(state, P$R);
 
       goto matched;
     }
     if (root.as_calculated == CALCULATED_INDEX_RULE3C) {
+      assert(false && "TODO");
       goto matched;
     }
     assert(false);
   }
-  assert(root.tag == STACK_ENTRY_INDEX);
 
-  size_t A = /*A + 1*/ root.as_index;
+  assert(root.tag == STACK_ENTRY_INDEX);
+  size_t A = root.as_index;
   STATE_GET_CELL(A)
   STATE_DEREF(A)
 
   EXPECT(A_cell != EVAL_NIL, ERROR_GENERIC, "")
-  /*if (B == EVAL_NATIVE) {
-    STATE_GET_WORD(B)
-    u8 tag = eval_tv_get_tag(B_word);
-    EXPECT(tag == EVAL_TAG_FUNC, ERROR_APPLY_TO_VALUE, "")
-    assert(false); // TODO: this
-  } else */
-  /*if (B_cell == EVAL_APPLY) {
-    assert(false);
-    stbds_arrpush(state->stack, B);
-    EvalResult lhs_result = eval_step_impl(state);
-    CHECK(state)
-    size_t rhs = lhs_result.sibling;
-    STATE_GET_CELL(rhs)
-    stbds_arrpush(state->stack, rhs);
-    EvalResult rhs_result = eval_step_impl(state);
-    assert(rhs_result.sibling == ERR_VAL);
-    // TODO create a $ lhs rhs and put it on the stack
-  }*/
   assert(A_cell == EVAL_TREE);
 
   bool matched = false;
@@ -249,20 +280,8 @@ void eval_step(EvalState state) {
   }
   matched = false;
 
-#define CALCULATE_OFFSET(from, to)                                                                 \
-  sint to##_##from##_ref = to - from;                                                              \
-  {                                                                                                \
-    size_t tmp = from + to##_##from##_ref;                                                         \
-    if (_eval_is_ref(state, tmp)) {                                                                \
-      STATE_GET_CELL(tmp)                                                                          \
-      STATE_DEREF(tmp)                                                                             \
-      to##_##from##_ref = (sint)tmp - (sint)from;                                                  \
-    }                                                                                              \
-  }
-
   do {
     // eval_encode_dump(state->cells, A);
-    // const size_t REF_SIZE = 1;
     size_t B = A + 1;
     STATE_GET_CELL(B)
     STATE_DEREF(B)
@@ -273,7 +292,6 @@ void eval_step(EvalState state) {
     }
     size_t D = C + 1;
     STATE_GET_CELL(D)
-    STATE_DEREF(C);
     size_t E = D + 1;
     if (!_eval_is_ref(state, E)) {
       break;
@@ -282,7 +300,10 @@ void eval_step(EvalState state) {
     if (!_eval_is_ref(state, F)) {
       break;
     }
-    if (!(is_opaque(state, C) && D_cell == EVAL_NIL)) {
+    size_t C_prime = C;
+    STATE_GET_CELL(C_prime)
+    STATE_DEREF(C_prime);
+    if (!(is_opaque(state, C_prime) && D_cell == EVAL_NIL)) {
       break;
     }
 
@@ -306,9 +327,9 @@ void eval_step(EvalState state) {
     STATE_SET_CELL(S, EVAL_REF);
     STATE_SET_REF(S, F_S_ref);
 
-    _eval_control_stack_push_index(state, P);
-    _eval_control_stack_push_index(state, R);
     _eval_control_stack_push_calculated(state, CALCULATED_INDEX_RULE2);
+    _eval_control_stack_push_index(state, R);
+    _eval_control_stack_push_index(state, P);
 
     matched = true;
 
@@ -321,19 +342,15 @@ void eval_step(EvalState state) {
   }
   matched = false;
 
-  stbds_arrpush(state->control_stack, root);
+  // NOTE: nothing matched, assume it is the value
+  stbds_arrpush(state->value_stack, root.as_index);
 
-  return;
+  return 1;
 
 cleanup:
 matched:
-  // NOTE: if after calculating the specified root from the stack
-  // we got an entry in the control stack
-  // then we (1) pop that entry and do the following:
-  // if entry was rule2 -> P' = stack_pop; R = stack_pop; stack_push P'; stack_push R
-  // if entry was rule3c -> P' = stack_pop; ...?
 
-  return;
+  return 0;
 }
 
 #undef EXPECT

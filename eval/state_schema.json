@@ -2,7 +2,10 @@
     "type": "object",
     "properties": {
         "cells": {
-            "type": "object",
+            "type": [
+                "null",
+                "object"
+            ],
             "properties": {
                 "state": "string",
                 "words": {
@@ -40,7 +43,10 @@
             }
         },
         "control_stack": {
-            "type": "array",
+            "type": [
+                "null",
+                "array"
+            ],
             "items": {
                 "type": [
                     "number",
@@ -60,7 +66,10 @@
             }
         },
         "value_stack": {
-            "type": "array",
+            "type": [
+                "null",
+                "array"
+            ],
             "items": {
                 "type": "number"
             }

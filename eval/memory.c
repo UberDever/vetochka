@@ -143,7 +143,10 @@ sint eval_cells_is_set(Allocator cells, size_t index) {
   return 1;
 }
 
-sint eval_cells_clear(Allocator cells) {
+sint eval_cells_reset(Allocator cells) {
+  if (!cells) {
+    return ERR_VAL;
+  }
   if (!cells->cells) {
     return ERR_VAL;
   }

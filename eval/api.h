@@ -17,10 +17,11 @@ struct string_buffer_t;
 
 sint eval_init(EvalState* state);
 sint eval_free(EvalState* state);
-void eval_step(EvalState state);
+sint eval_step(EvalState state);
 u8 eval_get_error(EvalState state, const char** message);
 sint eval_dump_json(struct string_buffer_t* json_out, EvalState state);
 sint eval_load_json(const char* json, EvalState state);
+sint eval_reset(EvalState state);
 
 sint eval_cells_init(Allocator* cells, size_t words_count);
 sint eval_cells_free(Allocator* cells);
@@ -29,4 +30,4 @@ sint eval_cells_get_word(Allocator cells, size_t index);
 sint eval_cells_set(Allocator cells, size_t index, uint8_t value);
 sint eval_cells_set_word(Allocator cells, size_t index, i64 value);
 sint eval_cells_is_set(Allocator cells, size_t index);
-sint eval_cells_clear(Allocator cells);
+sint eval_cells_reset(Allocator cells);

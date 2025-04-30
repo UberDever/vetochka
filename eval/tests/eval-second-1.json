@@ -58,13 +58,91 @@
                 ]
             },
             "control_stack": [
-                21,
+                {
+                    "compute_index": "rule2"
+                },
                 23,
+                21
+            ],
+            "value_stack": []
+        },
+        {
+            "cells": null,
+            "control_stack": [
+                {
+                    "compute_index": "rule2"
+                },
+                23
+            ],
+            "value_stack": [
+                21
+            ]
+        },
+        {
+            "cells": null,
+            "control_stack": [
                 {
                     "compute_index": "rule2"
                 }
             ],
+            "value_stack": [
+                23,
+                21
+            ]
+        },
+        {
+            "cells": {
+                "state": "^^#*##^**^^***^^**^**######",
+                "words": [
+                    {
+                        "ref": 4,
+                        "index": 2
+                    },
+                    {
+                        "ref": 5,
+                        "index": 4
+                    },
+                    {
+                        "ref": 9,
+                        "index": 5
+                    },
+                    {
+                        "ref": -15,
+                        "index": 21
+                    },
+                    {
+                        "ref": -8,
+                        "index": 22
+                    },
+                    {
+                        "ref": -14,
+                        "index": 23
+                    },
+                    {
+                        "ref": -10,
+                        "index": 24
+                    },
+                    {
+                        "ref": -19,
+                        "index": 25
+                    },
+                    {
+                        "ref": -17,
+                        "index": 26
+                    }
+                ]
+            },
+            "control_stack": [
+                25
+            ],
             "value_stack": []
+        },
+        {
+            "cells": null,
+            "control_stack": [],
+            "value_stack": [
+                25
+            ]
         }
     ]
 }
