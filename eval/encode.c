@@ -205,45 +205,33 @@ sint _eval_load_json(json_parser_t* parser, EvalState state) {
     }
   }
 
-  _JSON_PARSER_EAT_KEY("control_stack", 1)
+  _JSON_PARSER_EAT_KEY("apply_stack", 1)
   if (_json_parser_match(parser, JSON_TOKEN_NULL)) {
     _JSON_PARSER_EAT(NULL, 1);
   } else {
-    stbds_arrsetlen(state->control_stack, 0);
+    stbds_arrsetlen(state->apply_stack, 0);
     _JSON_PARSER_EAT(ARRAY, 1);
-    size_t control_count = parser->entries_count;
-    for (size_t i = 0; i < control_count; ++i) {
-      if (_json_parser_match(parser, JSON_TOKEN_NUMBER)) {
-        _JSON_PARSER_EAT(NUMBER, 1);
-        _eval_control_stack_push_index(state, parser->digested_number);
-        continue;
+    size_t apply_count = parser->entries_count;
+    for (size_t i = 0; i < apply_count; ++i) {
+      _JSON_PARSER_EAT(NUMBER, 1);
+      if (parser->digested_number == -1) {
+        stbds_arrpush(state->apply_stack, TOKEN_APPLY);
+      } else {
+        stbds_arrpush(state->apply_stack, parser->digested_number);
       }
-      _JSON_PARSER_EAT(OBJECT, 1);
-      _JSON_PARSER_EAT_KEY("compute_index", 1)
-      _JSON_PARSER_EAT(STRING, 1);
-      if (strcmp(_json_parser_get_string(parser), "rule2") == 0) {
-        _eval_control_stack_push_calculated(state, CALCULATED_INDEX_RULE2);
-        continue;
-      }
-      if (strcmp(_json_parser_get_string(parser), "rule3c") == 0) {
-        _eval_control_stack_push_calculated(state, CALCULATED_INDEX_RULE3C);
-        continue;
-      }
-      err = 1;
-      goto cleanup;
     }
   }
 
-  _JSON_PARSER_EAT_KEY("value_stack", 1)
+  _JSON_PARSER_EAT_KEY("result_stack", 1)
   if (_json_parser_match(parser, JSON_TOKEN_NULL)) {
     _JSON_PARSER_EAT(NULL, 1);
   } else {
-    stbds_arrsetlen(state->value_stack, 0);
+    stbds_arrsetlen(state->result_stack, 0);
     _JSON_PARSER_EAT(ARRAY, 1);
-    size_t value_count = parser->entries_count;
-    for (size_t i = 0; i < value_count; ++i) {
+    size_t apply_count = parser->entries_count;
+    for (size_t i = 0; i < apply_count; ++i) {
       _JSON_PARSER_EAT(NUMBER, 1);
-      _eval_value_stack_push(state, parser->digested_number);
+      stbds_arrpush(state->result_stack, parser->digested_number);
     }
   }
 
@@ -317,10 +305,10 @@ cleanup:
 }
 
 static int ENCODE_MAP[] = {
-    ['*'] = EVAL_NIL,
-    ['^'] = EVAL_TREE,
+    ['*'] = SIGIL_NIL,
+    ['^'] = SIGIL_TREE,
     //['$'] = EVAL_APPLY,
-    ['#'] = EVAL_REF,
+    ['#'] = SIGIL_REF,
 };
 
 static bool char_is_node(char c) {
@@ -360,7 +348,7 @@ sint eval_encode_parse(Allocator cells, const char* program) {
         goto cleanup;
       }
       sint node = eval_cells_get(cells, index - 1);
-      if (node == EVAL_REF) {
+      if (node == SIGIL_REF) {
         // u8 tag = EVAL_TAG_INDEX;
         // u64 val = eval_tv_new_tagged_value_signed(tag, value);
         sint res = eval_cells_set_word(cells, index - 1, value);
@@ -400,7 +388,7 @@ cleanup:
 //   while (eval_cells_is_set(cells, word_index)) {
 //     sint word_index_cell = eval_cells_get(cells, word_index);
 //     assert(word_index_cell != ERR_VAL);
-//     if (word_index_cell == EVAL_REF) {
+//     if (word_index_cell == SIGIL_REF) {
 //       sint word_index_word = eval_cells_get_word(cells, word_index);
 //       assert(word_index_word != ERR_VAL);
 //       logg("!%ld[%zu] ", word_index_word, word_index);
@@ -416,7 +404,6 @@ void _eval_debug_dump(EvalState state, string_buffer_t* buffer) {
   const size_t WINDOW_SIZE = 4;
   const size_t LINE_LEN = 120;
   const size_t WINDOWS_LINE = LINE_LEN / WINDOW_SIZE;
-  const char* control_names[] = {"INVALID", "r2", "r3c"};
 
 #define DUMP_BUFFER                                                                                \
   _sb_append_str(buffer, _sb_str_view(&indices_line));                                             \
@@ -425,21 +412,20 @@ void _eval_debug_dump(EvalState state, string_buffer_t* buffer) {
   _sb_append_char(buffer, '\n');                                                                   \
   _sb_append_str(buffer, _sb_str_view(&words_line));                                               \
   _sb_append_char(buffer, '\n');                                                                   \
-  _sb_printf(buffer, "control: ");                                                                 \
-  for (size_t i = 0; i < stbds_arrlenu(state->control_stack); ++i) {                               \
-    struct StackEntry e = state->control_stack[i];                                                 \
-    if (e.tag == STACK_ENTRY_INDEX) {                                                              \
-      _sb_printf(buffer, "%zu ", e.as_index);                                                      \
-    } else if (e.tag == STACK_ENTRY_CALCULATED) {                                                  \
-      _sb_printf(buffer, "%s ", control_names[e.as_calculated]);                                   \
+  _sb_printf(buffer, "apply: ");                                                                   \
+  for (size_t i = 0; i < stbds_arrlenu(state->apply_stack); ++i) {                                 \
+    size_t value = state->apply_stack[i];                                                          \
+    if (value == TOKEN_APPLY) {                                                                    \
+      _sb_printf(buffer, "%d ", -1);                                                               \
     } else {                                                                                       \
-      assert(false && "unreachable");                                                              \
+      _sb_printf(buffer, "%zu ", value);                                                          \
     }                                                                                              \
   }                                                                                                \
   _sb_append_char(buffer, '\n');                                                                   \
-  _sb_printf(buffer, "value: ");                                                                   \
-  for (size_t i = 0; i < stbds_arrlenu(state->value_stack); ++i) {                                 \
-    _sb_printf(buffer, "%zu ", state->value_stack[i]);                                             \
+  _sb_printf(buffer, "result: ");                                                                   \
+  for (size_t i = 0; i < stbds_arrlenu(state->result_stack); ++i) {                                \
+    size_t value = state->result_stack[i];                                                         \
+    _sb_printf(buffer, "%zu ", value);                                                            \
   }                                                                                                \
   _sb_append_char(buffer, '\n');                                                                   \
   _sb_append_str(buffer, "---------\n");
@@ -467,14 +453,18 @@ void _eval_debug_dump(EvalState state, string_buffer_t* buffer) {
     _sb_printf(&indices_line, num_format, i);
     u8 cell = eval_cells_get(state->cells, i);
     _sb_printf(&cells_line, char_format, CELL_TO_CHAR[cell]);
-    if (cell == EVAL_REF) {
+    if (cell == SIGIL_REF) {
       i64 ref = eval_cells_get_word(state->cells, i);
-      u64 ref_index = ref + i;
-      _sb_printf(&words_line, num_format, ref_index);
-    } else {
-      for (size_t j = 0; j < WINDOW_SIZE; ++j) {
-        _sb_append_char(&words_line, ' ');
+      if (ref != ERR_VAL) {
+        u64 ref_index = ref + i;
+        _sb_printf(&words_line, num_format, ref_index);
+        i++;
+        continue;
       }
+    }
+
+    for (size_t j = 0; j < WINDOW_SIZE; ++j) {
+      _sb_append_char(&words_line, ' ');
     }
     i++;
   }
@@ -495,18 +485,15 @@ void _eval_debug_dump(EvalState state, string_buffer_t* buffer) {
     goto cleanup;                                                                                  \
   }
 
-static sint dump_control_stack(struct string_buffer_t* json_out, Stack stack) {
+static sint dump_apply_stack(struct string_buffer_t* json_out, const size_t* stack) {
   sint result = 0;
-  const char* mappings[] = {"INVALID", "rule2", "rule3c"};
-  _sb_printf(json_out, "\"control_stack\": [");
+  _sb_printf(json_out, "\"apply_stack\": [");
   for (size_t i = 0; i < stbds_arrlenu(stack); ++i) {
-    struct StackEntry e = stack[i];
-    if (e.tag == STACK_ENTRY_INDEX) {
-      _sb_printf(json_out, "%d, ", e.as_index);
-    } else if (e.tag == STACK_ENTRY_CALCULATED) {
-      _sb_printf(json_out, "{ \"compute_index\": \"%s\" }, ", mappings[(size_t)e.as_calculated]);
+    size_t e = stack[i];
+    if (e == TOKEN_APPLY) {
+      _sb_printf(json_out, "%d, ", -1);
     } else {
-      assert(false);
+      _sb_printf(json_out, "%zu, ", e);
     }
   }
   _sb_try_chop_suffix(json_out, ", ");
@@ -515,14 +502,16 @@ static sint dump_control_stack(struct string_buffer_t* json_out, Stack stack) {
   return result;
 }
 
-static sint dump_value_stack(struct string_buffer_t* json_out, size_t* stack) {
+static sint dump_result_stack(struct string_buffer_t* json_out, const size_t* stack) {
   sint result = 0;
-  _sb_printf(json_out, "\"value_stack\": [");
+  _sb_printf(json_out, "\"result_stack\": [");
   for (size_t i = 0; i < stbds_arrlenu(stack); ++i) {
-    _sb_printf(json_out, "%d, ", stack[i]);
+    _sb_printf(json_out, "%zu, ", stack[i]);
   }
+
   _sb_try_chop_suffix(json_out, ", ");
   _sb_append_str(json_out, "]");
+
   return result;
 }
 
@@ -534,15 +523,13 @@ sint eval_dump_json(struct string_buffer_t* json_out, EvalState state) {
   CHECK(result == 0);
   _sb_append_str(json_out, ",\n");
 
-  result = dump_control_stack(json_out, state->control_stack);
+  result = dump_apply_stack(json_out, state->apply_stack);
   CHECK(result == 0);
   _sb_append_str(json_out, ",\n");
 
-  result = dump_value_stack(json_out, state->value_stack);
+  result = dump_result_stack(json_out, state->result_stack);
   CHECK(result == 0);
   _sb_append_str(json_out, ",\n");
-
-  // TODO: rest of the json scheme
 
   if (_sb_try_chop_suffix(json_out, ",\n")) {
     _sb_append_char(json_out, '\n');
@@ -571,7 +558,7 @@ sint _eval_cells_dump_json(struct string_buffer_t* json_out, Allocator cells) {
     sint i_word = eval_cells_get_word(cells, i);
     if (i_word != ERR_VAL) {
       sint i_cell = eval_cells_get(cells, i);
-      if (i_cell == EVAL_REF) {
+      if (i_cell == SIGIL_REF) {
         _sb_printf(json_out, "{ \"index\": %zu, \"ref\": %ld }, ", i, i_word);
       } else {
         u8 tag = eval_tv_get_tag(i_word);

@@ -1,0 +1,476 @@
+[
+    {
+        "name": "simplest data 1",
+        "output_final": false,
+        "input": {
+            "cells": {
+                "state": "^**",
+                "words": []
+            },
+            "apply_stack": [
+                0
+            ],
+            "result_stack": []
+        },
+        "output": [
+            {
+                "cells": {
+                    "state": "^**",
+                    "words": []
+                },
+                "apply_stack": [],
+                "result_stack": [
+                    0
+                ]
+            }
+        ]
+    },
+    {
+        "name": "simplest data 2",
+        "output_final": false,
+        "input": {
+            "cells": {
+                "state": "^^***",
+                "words": []
+            },
+            "apply_stack": [
+                0
+            ],
+            "result_stack": []
+        },
+        "output": [
+            {
+                "cells": {
+                    "state": "^^***",
+                    "words": []
+                },
+                "apply_stack": [],
+                "result_stack": [
+                    0
+                ]
+            }
+        ]
+    },
+    {
+        "name": "simplest data 3",
+        "output_final": false,
+        "input": {
+            "cells": {
+                "state": "^^**^**",
+                "words": []
+            },
+            "apply_stack": [
+                0
+            ],
+            "result_stack": []
+        },
+        "output": [
+            {
+                "cells": {
+                    "state": "^^**^**",
+                    "words": []
+                },
+                "apply_stack": [],
+                "result_stack": [
+                    0
+                ]
+            }
+        ]
+    },
+    {
+        "name": "simplest data 4",
+        "output_final": false,
+        "input": {
+            "cells": {
+                "state": "^^**^**#**",
+                "words": [
+                    {
+                        "ref": -7,
+                        "index": 7
+                    }
+                ]
+            },
+            "apply_stack": [
+                7
+            ],
+            "result_stack": []
+        },
+        "output": [
+            {
+                "cells": {
+                    "state": "^^**^**#**",
+                    "words": [
+                        {
+                            "ref": -7,
+                            "index": 7
+                        }
+                    ]
+                },
+                "apply_stack": [],
+                "result_stack": [
+                    0
+                ]
+            }
+        ]
+    },
+    {
+        "name": "simplest rule 1",
+        "output_final": false,
+        "input": {
+            "cells": {
+                "state": "^^**^**^**",
+                "words": []
+            },
+            "apply_stack": [
+                -1,
+                0,
+                7
+            ],
+            "result_stack": []
+        },
+        "output": [
+            {
+                "cells": {
+                    "state": "^^**^**^**",
+                    "words": []
+                },
+                "apply_stack": [
+                    4
+                ],
+                "result_stack": []
+            },
+            {
+                "cells": {
+                    "state": "^^**^**^**",
+                    "words": []
+                },
+                "apply_stack": [],
+                "result_stack": [
+                    4
+                ]
+            }
+        ]
+    },
+    {
+        "name": "simplest rule 2",
+        "output_final": false,
+        "input": {
+            "cells": {
+                "state": "^^^***^**^**",
+                "words": []
+            },
+            "apply_stack": [
+                -1,
+                0,
+                9
+            ],
+            "result_stack": []
+        },
+        "output": [
+            {
+                "cells": {
+                    "state": "^^^***^**^**",
+                    "words": []
+                },
+                "apply_stack": [
+                    -1,
+                    -1,
+                    2,
+                    9,
+                    -1,
+                    6,
+                    9
+                ],
+                "result_stack": []
+            },
+            {
+                "cells": {
+                    "state": "^^^***^**^**^^***",
+                    "words": []
+                },
+                "apply_stack": [
+                    -1,
+                    -1,
+                    2,
+                    9,
+                    12
+                ],
+                "result_stack": []
+            },
+            {
+                "cells": {
+                    "state": "^^^***^**^**^^***^^***",
+                    "words": []
+                },
+                "apply_stack": [
+                    -1,
+                    17
+                ],
+                "result_stack": [
+                    12
+                ]
+            },
+            {
+                "cells": {
+                    "state": "^^^***^**^**^^***^^***^^**^^***",
+                    "words": []
+                },
+                "apply_stack": [
+                    22
+                ],
+                "result_stack": []
+            },
+            {
+                "cells": {
+                    "state": "^^^***^**^**^^***^^***^^**^^***",
+                    "words": []
+                },
+                "apply_stack": [],
+                "result_stack": [
+                    22
+                ]
+            }
+        ]
+    },
+    {
+        "name": "simplest rule 3a",
+        "output_final": false,
+        "input": {
+            "cells": {
+                "state": "^^^**^**^**^**",
+                "words": []
+            },
+            "apply_stack": [
+                -1,
+                0,
+                11
+            ],
+            "result_stack": []
+        },
+        "output": [
+            {
+                "cells": {
+                    "state": "^^^**^**^**^**",
+                    "words": []
+                },
+                "apply_stack": [
+                    2
+                ],
+                "result_stack": []
+            },
+            {
+                "cells": {
+                    "state": "^^^**^**^**^**",
+                    "words": []
+                },
+                "apply_stack": [],
+                "result_stack": [
+                    2
+                ]
+            }
+        ]
+    },
+    {
+        "name": "simplest rule 3b",
+        "output_final": false,
+        "input": {
+            "cells": {
+                "state": "^^^**^**^**^^***",
+                "words": []
+            },
+            "apply_stack": [
+                -1,
+                0,
+                11
+            ],
+            "result_stack": []
+        },
+        "output": [
+            {
+                "cells": {
+                    "state": "^^^**^**^**^^***",
+                    "words": []
+                },
+                "apply_stack": [
+                    -1,
+                    5,
+                    12
+                ],
+                "result_stack": []
+            },
+            {
+                "cells": {
+                    "state": "^^^**^**^**^^***^^***",
+                    "words": []
+                },
+                "apply_stack": [
+                    16
+                ],
+                "result_stack": []
+            },
+            {
+                "cells": {
+                    "state": "^^^**^**^**^^***^^***",
+                    "words": []
+                },
+                "apply_stack": [],
+                "result_stack": [
+                    16
+                ]
+            }
+        ]
+    },
+    {
+        "name": "simplest rule 3c",
+        "output_final": false,
+        "input": {
+            "cells": {
+                "state": "^^^**^**^**^^**^**",
+                "words": []
+            },
+            "apply_stack": [
+                -1,
+                0,
+                11
+            ],
+            "result_stack": []
+        },
+        "output": [
+            {
+                "cells": {
+                    "state": "^^^**^**^**^^**^**",
+                    "words": []
+                },
+                "apply_stack": [
+                    -1,
+                    -1,
+                    8,
+                    12,
+                    15
+                ],
+                "result_stack": []
+            },
+            {
+                "cells": {
+                    "state": "^^^**^**^**^^**^**^^***",
+                    "words": []
+                },
+                "apply_stack": [
+                    -1,
+                    18
+                ],
+                "result_stack": [
+                    15
+                ]
+            },
+            {
+                "cells": {
+                    "state": "^^^**^**^**^^**^**^^***^^**^**",
+                    "words": []
+                },
+                "apply_stack": [
+                    23
+                ],
+                "result_stack": []
+            },
+            {
+                "cells": {
+                    "state": "^^^**^**^**^^**^**^^***^^**^**",
+                    "words": []
+                },
+                "apply_stack": [],
+                "result_stack": [
+                    23
+                ]
+            }
+        ]
+    },
+    {
+        "name": "not false",
+        "output_final": false,
+        "input": {
+            "cells": {
+                "state": "^^^^***^^**^**^**^**",
+                "words": []
+            },
+            "apply_stack": [
+                -1,
+                0,
+                17
+            ],
+            "result_stack": []
+        },
+        "output": [
+            {
+                "cells": {
+                    "state": "^^^^***^^**^**^**^**",
+                    "words": []
+                },
+                "apply_stack": [
+                    2
+                ],
+                "result_stack": []
+            },
+            {
+                "cells": {
+                    "state": "^^^^***^^**^**^**^**",
+                    "words": []
+                },
+                "apply_stack": [],
+                "result_stack": [
+                    2
+                ]
+            }
+        ]
+    },
+    {
+        "name": "not true",
+        "output_final": false,
+        "input": {
+            "cells": {
+                "state": "^^^^***^^**^**^**^^***",
+                "words": []
+            },
+            "apply_stack": [
+                -1,
+                0,
+                17
+            ],
+            "result_stack": []
+        },
+        "output": [
+            {
+                "cells": {
+                    "state": "^^^^***^^**^**^**^^***",
+                    "words": []
+                },
+                "apply_stack": [
+                    -1,
+                    7,
+                    18
+                ],
+                "result_stack": []
+            },
+            {
+                "cells": {
+                    "state": "^^^^***^^**^**^**^^***",
+                    "words": []
+                },
+                "apply_stack": [
+                    11
+                ],
+                "result_stack": []
+            },
+            {
+                "cells": {
+                    "state": "^^^^***^^**^**^**^^***",
+                    "words": []
+                },
+                "apply_stack": [],
+                "result_stack": [
+                    11
+                ]
+            }
+        ]
+    }
+]

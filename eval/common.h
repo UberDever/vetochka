@@ -50,13 +50,13 @@ void _errbuf_write(const char* format, ...);
   EXPECT(index##_cell != ERR_VAL, ERROR_INVALID_WORD, "");
 
 #define DEREF(cells, index)                                                                        \
-  if (index##_cell == EVAL_REF) {                                                                  \
+  if (index##_cell == SIGIL_REF) {                                                                 \
     GET_WORD(cells, index);                                                                        \
     index += (sint)index##_word;                                                                   \
     index##_cell = eval_cells_get(cells, index);                                                   \
     size_t new_index = index;                                                                      \
     GET_CELL(cells, new_index)                                                                     \
-    EXPECT(new_index_cell != EVAL_REF, ERROR_REF_TO_REF, "");                                      \
+    EXPECT(new_index_cell != SIGIL_REF, ERROR_REF_TO_REF, "");                                     \
   }
 
 static inline u8 eval_tv_get_tag(u64 tagged_value) {
@@ -93,53 +93,34 @@ static inline u64 eval_tv_new_tagged_value_unsigned(u8 tag, u64 payload) {
   return (payload << 4) | (tag & 0xF);
 }
 
-#define EVAL_NIL  0
-#define EVAL_TREE 1
+#define SIGIL_NIL  0
+#define SIGIL_TREE 1
 // #define EVAL_APPLY 2
-#define EVAL_REF 3
+#define SIGIL_REF 3
 
 #define EVAL_TAG_NUMBER 0
 #define EVAL_TAG_INDEX  1
 #define EVAL_TAG_FUNC   2
 
-typedef enum stack_entry_t {
-  STACK_ENTRY_INVALID,
-  STACK_ENTRY_INDEX,
-  STACK_ENTRY_CALCULATED
-} stack_entry_t;
-
-typedef enum calculated_index_t {
-  CALCULATED_INDEX_INVALID,
-  CALCULATED_INDEX_RULE2,
-  CALCULATED_INDEX_RULE3C
-} calculated_index_t;
-
-struct StackEntry {
-  stack_entry_t tag;
-
-  union {
-    size_t as_index;
-    calculated_index_t as_calculated;
-  };
-};
+#define TOKEN_APPLY SIZE_MAX
 
 struct json_parser_t;
 
 struct EvalState_impl {
   Allocator cells;
-  Stack control_stack;
-  size_t* value_stack;
+  size_t* apply_stack;
+  size_t* result_stack;
+
   u64* free_bitmap;
   size_t free_capacity;
+  u8* match_stack;
 
   uint8_t error_code;
   const char* error;
 };
 
 sint _eval_reset_cells(EvalState state);
-void _eval_control_stack_push_index(EvalState state, size_t index);
-void _eval_control_stack_push_calculated(EvalState state, u8 type);
-void _eval_value_stack_push(EvalState state, size_t value);
+void _eval_result_stack_push(EvalState state, size_t value);
 sint _eval_load_json(struct json_parser_t* parser, EvalState state);
 sint _eval_cells_load_json(struct json_parser_t* parser, Allocator cells);
 
@@ -212,7 +193,11 @@ const char* _json_parser_get_string(json_parser_t* parser);
   if (parser->at_eof) {                                                                            \
     goto cleanup;                                                                                  \
   }                                                                                                \
-  _json_parser_eat(parser, JSON_TOKEN_##type);                                                     \
+  if (!_json_parser_eat(parser, JSON_TOKEN_##type)) {                                              \
+    logg_s("failed to eat " #type);                                                                \
+    err = errval;                                                                                  \
+    goto cleanup;                                                                                  \
+  }                                                                                                \
   if (parser->was_err) {                                                                           \
     err = errval;                                                                                  \
     goto cleanup;                                                                                  \

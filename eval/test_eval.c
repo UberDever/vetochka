@@ -25,16 +25,16 @@
 #define STR(x) #x
 
 typedef struct test_data_t {
-  enum { test_data_none, test_data_json, test_data_file_testcase } tag;
+  enum { test_data_none, test_data_json, test_data_file_testsuite } tag;
 
   union {
     const char* as_json;
 
-    struct file_testcase_t {
+    struct file_testsuite_t {
       const char* name;
       bool (*test)(struct test_data_t);
 
-    } as_file_testcase_t;
+    } as_file_testsuite_t;
   };
 
   const char* name;
@@ -52,9 +52,9 @@ void add_case(test_case_t** cases, test_t test, const char* name, test_data_t da
   stbds_arrput(*cases, ((test_case_t){.test = test, .name = name, .data = data}));
 }
 
-bool load_and_execute_testcase(test_data_t data) {
-  assert(data.tag == test_data_file_testcase);
-  const char* path = data.as_file_testcase_t.name;
+bool load_and_execute_testsuite(test_data_t data) {
+  assert(data.tag == test_data_file_testsuite);
+  const char* path = data.as_file_testsuite_t.name;
 
   string_buffer_t path_json;
   _sb_init(&path_json);
@@ -65,7 +65,7 @@ bool load_and_execute_testcase(test_data_t data) {
   _sb_append_str(&path_json, path);
   _sb_append_str(&path_json, ".json");
 
-  logg("loading %s", _sb_str_view(&path_json));
+  logg("suite %s", _sb_str_view(&path_json));
 
   string_buffer_t file_contents;
   _sb_init(&file_contents);
@@ -89,10 +89,10 @@ bool load_and_execute_testcase(test_data_t data) {
     goto cleanup;
   }
 
-  const char* testcase = _sb_str_view(&file_contents);
+  const char* testsuite = _sb_str_view(&file_contents);
 
   test_result =
-      data.as_file_testcase_t.test((test_data_t){.tag = test_data_json, .as_json = testcase});
+      data.as_file_testsuite_t.test((test_data_t){.tag = test_data_json, .as_json = testsuite});
 
   fclose(file_json);
 cleanup:
@@ -109,7 +109,7 @@ cleanup:
 
 static inline bool is_ref(Allocator cells, size_t index) {
   GET_CELL(cells, index)
-  return (index_cell == EVAL_REF);
+  return (index_cell == SIGIL_REF);
 failed:
   return false;
 }
@@ -120,28 +120,28 @@ failed:
 bool compare_trees(Allocator lhs_cells, Allocator rhs_cells, size_t lhs, size_t rhs) {
   sint lhs_cell = eval_cells_get(lhs_cells, lhs);
   if (lhs_cell == ERR_VAL) {
-    logg("invalid cell [%zu] %zu", lhs, lhs_cell);
+    logg("invalid cell [%zu] %ld", lhs, lhs_cell);
     return false;
   }
   if (is_ref(lhs_cells, lhs)) {
     DEREF(lhs_cells, lhs)
     lhs_cell = eval_cells_get(lhs_cells, lhs);
     if (lhs_cell == ERR_VAL) {
-      logg("invalid cell [%zu] %zu", lhs, lhs_cell);
+      logg("invalid cell [%zu] %ld", lhs, lhs_cell);
       return false;
     }
   }
 
   sint rhs_cell = eval_cells_get(rhs_cells, rhs);
   if (rhs_cell == ERR_VAL) {
-    logg("invalid cell [%zu] %zu", rhs, rhs_cell);
+    logg("invalid cell [%zu] %ld", rhs, rhs_cell);
     return false;
   }
   if (is_ref(rhs_cells, rhs)) {
     DEREF(rhs_cells, rhs)
     rhs_cell = eval_cells_get(rhs_cells, rhs);
     if (rhs_cell == ERR_VAL) {
-      logg("invalid cell [%zu] %zu", rhs, rhs_cell);
+      logg("invalid cell [%zu] %ld", rhs, rhs_cell);
       return false;
     }
   }
@@ -150,24 +150,24 @@ bool compare_trees(Allocator lhs_cells, Allocator rhs_cells, size_t lhs, size_t 
     logg("%ld[%zu] != %ld[%zu]", lhs_cell, lhs, rhs_cell, rhs);
     return false;
   }
-  if (lhs_cell == EVAL_REF) {
+  if (lhs_cell == SIGIL_REF) {
     sint lhs_word = eval_cells_get_word(lhs_cells, lhs);
     if (lhs_word == ERR_VAL) {
-      logg("invalid value [%zu] %zu", lhs, lhs_word);
+      logg("invalid value [%zu] %ld", lhs, lhs_word);
       return false;
     }
     sint rhs_word = eval_cells_get_word(rhs_cells, rhs);
     if (rhs_word == ERR_VAL) {
-      logg("invalid value [%zu] %zu", rhs, rhs_word);
+      logg("invalid value [%zu] %ld", rhs, rhs_word);
       return false;
     }
     if (lhs_word != rhs_word) {
-      logg("words differ at [%zu] [%zu] %zu != %zu", lhs, rhs, lhs_word, rhs_word);
+      logg("words differ at [%zu] [%zu] %ld != %ld", lhs, rhs, lhs_word, rhs_word);
       return false;
     }
   }
 
-  if (lhs_cell != EVAL_NIL) {
+  if (lhs_cell != SIGIL_NIL) {
     bool result = true;
     result &= compare_trees(lhs_cells, rhs_cells, lhs + 1, rhs + 1);
     if (!result) {
@@ -184,39 +184,33 @@ failed:
   return false;
 }
 
-bool compare_states(EvalState actual, EvalState expected) {
-  bool trees_result = compare_trees(actual->cells, expected->cells, 0, 0);
-  if (!trees_result) {
+bool compare_stacks(size_t* actual, size_t* expected) {
+  size_t lhs_size = stbds_arrlenu(actual);
+  size_t rhs_size = stbds_arrlenu(expected);
+  if (lhs_size != rhs_size) {
+    logg("%zu != %zu", lhs_size, rhs_size);
     return false;
   }
-  {
-    size_t lhs_size = stbds_arrlenu(actual->control_stack);
-    size_t rhs_size = stbds_arrlenu(expected->control_stack);
-    if (lhs_size != rhs_size) {
+  for (size_t i = 0; i < lhs_size; ++i) {
+    if (actual[i] != expected[i]) {
+      logg("[%zu] %zu != %zu", i, actual[i], expected[i]);
       return false;
     }
-    for (size_t i = 0; i < lhs_size; ++i) {
-      if (actual->control_stack[i].tag != expected->control_stack[i].tag) {
-        return false;
-      }
-      if (actual->control_stack[i].tag == STACK_ENTRY_INDEX) {
-        return actual->control_stack[i].as_index == expected->control_stack[i].as_index;
-      }
-      return actual->control_stack[i].as_calculated == expected->control_stack[i].as_calculated;
-    }
   }
-  {
-    size_t lhs_size = stbds_arrlenu(actual->value_stack);
-    size_t rhs_size = stbds_arrlenu(expected->value_stack);
-    if (lhs_size != rhs_size) {
-      return false;
-    }
-    for (size_t i = 0; i < lhs_size; ++i) {
-      if (actual->value_stack[i] != expected->value_stack[i]) {
-        return false;
-      }
-    }
+  return true;
+}
+
+bool compare_states(EvalState actual, EvalState expected) {
+  if (!compare_trees(actual->cells, expected->cells, 0, 0)) {
+    return false;
   }
+  if (!compare_stacks(actual->apply_stack, expected->apply_stack)) {
+    return false;
+  }
+  if (!compare_stacks(actual->result_stack, expected->result_stack)) {
+    return false;
+  }
+
   return true;
 }
 
@@ -330,7 +324,7 @@ bool test_encode_parse_smoke(test_data_t _) {
     while (eval_cells_is_set(cells, j)) {
       uint8_t cell = eval_cells_get(cells, j);
       printf("%hhu ", cell);
-      if (cell == EVAL_REF) {
+      if (cell == SIGIL_REF) {
         sint word = eval_cells_get_word(cells, j);
         printf("[%zu] ", word);
       }
@@ -367,54 +361,110 @@ bool test_eval(test_data_t data) {
   }
 
   _json_parser_init(json, parser);
-  _JSON_PARSER_EAT(OBJECT, 1);
-  _JSON_PARSER_EAT_KEY("input", 1);
-
-  err = _eval_load_json(parser, state);
-  if (err) {
-    logg_s("failed eval_load_json");
-    goto cleanup;
-  }
+  _JSON_PARSER_EAT(ARRAY, 1);
+  size_t cases_count = parser->entries_count;
 
   string_buffer_t debug_buffer;
   _sb_init(&debug_buffer);
-  sint fully_evaluated = 0;
 
-  _JSON_PARSER_EAT_KEY("output", 1);
-  _JSON_PARSER_EAT(ARRAY, 1);
-  size_t output_count = parser->entries_count;
-  for (size_t step_count = 0; step_count < output_count; ++step_count) {
-    _eval_debug_dump(state, &debug_buffer);
-    printf("%s", _sb_str_view(&debug_buffer));
-    _sb_clear(&debug_buffer);
+  for (size_t case_num = 0; case_num < cases_count; case_num++) {
+    _JSON_PARSER_EAT(OBJECT, 1);
 
-    err = _eval_load_json(parser, reference_state);
+    _JSON_PARSER_EAT_KEY("name", 1);
+    _JSON_PARSER_EAT(STRING, 1);
+    const char* case_name = _json_parser_get_string(parser);
+    logg("case %zu: %s", case_num, case_name);
+
+    bool output_final = false;
+    _JSON_PARSER_EAT_KEY("output_final", 1);
+    _JSON_PARSER_EAT(BOOL, 1);
+    output_final = parser->digested_bool;
+
+    _JSON_PARSER_EAT_KEY("input", 1);
+
+    err = _eval_load_json(parser, state);
     if (err) {
       logg_s("failed eval_load_json");
       goto cleanup;
     }
 
-    fully_evaluated = eval_step(state);
-    if (state->error_code) {
-      logg("%s", state->error);
-      err = state->error_code;
+    sint fully_evaluated = 0;
+
+    if (output_final) {
+      while (true) {
+        fully_evaluated = eval_step(state);
+        if (state->error_code) {
+          logg("%s", state->error);
+          err = state->error_code;
+          goto dump_states;
+        }
+
+        if (fully_evaluated) {
+          break;
+        }
+      }
+
+      _JSON_PARSER_EAT_KEY("output", 1);
+      _JSON_PARSER_EAT(ARRAY, 1);
+      err = _eval_load_json(parser, reference_state);
+      if (err) {
+        logg_s("failed eval_load_json");
+        goto cleanup;
+      }
+      if (!compare_states(state, reference_state)) {
+        err = 1;
+        logg_s("states are not equal");
+        goto dump_states;
+      }
+
       goto cleanup;
     }
 
-    if (!compare_states(state, reference_state)) {
+    _JSON_PARSER_EAT_KEY("output", 1);
+    _JSON_PARSER_EAT(ARRAY, 1);
+    size_t output_count = parser->entries_count;
+    for (size_t step_count = 0; step_count < output_count; ++step_count) {
+      err = _eval_load_json(parser, reference_state);
+      if (err) {
+        logg_s("failed eval_load_json");
+        goto cleanup;
+      }
+
+      fully_evaluated = eval_step(state);
+      if (state->error_code) {
+        logg("%s", state->error);
+        err = state->error_code;
+        goto dump_states;
+      }
+
+      if (!compare_states(state, reference_state)) {
+        err = 1;
+        logg_s("states are not equal");
+        goto dump_states;
+      }
+    }
+    if (!fully_evaluated) {
       err = 1;
-      logg_s("states differ");
-      goto cleanup;
+      logg_s("not fully evaluated");
+      goto dump_states;
     }
-  }
-  if (!fully_evaluated) {
-    err = 1;
-    logg_s("not fully evaluated");
-    goto cleanup;
+
+    // _eval_debug_dump(state, &debug_buffer);
+    // printf("%s", _sb_str_view(&debug_buffer));
+    // _sb_clear(&debug_buffer);
   }
 
+  goto cleanup;
+
+dump_states:
+  logg_s("got:");
   _eval_debug_dump(state, &debug_buffer);
   printf("%s", _sb_str_view(&debug_buffer));
+  _sb_clear(&debug_buffer);
+  logg_s("expected:");
+  _eval_debug_dump(reference_state, &debug_buffer);
+  printf("%s", _sb_str_view(&debug_buffer));
+  _sb_clear(&debug_buffer);
 
 cleanup:
   _sb_free(&debug_buffer);
@@ -424,300 +474,14 @@ cleanup:
   return err == 0;
 }
 
-#if 0
-
-#define EXPECT(cond, code, msg)                                                                    \
-  if (!(cond)) {                                                                                   \
-    printf(#cond " failed\n");                                                                     \
-    goto failed;                                                                                   \
-  }
-
-static inline bool is_ref(Allocator cells, size_t index) {
-  GET_CELL(cells, index)
-  return (index_cell == EVAL_REF);
-failed:
-  return false;
-}
-
-// NOTE: this function could benefit from skip subtree feature
-// since we don't always want to reference everything to everything in the expected, we only want to
-// compare the nodes of the trees
-bool compare_trees(Allocator lhs_cells, Allocator rhs_cells, size_t lhs, size_t rhs) {
-  sint lhs_cell = eval_cells_get(lhs_cells, lhs);
-  if (lhs_cell == ERR_VAL) {
-    printf("invalid cell [%zu] %zu\n", lhs, lhs_cell);
-    return false;
-  }
-  if (is_ref(lhs_cells, lhs)) {
-    DEREF(lhs_cells, lhs)
-    lhs_cell = eval_cells_get(lhs_cells, lhs);
-    if (lhs_cell == ERR_VAL) {
-      printf("invalid cell [%zu] %zu\n", lhs, lhs_cell);
-      return false;
-    }
-  }
-
-  sint rhs_cell = eval_cells_get(rhs_cells, rhs);
-  if (rhs_cell == ERR_VAL) {
-    printf("invalid cell [%zu] %zu\n", rhs, rhs_cell);
-    return false;
-  }
-  if (is_ref(rhs_cells, rhs)) {
-    DEREF(rhs_cells, rhs)
-    rhs_cell = eval_cells_get(rhs_cells, rhs);
-    if (rhs_cell == ERR_VAL) {
-      printf("invalid cell [%zu] %zu\n", rhs, rhs_cell);
-      return false;
-    }
-  }
-
-  if (lhs_cell != rhs_cell) {
-    printf("%ld[%zu] != %ld[%zu]\n", lhs_cell, lhs, rhs_cell, rhs);
-    return false;
-  }
-  printf("%ld[%zu] == %ld[%zu]\n", lhs_cell, lhs, rhs_cell, rhs);
-  if (lhs_cell == EVAL_REF) {
-    sint lhs_word = eval_cells_get_word(lhs_cells, lhs);
-    if (lhs_word == ERR_VAL) {
-      printf("invalid value [%zu] %zu\n", lhs, lhs_word);
-      return false;
-    }
-    sint rhs_word = eval_cells_get_word(rhs_cells, rhs);
-    if (rhs_word == ERR_VAL) {
-      printf("invalid value [%zu] %zu\n", rhs, rhs_word);
-      return false;
-    }
-    if (lhs_word != rhs_word) {
-      printf("words differ at [%zu] [%zu] %zu != %zu\n", lhs, rhs, lhs_word, rhs_word);
-      return false;
-    }
-  }
-
-  if (lhs_cell != EVAL_NIL) {
-    bool result = true;
-    result &= compare_trees(lhs_cells, rhs_cells, lhs + 1, rhs + 1);
-    if (!result) {
-      return result;
-    }
-    result &= compare_trees(lhs_cells, rhs_cells, lhs + 2, rhs + 2);
-    if (!result) {
-      return result;
-    }
-  }
-  return true;
-
-failed:
-  return false;
-}
-
-static void dump_cells_and_stack(Allocator cells, Stack stack) {
-  printf("stack: ");
-  for (size_t i = 0; i < stbds_arrlenu(stack); ++i) {
-    if (stack[i].type == StackEntryType_Index) {
-      printf("%zu ", stack[i].as_index);
-    } else if (stack[i].type == StackEntryType_Calculated) {
-      printf("$%u ", stack[i].as_calculated_index.type);
-    } else {
-      assert(false);
-    }
-  }
-  printf("\n");
-  eval_encode_dump(cells, 0);
-}
-
-static bool compare_results(Allocator lhs, Stack* lhs_stack, Allocator rhs, Stack* rhs_stack) {
-  bool result = true;
-
-  size_t lhs_size = stbds_arrlenu(*lhs_stack);
-  size_t rhs_size = stbds_arrlenu(*rhs_stack);
-  if (lhs_size == 0 && rhs_size == 0) {
-    stbds_arrput(*lhs_stack, ((struct StackEntry){.type = StackEntryType_Index, .as_index = 0}));
-    stbds_arrput(*rhs_stack, ((struct StackEntry){.type = StackEntryType_Index, .as_index = 0}));
-  }
-  if (lhs_size != rhs_size) {
-    result = false;
-    printf("stack sizes are different: %zu != %zu\n", lhs_size, rhs_size);
-    goto cleanup;
-  }
-
-  // dump_cells_and_stack(lhs, *lhs_stack);
-  // dump_cells_and_stack(rhs, *rhs_stack);
-
-  for (size_t i = 0; i < lhs_size; ++i) {
-    struct StackEntry lhs_entry = stbds_arrpop(*lhs_stack);
-    struct StackEntry rhs_entry = stbds_arrpop(*rhs_stack);
-    if (lhs_entry.type == StackEntryType_Calculated
-        && rhs_entry.type == StackEntryType_Calculated) {
-      result = lhs_entry.as_calculated_index.type == rhs_entry.as_calculated_index.type;
-      if (!result) {
-        printf(
-            "different calculated indices %d %d\n",
-            lhs_entry.as_calculated_index.type,
-            rhs_entry.as_calculated_index.type);
-        goto cleanup;
-      }
-      continue;
-    }
-
-    if (lhs_entry.type == StackEntryType_Index && rhs_entry.type == StackEntryType_Index) {
-      size_t lhs_root = lhs_entry.as_index;
-      size_t rhs_root = rhs_entry.as_index;
-      if (!compare_trees(lhs, rhs, lhs_root, rhs_root)) {
-        printf("program state, root = %zu:\n", lhs_root);
-        eval_encode_dump(lhs, 0);
-        printf("expected state, root = %zu:\n", rhs_root);
-        eval_encode_dump(rhs, 0);
-        result = false;
-        goto cleanup;
-      }
-      continue;
-    }
-
-    printf("uncomparable indices %d %d\n", lhs_entry.type, rhs_entry.type);
-    result = false;
-    goto cleanup;
-  }
-
-cleanup:
-  return result;
-}
-
-typedef struct {
-  const char* program;
-  const char* expected_stack;
-  const char* expected;
-  i64 steps;
-} test_eval_data;
-
-bool parse_test_stack(const char* stack, Stack* out) {
-  bool result = true;
-  const char* delimiters = " \t\n";
-  char* prog = malloc(sizeof(char) * (strlen(stack) + 1));
-  strcpy(prog, stack);
-  char* token = strtok(prog, delimiters);
-  while (token != NULL) {
-    if (!strcmp(token, "r2")) {
-      stbds_arrput(
-          *out,
-          ((struct StackEntry){
-              .type = StackEntryType_Calculated,
-              .as_calculated_index = {.type = CalculatedIndexType_Rule2}}));
-      token = strtok(NULL, delimiters);
-      continue;
-    }
-    if (!strcmp(token, "r3c")) {
-      stbds_arrput(
-          *out,
-          ((struct StackEntry){
-              .type = StackEntryType_Calculated,
-              .as_calculated_index = {.type = CalculatedIndexType_Rule3c}}));
-      token = strtok(NULL, delimiters);
-      continue;
-    }
-
-    char* endptr = NULL;
-    size_t value = strtoull(token, &endptr, 10);
-    if (*endptr != '\0') {
-      result = false;
-      goto cleanup;
-    }
-    stbds_arrput(*out, ((struct StackEntry){.type = StackEntryType_Index, .as_index = value}));
-    token = strtok(NULL, delimiters);
-  }
-cleanup:
-  free(prog);
-  return result;
-}
-
-bool prepare_expected(Allocator* expected_cells, Stack* expected_stack, test_eval_data* data) {
-  bool result = true;
-  if (!parse_test_stack(data->expected_stack, expected_stack)) {
-    result = false;
-    printf("failed to parse test stack %s\n", data->expected_stack);
-    goto cleanup;
-  }
-
-  eval_cells_init(expected_cells, 4);
-  sint res = eval_encode_parse(*expected_cells, data->expected);
-  if (res != 0) {
-    result = false;
-    printf("failed to parse %s\n", data->expected);
-    goto cleanup;
-  }
-
-cleanup:
-  return result;
-}
-
-bool test_eval_eval(void* data_ptr) {
-  bool result = true;
-  test_eval_data* data = data_ptr;
-  // TODO: use step counter
-
-  Stack expected_stack = NULL;
-  Allocator expected_cells = NULL;
-  if (!prepare_expected(&expected_cells, &expected_stack, data)) {
-    result = false;
-    goto cleanup;
-  }
-
-  EvalState state = NULL;
-  const char* program = data->program;
-  eval_init_from_program(&state, program);
-  eval_step(state);
-
-  const char* error_msg = "";
-  Allocator cells = eval_get_memory(state);
-  Stack stack = eval_get_stack(state);
-  uint8_t error_code = eval_get_error(state, &error_msg);
-  if (error_code) {
-    result = false;
-    printf("failed to step for program '%s'\ncode: %d msg: '%s'\n", program, error_code, error_msg);
-    goto cleanup;
-  }
-
-  {
-    _sb_new(json_out);
-    _sb_init(json_out);
-    sint dump_result = eval_dump_json(json_out, state);
-    if (dump_result != 0) {
-      result = false;
-      printf("dump failed %ld", dump_result);
-      goto cleanup;
-    }
-    printf("json: %s\n", _sb_str_view(json_out));
-    _sb_free(json_out);
-  }
-
-  result = compare_results(cells, &stack, expected_cells, &expected_stack);
-
-cleanup:
-  stbds_arrfree(expected_stack);
-  eval_cells_free(&expected_cells);
-  eval_free(&state);
-  return result;
-}
-
-#define ADD_TEST(test, datum)                                                                      \
-  stbds_arrput(tests, test);                                                                       \
-  stbds_arrput(names, #test " $ " #datum);                                                         \
-  stbds_arrput(data, datum);
-
-#define ADD_TEST_WITH_DATA(testcase, N, prog, roots, exp, steps_n)                                 \
-  test_eval_data testcase##_data_##N = {                                                           \
-      .program = prog, .expected_stack = roots, .expected = exp, .steps = steps_n};                \
-  ADD_TEST(testcase, &testcase##_data_##N);
-
-#endif
-
 #define add_file_case(casename)                                                                    \
   add_case(                                                                                        \
       &cases,                                                                                      \
-      load_and_execute_testcase,                                                                   \
+      load_and_execute_testsuite,                                                                  \
       (casename),                                                                                  \
       (test_data_t){                                                                               \
-          .tag = test_data_file_testcase,                                                          \
-          .as_file_testcase_t = (struct file_testcase_t){.name = (casename), .test = test_eval},   \
+          .tag = test_data_file_testsuite,                                                         \
+          .as_file_testsuite_t = (struct file_testsuite_t){.name = (casename), .test = test_eval}, \
           .name = (casename)})
 
 int main() {
@@ -726,7 +490,7 @@ int main() {
 
   int result = 0;
   test_case_t* cases = NULL;
-  void* testcase_data = NULL;
+  void* testsuite_data = NULL;
 
   add_case(
       &cases,
@@ -740,10 +504,12 @@ int main() {
       (test_data_t){.name = STR(test_memory_many_cells)});
   // add_case(&cases, test_encode_parse_smoke, STR(test_encode_parse_smoke), (test_data_t){});
 
-  add_file_case("eval-pure-1");
-  add_file_case("eval-first-1");
-  add_file_case("eval-first-2");
-  add_file_case("eval-second-1");
+  // add_file_case("eval-pure-1");
+  // add_file_case("eval-first-1");
+  // add_file_case("eval-first-2");
+  // add_file_case("eval-second-1");
+  // add_file_case("eval-not-false");
+  add_file_case("eval-smoke");
 
   const char* GREEN = "\033[0;32m";
   const char* CYAN = "\033[0;36m";
@@ -765,6 +531,6 @@ int main() {
   }
 
   stbds_arrfree(cases);
-  stbds_arrfree(testcase_data);
+  stbds_arrfree(testsuite_data);
   return result;
 }

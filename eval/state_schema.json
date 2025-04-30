@@ -42,30 +42,16 @@
                 }
             }
         },
-        "control_stack": {
+        "apply_stack": {
             "type": [
                 "null",
                 "array"
             ],
             "items": {
-                "type": [
-                    "number",
-                    {
-                        "type": "object",
-                        "properties": {
-                            "compute_index": {
-                                "type": "string",
-                                "enum": [
-                                    "rule2",
-                                    "rule3c"
-                                ]
-                            }
-                        }
-                    }
-                ]
+                "type": "number"
             }
         },
-        "value_stack": {
+        "result_stack": {
             "type": [
                 "null",
                 "array"
