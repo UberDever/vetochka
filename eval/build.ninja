@@ -41,16 +41,19 @@ build $builddir/memory-release.o: compile memory.c | config.h
     extraflags =
 build $builddir/encode-release.o: compile encode.c | config.h
     extraflags =
+build $builddir/native-release.o: compile native.c | config.h
+    extraflags =
 
 build $builddir/eval-sanitize.o: compile eval.c | config.h
 build $builddir/node-sanitize.o: compile util.c | config.h
 build $builddir/memory-sanitize.o: compile memory.c | config.h
 build $builddir/encode-sanitize.o: compile encode.c | config.h
+build $builddir/native-sanitize.o: compile native.c | config.h
 
 # Libs
-build $builddir/libeval-release.so: link_lib $builddir/eval-release.o $builddir/node-release.o $builddir/memory-release.o $builddir/encode-release.o
+build $builddir/libeval-release.so: link_lib $builddir/eval-release.o $builddir/node-release.o $builddir/memory-release.o $builddir/encode-release.o $builddir/native-release.o
     extraflags =
-build $builddir/libeval-sanitize.so: link_lib $builddir/eval-sanitize.o $builddir/node-sanitize.o $builddir/memory-sanitize.o $builddir/encode-sanitize.o
+build $builddir/libeval-sanitize.so: link_lib $builddir/eval-sanitize.o $builddir/node-sanitize.o $builddir/memory-sanitize.o $builddir/encode-sanitize.o $builddir/native-sanitize.o
 
 # Testing
 build $builddir/test_eval.o: compile test_eval.c

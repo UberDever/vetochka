@@ -1,3 +1,4 @@
+#include "api.h"
 #include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -7,6 +8,7 @@
 
 #include "common.h"
 #include "config.h"
+#include "native.h"
 
 #ifndef PROJECT_ROOT
 #error "must be defined in the config.h"
@@ -101,88 +103,66 @@ cleanup:
   return test_result;
 }
 
+#define UPDATE_RESULT(cond)                                                                        \
+  result &= (cond);                                                                                \
+  if (!result) {                                                                                   \
+    logg_s(#cond " failed");                                                                       \
+  }
+
 #define EXPECT(cond, code, msg)                                                                    \
   if (!(cond)) {                                                                                   \
-    logg_s(#cond " failed\n");                                                                     \
+    logg_s(#cond " failed");                                                                       \
     goto failed;                                                                                   \
   }
 
-static inline bool is_ref(Allocator cells, size_t index) {
-  GET_CELL(cells, index)
-  return (index_cell == SIGIL_REF);
-failed:
-  return false;
-}
-
-// NOTE: this function could benefit from skip subtree feature
-// since we don't always want to reference everything to everything in the expected, we only want to
-// compare the nodes of the trees
-bool compare_trees(Allocator lhs_cells, Allocator rhs_cells, size_t lhs, size_t rhs) {
-  sint lhs_cell = eval_cells_get(lhs_cells, lhs);
+bool compare_trees(EvalState lhs_state, EvalState rhs_state, size_t lhs, size_t rhs) {
+  sint lhs_cell = eval_cells_get(lhs_state->cells, lhs);
   if (lhs_cell == ERR_VAL) {
     logg("invalid cell [%zu] %ld", lhs, lhs_cell);
     return false;
   }
-  if (is_ref(lhs_cells, lhs)) {
-    DEREF(lhs_cells, lhs)
-    lhs_cell = eval_cells_get(lhs_cells, lhs);
-    if (lhs_cell == ERR_VAL) {
-      logg("invalid cell [%zu] %ld", lhs, lhs_cell);
-      return false;
-    }
-  }
-
-  sint rhs_cell = eval_cells_get(rhs_cells, rhs);
+  sint rhs_cell = eval_cells_get(rhs_state->cells, rhs);
   if (rhs_cell == ERR_VAL) {
     logg("invalid cell [%zu] %ld", rhs, rhs_cell);
     return false;
   }
-  if (is_ref(rhs_cells, rhs)) {
-    DEREF(rhs_cells, rhs)
-    rhs_cell = eval_cells_get(rhs_cells, rhs);
-    if (rhs_cell == ERR_VAL) {
-      logg("invalid cell [%zu] %ld", rhs, rhs_cell);
-      return false;
-    }
+
+  // NOTE: single nil node
+  if (lhs_cell == SIGIL_NIL || rhs_cell == SIGIL_NIL) {
+    return lhs_cell == rhs_cell;
   }
 
-  if (lhs_cell != rhs_cell) {
-    logg("%ld[%zu] != %ld[%zu]", lhs_cell, lhs, rhs_cell, rhs);
-    return false;
-  }
-  if (lhs_cell == SIGIL_REF) {
-    sint lhs_word = eval_cells_get_word(lhs_cells, lhs);
-    if (lhs_word == ERR_VAL) {
-      logg("invalid value [%zu] %ld", lhs, lhs_word);
+  bool result = true;
+
+  if (_is_terminal(lhs_state, lhs)) {
+    if (!_is_terminal(rhs_state, rhs)) {
+      logg("%ld[%zu] != %ld[%zu]", lhs_cell, lhs, rhs_cell, rhs);
       return false;
     }
-    sint rhs_word = eval_cells_get_word(rhs_cells, rhs);
-    if (rhs_word == ERR_VAL) {
-      logg("invalid value [%zu] %ld", rhs, rhs_word);
-      return false;
-    }
-    if (lhs_word != rhs_word) {
-      logg("words differ at [%zu] [%zu] %ld != %ld", lhs, rhs, lhs_word, rhs_word);
-      return false;
-    }
+
+    sint lhs_left = eval_cells_get(lhs_state->cells, lhs + 1);
+    sint lhs_right = eval_cells_get(lhs_state->cells, lhs + 2);
+    sint rhs_left = eval_cells_get(lhs_state->cells, rhs + 1);
+    sint rhs_right = eval_cells_get(lhs_state->cells, rhs + 2);
+    UPDATE_RESULT(lhs_cell == rhs_cell);
+    UPDATE_RESULT(lhs_left == rhs_left);
+    UPDATE_RESULT(lhs_right == rhs_right);
+
+    return result;
   }
 
-  if (lhs_cell != SIGIL_NIL) {
-    bool result = true;
-    result &= compare_trees(lhs_cells, rhs_cells, lhs + 1, rhs + 1);
-    if (!result) {
-      return result;
-    }
-    result &= compare_trees(lhs_cells, rhs_cells, lhs + 2, rhs + 2);
-    if (!result) {
-      return result;
-    }
-  }
-  return true;
+  size_t lhs_left = _get_left_node(lhs_state, lhs);
+  size_t rhs_left = _get_left_node(rhs_state, rhs);
+  UPDATE_RESULT(compare_trees(lhs_state, rhs_state, lhs_left, rhs_left));
 
-failed:
-  return false;
+  size_t lhs_right = _get_right_node(lhs_state, lhs);
+  size_t rhs_right = _get_right_node(rhs_state, rhs);
+  UPDATE_RESULT(compare_trees(lhs_state, rhs_state, lhs_right, rhs_right));
+
+  return result;
 }
+
+#undef UPDATE_RESULT
 
 bool compare_stacks(size_t* actual, size_t* expected) {
   size_t lhs_size = stbds_arrlenu(actual);
@@ -201,7 +181,7 @@ bool compare_stacks(size_t* actual, size_t* expected) {
 }
 
 bool compare_states(EvalState actual, EvalState expected) {
-  if (!compare_trees(actual->cells, expected->cells, 0, 0)) {
+  if (!compare_trees(actual, expected, 0, 0)) {
     return false;
   }
   if (!compare_stacks(actual->apply_stack, expected->apply_stack)) {
@@ -300,6 +280,10 @@ cleanup:
   return result;
 }
 
+static void load_standard_natives(EvalState state) {
+  eval_add_native(state, "io.println", _native_io_println);
+}
+
 bool test_eval(test_data_t data) {
   sint err = 0;
   assert(data.tag == test_data_json);
@@ -320,6 +304,8 @@ bool test_eval(test_data_t data) {
     logg_s("failed eval_init");
     goto cleanup;
   }
+  load_standard_natives(state);
+  load_standard_natives(reference_state);
 
   _json_parser_init(json, parser);
   _JSON_PARSER_EAT(ARRAY, 1);
@@ -465,6 +451,7 @@ int main() {
       (test_data_t){.name = STR(test_memory_many_cells)});
 
   add_file_case("eval-smoke");
+  add_file_case("eval-native");
 
   const char* GREEN = "\033[0;32m";
   const char* CYAN = "\033[0;36m";

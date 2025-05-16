@@ -1,5 +1,6 @@
 
 
+#include "api.h"
 #include <assert.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -33,13 +34,8 @@ void _errbuf_write(const char* format, ...) {
 
 #define ERROR_PARSE           1
 #define ERROR_STACK_UNDERFLOW 2
-#define ERROR_DEREF_NONREF    3
-#define ERROR_INVALID_CELL    4
-#define ERROR_INVALID_WORD    5
-#define ERROR_REF_TO_REF      6
-#define ERROR_APPLY_TO_VALUE  7
-#define ERROR_REF_EXPECTED    8
-#define ERROR_INVALID_TREE    9
+#define ERROR_APPLY_TO_VALUE  3
+#define ERROR_INVALID_TREE    4
 #define ERROR_GENERIC         127
 
 sint eval_init(EvalState* state) {
@@ -67,6 +63,7 @@ sint eval_free(EvalState* state) {
   stbds_arrfree(s->apply_stack);
   stbds_arrfree(s->result_stack);
   stbds_arrfree(s->match_stack);
+  stbds_shfree(s->native_symbols);
   free(s->free_bitmap);
   free(s);
   *state = NULL;
@@ -91,6 +88,22 @@ sint eval_reset(EvalState state) {
   state->error_code = 0;
   return 0;
 }
+
+sint eval_add_native(EvalState state, const char* name, native_symbol_t symbol) {
+  stbds_shput(state->native_symbols, name, symbol);
+  return 0;
+}
+
+sint eval_get_native(EvalState state, const char* name, native_symbol_t* symbol) {
+  sint entry = stbds_shgeti(state->native_symbols, name);
+  if (entry == -1) {
+    return entry;
+  }
+  *symbol = state->native_symbols[entry].value;
+  return 0;
+}
+
+// ********************** ACTUAL EVALUATION **********************
 
 #define EXPECT(cond, code, msg)                                                                    \
   if (!(cond)) {                                                                                   \
@@ -139,7 +152,7 @@ static size_t next_n_vacant_cells(EvalState state, size_t n) {
 // assumes a valid tree
 // returns the passed index if no corresponding node exists
 
-static inline size_t get_left_node(EvalState state, size_t root_index) {
+size_t _get_left_node(EvalState state, size_t root_index) {
   sint root_cell = eval_cells_get(state->cells, root_index);
   if (root_cell == ERR_VAL || root_cell != SIGIL_TREE) {
     return root_index;
@@ -163,7 +176,7 @@ static inline size_t get_left_node(EvalState state, size_t root_index) {
   return lhs_index;
 }
 
-static inline size_t get_right_node(EvalState state, size_t root_index) {
+size_t _get_right_node(EvalState state, size_t root_index) {
   stbds_arrsetlen(state->match_stack, 0);
   sint root_cell = eval_cells_get(state->cells, root_index);
   if (root_cell == ERR_VAL || root_cell != SIGIL_TREE) {
@@ -210,9 +223,11 @@ static inline size_t get_right_node(EvalState state, size_t root_index) {
   return cur;
 }
 
-static inline size_t dereference(EvalState state, size_t index) {
+static size_t dereference(EvalState state, size_t index) {
   sint index_cell = eval_cells_get(state->cells, index);
-  if (index_cell == SIGIL_REF) {
+  sint index_left_cell = eval_cells_get(state->cells, index + 1);
+  sint index_right_cell = eval_cells_get(state->cells, index + 2);
+  if (_is_ref(index_cell, index_left_cell, index_right_cell)) {
     sint index_word = eval_cells_get_word(state->cells, index);
     ASSERT(index_word != ERR_VAL, ERROR_GENERIC, "");
     index += index_word;
@@ -221,7 +236,7 @@ cleanup:
   return index;
 }
 
-static inline bool is_terminal(EvalState state, size_t index) {
+bool _is_terminal(EvalState state, size_t index) {
   sint root = eval_cells_get(state->cells, index);
   sint left = eval_cells_get(state->cells, index + 1);
   sint right = eval_cells_get(state->cells, index + 2);
@@ -232,15 +247,15 @@ static inline bool is_terminal(EvalState state, size_t index) {
 
   bool result = false;
   // NOTE: leaf
-  result |= root == SIGIL_TREE && left == SIGIL_NIL && right == SIGIL_NIL;
+  result |= _is_leaf(root, left, right);
   // NOTE: stem
-  result |= root == SIGIL_TREE && left == SIGIL_TREE && right == SIGIL_NIL;
+  result |= _is_stem(root, left, right);
   // NOTE: fork
-  result |= root == SIGIL_TREE && left == SIGIL_TREE && right == SIGIL_TREE;
+  result |= _is_fork(root, left, right);
   // NOTE: ref
-  result |= root == SIGIL_REF && left == SIGIL_NIL && right == SIGIL_NIL;
+  result |= _is_ref(root, left, right);
   // NOTE: native
-  result |= root == SIGIL_REF && left == SIGIL_REF && right == SIGIL_NIL;
+  result |= _is_native(root, left, right);
   return result;
 }
 
@@ -280,16 +295,31 @@ sint eval_step(EvalState state) {
   size_t F = stbds_arrpop(state->result_stack);
   size_t z = stbds_arrpop(state->result_stack);
   sint F_cell = eval_cells_get(state->cells, F);
+  sint F_left = eval_cells_get(state->cells, F + 1);
+  sint F_right = eval_cells_get(state->cells, F + 2);
+
+  if (_is_native(F_cell, F_left, F_right)) {
+    sint word = eval_cells_get_word(state->cells, F);
+    ASSERT(word != ERR_VAL, ERROR_GENERIC, "");
+    u8 tag = eval_tv_get_tag(word);
+    ASSERT(tag == NATIVE_TAG_FUNC, ERROR_APPLY_TO_VALUE, "");
+    u64 func_ptr = eval_tv_get_payload_unsigned(word);
+    native_symbol_t func = (native_symbol_t)func_ptr;
+    size_t res = func(state, z);
+    stbds_arrput(state->apply_stack, res);
+    return false;
+  }
+
   ASSERT(F_cell == SIGIL_TREE, ERROR_GENERIC, "");
 
-  size_t A = get_left_node(state, F);
+  size_t A = _get_left_node(state, F);
   ASSERT(A != F, ERROR_INVALID_TREE, "");
   sint A_cell = eval_cells_get(state->cells, A);
 
-  size_t y = get_right_node(state, F);
+  size_t y = _get_right_node(state, F);
   ASSERT(y != F, ERROR_INVALID_TREE, "");
-  size_t w = get_left_node(state, A);
-  size_t x = get_right_node(state, A);
+  size_t w = _get_left_node(state, A);
+  size_t x = _get_right_node(state, A);
   sint y_cell = eval_cells_get(state->cells, y);
   sint w_cell = eval_cells_get(state->cells, w);
   sint x_cell = eval_cells_get(state->cells, x);
@@ -307,7 +337,7 @@ sint eval_step(EvalState state) {
     stbds_arrput(state->apply_stack, new);
     return false;
   }
-  ASSERT(is_terminal(state, A), ERROR_GENERIC, "");
+  ASSERT(_is_terminal(state, A), ERROR_GENERIC, "");
   ASSERT(w != A, ERROR_INVALID_TREE, "");
   ASSERT(x != A, ERROR_INVALID_TREE, "");
 
@@ -352,9 +382,9 @@ sint eval_step(EvalState state) {
   }
   if (w_cell != SIGIL_NIL && x_cell != SIGIL_NIL) {
     // rule 3(?)
-    size_t u = get_left_node(state, z);
+    size_t u = _get_left_node(state, z);
     ASSERT(u != z, ERROR_INVALID_TREE, "");
-    size_t v = get_right_node(state, z);
+    size_t v = _get_right_node(state, z);
     ASSERT(v != z, ERROR_INVALID_TREE, "");
     sint u_cell = eval_cells_get(state->cells, u);
     sint v_cell = eval_cells_get(state->cells, v);

@@ -38,24 +38,6 @@ int _sb_try_chop_suffix(struct string_buffer_t* s, const char* suffix);
 void _errbuf_clear();
 void _errbuf_write(const char* format, ...);
 
-#define GET_CELL(cells, index)                                                                     \
-  sint index##_cell = eval_cells_get(cells, index);                                                \
-  EXPECT(index##_cell != ERR_VAL, ERROR_INVALID_CELL, "");
-
-#define GET_WORD(cells, index)                                                                     \
-  sint index##_word = eval_cells_get_word(cells, index);                                           \
-  EXPECT(index##_cell != ERR_VAL, ERROR_INVALID_WORD, "");
-
-#define DEREF(cells, index)                                                                        \
-  if (index##_cell == SIGIL_REF) {                                                                 \
-    GET_WORD(cells, index);                                                                        \
-    index += (sint)index##_word;                                                                   \
-    index##_cell = eval_cells_get(cells, index);                                                   \
-    size_t new_index = index;                                                                      \
-    GET_CELL(cells, new_index)                                                                     \
-    EXPECT(new_index_cell != SIGIL_REF, ERROR_REF_TO_REF, "");                                     \
-  }
-
 static inline u8 eval_tv_get_tag(u64 tagged_value) {
   return (u8)(tagged_value & 0xF);
 }
@@ -94,13 +76,41 @@ static inline u64 eval_tv_new_tagged_value_unsigned(u8 tag, u64 payload) {
 #define SIGIL_TREE 1
 #define SIGIL_REF  2
 
-#define EVAL_TAG_NUMBER 0
-#define EVAL_TAG_INDEX  1
-#define EVAL_TAG_FUNC   2
+static inline bool _is_leaf(sint root, sint left, sint right) {
+  return root == SIGIL_TREE && left == SIGIL_NIL && right == SIGIL_NIL;
+}
+
+static inline bool _is_stem(sint root, sint left, sint right) {
+  return root == SIGIL_TREE && left == SIGIL_TREE && right == SIGIL_NIL;
+}
+
+static inline bool _is_fork(sint root, sint left, sint right) {
+  return root == SIGIL_TREE && left == SIGIL_TREE && right == SIGIL_TREE;
+}
+
+static inline bool _is_ref(sint root, sint left, sint right) {
+  return root == SIGIL_REF && left == SIGIL_NIL && right == SIGIL_NIL;
+}
+
+static inline bool _is_native(sint root, sint left, sint right) {
+  return root == SIGIL_REF && left == SIGIL_REF && right == SIGIL_NIL;
+}
+
+bool _is_terminal(EvalState state, size_t index);
+size_t _get_left_node(EvalState state, size_t root_index);
+size_t _get_right_node(EvalState state, size_t root_index);
+
+#define NATIVE_TAG_NUMBER 0
+#define NATIVE_TAG_FUNC   1
 
 #define TOKEN_APPLY SIZE_MAX
 
 struct json_parser_t;
+
+typedef struct {
+  const char* key;
+  native_symbol_t value;
+} native_entry_t;
 
 struct EvalState_impl {
   Allocator cells;
@@ -111,6 +121,7 @@ struct EvalState_impl {
   size_t free_capacity;
   u8* match_stack;
 
+  native_entry_t* native_symbols;
   uint8_t error_code;
   const char* error;
 };
@@ -118,21 +129,21 @@ struct EvalState_impl {
 sint _eval_reset_cells(EvalState state);
 void _eval_result_stack_push(EvalState state, size_t value);
 sint _eval_load_json(struct json_parser_t* parser, EvalState state);
-sint _eval_cells_load_json(struct json_parser_t* parser, Allocator cells);
+sint _eval_cells_load_json(struct json_parser_t* parser, EvalState state);
 
 void _eval_debug_dump(EvalState state, string_buffer_t* buffer);
 
 typedef struct {
   size_t key;
   size_t value;
-} cell_word;
+} cell_word_t;
 
 struct Allocator_impl {
   u64* cells;
   u64* cells_bitmap;
   size_t cells_capacity;
 
-  cell_word* payload_index;
+  cell_word_t* payload_index;
 
   i64* payloads;
 };

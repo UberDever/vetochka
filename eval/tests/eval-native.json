@@ -1,0 +1,58 @@
+[
+    {
+        "name": "native call with tree node",
+        "output_final": false,
+        "input": {
+            "cells": {
+                "state": "##*^**",
+                "words": [
+                    {
+                        "index": 0,
+                        "tag": "function",
+                        "payload": "io.println"
+                    }
+                ]
+            },
+            "apply_stack": [
+                -1,
+                0,
+                3
+            ],
+            "result_stack": []
+        },
+        "output": [
+            {
+                "cells": {
+                    "state": "##*^**",
+                    "words": [
+                        {
+                            "index": 0,
+                            "tag": "function",
+                            "payload": "io.println"
+                        }
+                    ]
+                },
+                "apply_stack": [
+                    3
+                ],
+                "result_stack": []
+            },
+            {
+                "cells": {
+                    "state": "##*^**",
+                    "words": [
+                        {
+                            "index": 0,
+                            "tag": "function",
+                            "payload": "io.println"
+                        }
+                    ]
+                },
+                "apply_stack": [],
+                "result_stack": [
+                    3
+                ]
+            }
+        ]
+    }
+]

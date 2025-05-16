@@ -31,14 +31,14 @@ void _eval_debug_dump(EvalState state, string_buffer_t* buffer) {
     if (value == TOKEN_APPLY) {                                                                    \
       _sb_printf(buffer, "%d ", -1);                                                               \
     } else {                                                                                       \
-      _sb_printf(buffer, "%zu ", value);                                                          \
+      _sb_printf(buffer, "%zu ", value);                                                           \
     }                                                                                              \
   }                                                                                                \
   _sb_append_char(buffer, '\n');                                                                   \
-  _sb_printf(buffer, "result: ");                                                                   \
+  _sb_printf(buffer, "result: ");                                                                  \
   for (size_t i = 0; i < stbds_arrlenu(state->result_stack); ++i) {                                \
     size_t value = state->result_stack[i];                                                         \
-    _sb_printf(buffer, "%zu ", value);                                                            \
+    _sb_printf(buffer, "%zu ", value);                                                             \
   }                                                                                                \
   _sb_append_char(buffer, '\n');                                                                   \
   _sb_append_str(buffer, "---------\n");
@@ -66,6 +66,7 @@ void _eval_debug_dump(EvalState state, string_buffer_t* buffer) {
     _sb_printf(&indices_line, num_format, i);
     u8 cell = eval_cells_get(state->cells, i);
     _sb_printf(&cells_line, char_format, CELL_TO_CHAR[cell]);
+    // TODO: fix for natives
     if (cell == SIGIL_REF) {
       i64 ref = eval_cells_get_word(state->cells, i);
       if (ref != ERR_VAL) {
@@ -90,7 +91,6 @@ void _eval_debug_dump(EvalState state, string_buffer_t* buffer) {
   _sb_free(&cells_line);
   _sb_free(&words_line);
 }
-
 
 // ********************** JSON COMMON **********************
 
@@ -274,7 +274,7 @@ sint _eval_load_json(json_parser_t* parser, EvalState state) {
     if (err) {
       goto cleanup;
     }
-    err = _eval_cells_load_json(parser, state->cells);
+    err = _eval_cells_load_json(parser, state);
     if (err) {
       goto cleanup;
     }
@@ -333,8 +333,9 @@ static u8 get_cell(char symbol) {
   assert(false && "unreachable");
 }
 
-sint _eval_cells_load_json(struct json_parser_t* parser, Allocator cells) {
+sint _eval_cells_load_json(struct json_parser_t* parser, EvalState state) {
   sint err = 0;
+  Allocator cells = state->cells;
   _JSON_PARSER_EAT(OBJECT, 1);
   _JSON_PARSER_EAT_KEY("state", 1)
   _JSON_PARSER_EAT(STRING, 1);
@@ -362,26 +363,37 @@ sint _eval_cells_load_json(struct json_parser_t* parser, Allocator cells) {
       continue;
     }
 
-    _JSON_PARSER_EAT_KEY("index", 1)
-    _JSON_PARSER_EAT(NUMBER, 1);
-    size_t val_index = parser->digested_number;
-    _JSON_PARSER_EAT_KEY("tag", 1)
-    _JSON_PARSER_EAT(NUMBER, 1);
-    u8 val_tag = parser->digested_number;
-    _JSON_PARSER_EAT_KEY("payload", 1)
-    _JSON_PARSER_EAT(NUMBER, 1);
-    u8 val_payload = parser->digested_number;
-    err = eval_cells_set_word(
-        cells, val_index, eval_tv_new_tagged_value_signed(val_tag, val_payload));
-    if (err) {
-      goto cleanup;
+    if (strcmp(_json_parser_get_string(parser), "index") == 0) {
+      _JSON_PARSER_EAT(NUMBER, 1);
+      size_t val_index = parser->digested_number;
+      _JSON_PARSER_EAT_KEY("tag", 1)
+      _JSON_PARSER_EAT(STRING, 1);
+      const char* tag_str = _json_parser_get_string(parser);
+      if (strcmp(tag_str, "function") == 0) {
+        _JSON_PARSER_EAT_KEY("payload", 1)
+        _JSON_PARSER_EAT(STRING, 1);
+        const char* payload_str = _json_parser_get_string(parser);
+        native_symbol_t symbol = NULL;
+        err = eval_get_native(state, payload_str, &symbol);
+        if (err) {
+          logg("can't find native %s", payload_str);
+          goto cleanup;
+        }
+        err = eval_cells_set_word(
+            cells, val_index, eval_tv_new_tagged_value_signed(NATIVE_TAG_FUNC, (i64)symbol));
+        if (err) {
+          goto cleanup;
+        }
+
+        continue;
+      }
     }
+    assert(0 && "unreachable");
   }
 
 cleanup:
   return err;
 }
-
 
 // ********************** JSON DUMPING **********************
 
