@@ -11,7 +11,88 @@
 
 #include "common.h"
 
-static char CELL_TO_CHAR[] = {'*', '^', '$', '#'};
+static char CELL_TO_CHAR[] = {'*', '^', '#'};
+
+void _eval_debug_dump(EvalState state, string_buffer_t* buffer) {
+  const size_t WINDOW_SIZE = 4;
+  const size_t LINE_LEN = 120;
+  const size_t WINDOWS_LINE = LINE_LEN / WINDOW_SIZE;
+
+#define DUMP_BUFFER                                                                                \
+  _sb_append_str(buffer, _sb_str_view(&indices_line));                                             \
+  _sb_append_char(buffer, '\n');                                                                   \
+  _sb_append_str(buffer, _sb_str_view(&cells_line));                                               \
+  _sb_append_char(buffer, '\n');                                                                   \
+  _sb_append_str(buffer, _sb_str_view(&words_line));                                               \
+  _sb_append_char(buffer, '\n');                                                                   \
+  _sb_printf(buffer, "apply: ");                                                                   \
+  for (size_t i = 0; i < stbds_arrlenu(state->apply_stack); ++i) {                                 \
+    size_t value = state->apply_stack[i];                                                          \
+    if (value == TOKEN_APPLY) {                                                                    \
+      _sb_printf(buffer, "%d ", -1);                                                               \
+    } else {                                                                                       \
+      _sb_printf(buffer, "%zu ", value);                                                          \
+    }                                                                                              \
+  }                                                                                                \
+  _sb_append_char(buffer, '\n');                                                                   \
+  _sb_printf(buffer, "result: ");                                                                   \
+  for (size_t i = 0; i < stbds_arrlenu(state->result_stack); ++i) {                                \
+    size_t value = state->result_stack[i];                                                         \
+    _sb_printf(buffer, "%zu ", value);                                                            \
+  }                                                                                                \
+  _sb_append_char(buffer, '\n');                                                                   \
+  _sb_append_str(buffer, "---------\n");
+
+  string_buffer_t indices_line;
+  _sb_init(&indices_line);
+  string_buffer_t cells_line;
+  _sb_init(&cells_line);
+  string_buffer_t words_line;
+  _sb_init(&words_line);
+
+  char num_format[20];
+  snprintf(num_format, sizeof(num_format), "%%-%zud", WINDOW_SIZE);
+  char char_format[20];
+  snprintf(char_format, sizeof(char_format), "%%-%zuc", WINDOW_SIZE);
+
+  size_t i = 0;
+  while (eval_cells_is_set(state->cells, i)) {
+    if ((i % WINDOWS_LINE == 0) && i > 0) {
+      DUMP_BUFFER
+      _sb_clear(&indices_line);
+      _sb_clear(&cells_line);
+      _sb_clear(&words_line);
+    }
+    _sb_printf(&indices_line, num_format, i);
+    u8 cell = eval_cells_get(state->cells, i);
+    _sb_printf(&cells_line, char_format, CELL_TO_CHAR[cell]);
+    if (cell == SIGIL_REF) {
+      i64 ref = eval_cells_get_word(state->cells, i);
+      if (ref != ERR_VAL) {
+        u64 ref_index = ref + i;
+        _sb_printf(&words_line, num_format, ref_index);
+        i++;
+        continue;
+      }
+    }
+
+    for (size_t j = 0; j < WINDOW_SIZE; ++j) {
+      _sb_append_char(&words_line, ' ');
+    }
+    i++;
+  }
+
+  DUMP_BUFFER
+
+#undef DUMP_BUFFER
+
+  _sb_free(&indices_line);
+  _sb_free(&cells_line);
+  _sb_free(&words_line);
+}
+
+
+// ********************** JSON COMMON **********************
 
 // NOTE: doesn't take ownership of json
 sint _json_parser_init(const char* json, json_parser_t* parser) {
@@ -241,16 +322,13 @@ cleanup:
 
 static u8 get_cell(char symbol) {
   if (symbol == '*') {
-    return 0;
+    return SIGIL_NIL;
   }
   if (symbol == '^') {
-    return 1;
-  }
-  if (symbol == '$') {
-    return 2;
+    return SIGIL_TREE;
   }
   if (symbol == '#') {
-    return 3;
+    return SIGIL_REF;
   }
   assert(false && "unreachable");
 }
@@ -304,179 +382,6 @@ cleanup:
   return err;
 }
 
-static int ENCODE_MAP[] = {
-    ['*'] = SIGIL_NIL,
-    ['^'] = SIGIL_TREE,
-    //['$'] = EVAL_APPLY,
-    ['#'] = SIGIL_REF,
-};
-
-static bool char_is_node(char c) {
-  return c == '*' || c == '^' /*|| c == '$'*/ || c == '#';
-}
-
-sint eval_encode_parse(Allocator cells, const char* program) {
-  const char* delimiters = " \t\n";
-  int result = 0;
-  char* prog = malloc(sizeof(char) * (strlen(program) + 1));
-  strcpy(prog, program);
-  char* token = strtok(prog, delimiters);
-  size_t index = 0;
-  while (token != NULL) {
-    if (char_is_node(token[0])) {
-      for (size_t j = 0; j < strlen(token); ++j) {
-        if (!char_is_node(token[j])) {
-          result = -1;
-          goto cleanup;
-        }
-        sint res = eval_cells_set(cells, index++, ENCODE_MAP[(size_t)token[j]]);
-        if (res == ERR_VAL) {
-          result = -1;
-          goto cleanup;
-        }
-      }
-    } else {
-      char* endptr = NULL;
-      sint value = strtoll(token, &endptr, 10);
-      if (*endptr != '\0') {
-        result = -1;
-        goto cleanup;
-      }
-
-      if (index == 0) {
-        result = -1;
-        goto cleanup;
-      }
-      sint node = eval_cells_get(cells, index - 1);
-      if (node == SIGIL_REF) {
-        // u8 tag = EVAL_TAG_INDEX;
-        // u64 val = eval_tv_new_tagged_value_signed(tag, value);
-        sint res = eval_cells_set_word(cells, index - 1, value);
-        if (res == ERR_VAL) {
-          result = -1;
-          goto cleanup;
-        }
-      } else {
-        result = -1;
-        goto cleanup;
-      }
-      node = -1;
-    }
-
-    token = strtok(NULL, delimiters);
-  }
-
-cleanup:
-  free(prog);
-  return result;
-}
-
-// void eval_encode_dump(Allocator cells, size_t root) {
-//   char nodes[] = {'*', '^', '$', '#'};
-//   size_t index = root;
-//   logg_s("nodes: ");
-//   while (eval_cells_is_set(cells, index)) {
-//     sint index_cell = eval_cells_get(cells, index);
-//     assert(index_cell != ERR_VAL);
-//     logg("%c[%zu] ", nodes[index_cell], index);
-//     index++;
-//   }
-//   logg_s("\n");
-
-//   logg_s("words: ");
-//   size_t word_index = root;
-//   while (eval_cells_is_set(cells, word_index)) {
-//     sint word_index_cell = eval_cells_get(cells, word_index);
-//     assert(word_index_cell != ERR_VAL);
-//     if (word_index_cell == SIGIL_REF) {
-//       sint word_index_word = eval_cells_get_word(cells, word_index);
-//       assert(word_index_word != ERR_VAL);
-//       logg("!%ld[%zu] ", word_index_word, word_index);
-//       word_index++;
-//       continue;
-//     }
-//     word_index++;
-//   }
-//   logg_s("\n");
-// }
-
-void _eval_debug_dump(EvalState state, string_buffer_t* buffer) {
-  const size_t WINDOW_SIZE = 4;
-  const size_t LINE_LEN = 120;
-  const size_t WINDOWS_LINE = LINE_LEN / WINDOW_SIZE;
-
-#define DUMP_BUFFER                                                                                \
-  _sb_append_str(buffer, _sb_str_view(&indices_line));                                             \
-  _sb_append_char(buffer, '\n');                                                                   \
-  _sb_append_str(buffer, _sb_str_view(&cells_line));                                               \
-  _sb_append_char(buffer, '\n');                                                                   \
-  _sb_append_str(buffer, _sb_str_view(&words_line));                                               \
-  _sb_append_char(buffer, '\n');                                                                   \
-  _sb_printf(buffer, "apply: ");                                                                   \
-  for (size_t i = 0; i < stbds_arrlenu(state->apply_stack); ++i) {                                 \
-    size_t value = state->apply_stack[i];                                                          \
-    if (value == TOKEN_APPLY) {                                                                    \
-      _sb_printf(buffer, "%d ", -1);                                                               \
-    } else {                                                                                       \
-      _sb_printf(buffer, "%zu ", value);                                                          \
-    }                                                                                              \
-  }                                                                                                \
-  _sb_append_char(buffer, '\n');                                                                   \
-  _sb_printf(buffer, "result: ");                                                                   \
-  for (size_t i = 0; i < stbds_arrlenu(state->result_stack); ++i) {                                \
-    size_t value = state->result_stack[i];                                                         \
-    _sb_printf(buffer, "%zu ", value);                                                            \
-  }                                                                                                \
-  _sb_append_char(buffer, '\n');                                                                   \
-  _sb_append_str(buffer, "---------\n");
-
-  string_buffer_t indices_line;
-  _sb_init(&indices_line);
-  string_buffer_t cells_line;
-  _sb_init(&cells_line);
-  string_buffer_t words_line;
-  _sb_init(&words_line);
-
-  char num_format[20];
-  snprintf(num_format, sizeof(num_format), "%%-%zud", WINDOW_SIZE);
-  char char_format[20];
-  snprintf(char_format, sizeof(char_format), "%%-%zuc", WINDOW_SIZE);
-
-  size_t i = 0;
-  while (eval_cells_is_set(state->cells, i)) {
-    if ((i % WINDOWS_LINE == 0) && i > 0) {
-      DUMP_BUFFER
-      _sb_clear(&indices_line);
-      _sb_clear(&cells_line);
-      _sb_clear(&words_line);
-    }
-    _sb_printf(&indices_line, num_format, i);
-    u8 cell = eval_cells_get(state->cells, i);
-    _sb_printf(&cells_line, char_format, CELL_TO_CHAR[cell]);
-    if (cell == SIGIL_REF) {
-      i64 ref = eval_cells_get_word(state->cells, i);
-      if (ref != ERR_VAL) {
-        u64 ref_index = ref + i;
-        _sb_printf(&words_line, num_format, ref_index);
-        i++;
-        continue;
-      }
-    }
-
-    for (size_t j = 0; j < WINDOW_SIZE; ++j) {
-      _sb_append_char(&words_line, ' ');
-    }
-    i++;
-  }
-
-  DUMP_BUFFER
-
-#undef DUMP_BUFFER
-
-  _sb_free(&indices_line);
-  _sb_free(&cells_line);
-  _sb_free(&words_line);
-}
 
 // ********************** JSON DUMPING **********************
 

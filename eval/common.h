@@ -18,13 +18,10 @@
 u8 _bitmap_get_bit(const u64* bitmap, size_t index);
 void _bitmap_set_bit(u64* bitmap, size_t index, u8 value);
 
-int _base64_encode(const u8* src, int srclen, char* dst);
-int _base64_decode(const char* src, int srclen, u8* dst);
-
 typedef struct string_buffer_t {
-  char* buf;  // Pointer to allocated data (NUL‑terminated)
-  size_t len; // Number of bytes currently used, excluding final NUL
-  size_t cap; // Total bytes allocated for buf (including space for NUL)
+  char* buf;
+  size_t len;
+  size_t cap;
 } string_buffer_t;
 
 void _sb_init(struct string_buffer_t* s);
@@ -95,8 +92,7 @@ static inline u64 eval_tv_new_tagged_value_unsigned(u8 tag, u64 payload) {
 
 #define SIGIL_NIL  0
 #define SIGIL_TREE 1
-// #define EVAL_APPLY 2
-#define SIGIL_REF 3
+#define SIGIL_REF  2
 
 #define EVAL_TAG_NUMBER 0
 #define EVAL_TAG_INDEX  1

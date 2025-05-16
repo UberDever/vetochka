@@ -300,45 +300,6 @@ cleanup:
   return result;
 }
 
-#if 0
-bool test_encode_parse_smoke(test_data_t _) {
-  bool result = true;
-
-  const char* programs[] = {
-      "^ ^** ^** ^**",             // ^ ^ ^ ^
-      "# 10 *",                    // 10
-      "^ ^ ^** * # 10 * # 12345 *" // ^ (^ ^) 10 12345
-  };
-
-  Allocator cells;
-  eval_cells_init(&cells, 4);
-  for (size_t i = 0; i < sizeof(programs) / sizeof(*programs); ++i) {
-    eval_cells_clear(cells);
-    sint res = eval_encode_parse(cells, programs[i]);
-    if (res != 0) {
-      printf("failed to parse %s", programs[i]);
-      result = false;
-      goto cleanup;
-    }
-    size_t j = 0;
-    while (eval_cells_is_set(cells, j)) {
-      uint8_t cell = eval_cells_get(cells, j);
-      printf("%hhu ", cell);
-      if (cell == SIGIL_REF) {
-        sint word = eval_cells_get_word(cells, j);
-        printf("[%zu] ", word);
-      }
-      j++;
-    }
-    printf("\n");
-  }
-
-cleanup:
-  eval_cells_free(&cells);
-  return result;
-}
-#endif
-
 bool test_eval(test_data_t data) {
   sint err = 0;
   assert(data.tag == test_data_json);
@@ -502,13 +463,7 @@ int main() {
       test_memory_many_cells,
       STR(test_memory_many_cells),
       (test_data_t){.name = STR(test_memory_many_cells)});
-  // add_case(&cases, test_encode_parse_smoke, STR(test_encode_parse_smoke), (test_data_t){});
 
-  // add_file_case("eval-pure-1");
-  // add_file_case("eval-first-1");
-  // add_file_case("eval-first-2");
-  // add_file_case("eval-second-1");
-  // add_file_case("eval-not-false");
   add_file_case("eval-smoke");
 
   const char* GREEN = "\033[0;32m";
@@ -522,7 +477,6 @@ int main() {
     } else {
       printf("%sFAILED%s\n\n", RED, RESET);
       result = 1;
-      // goto cleanup;
     }
   }
 

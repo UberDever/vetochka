@@ -131,10 +131,6 @@ static size_t next_n_vacant_cells(EvalState state, size_t n) {
   return next_n_vacant_cells(state, n);
 }
 
-// static inline bool is_terminal(u8 cell) {
-//   return cell == SIGIL_NIL || cell == SIGIL_REF;
-// }
-
 // TODO: need to verify the tree for validity before evaluation
 
 // NOTE: Two following algorithms: given a root, get the corresponding node index
