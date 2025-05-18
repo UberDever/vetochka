@@ -4,12 +4,22 @@
         "output_final": false,
         "input": {
             "cells": {
-                "state": "##*^**",
+                "state": "##*^##*##*",
                 "words": [
                     {
                         "index": 0,
                         "tag": "function",
                         "payload": "io.println"
+                    },
+                    {
+                        "index": 4,
+                        "tag": "number",
+                        "payload": "type.number"
+                    },
+                    {
+                        "index": 7,
+                        "tag": "number",
+                        "payload": 42
                     }
                 ]
             },
@@ -23,12 +33,22 @@
         "output": [
             {
                 "cells": {
-                    "state": "##*^**",
+                    "state": "##*^##*##*",
                     "words": [
                         {
                             "index": 0,
                             "tag": "function",
                             "payload": "io.println"
+                        },
+                        {
+                            "index": 4,
+                            "tag": "number",
+                            "payload": "type.number"
+                        },
+                        {
+                            "index": 7,
+                            "tag": "number",
+                            "payload": 42
                         }
                     ]
                 },
@@ -38,10 +58,7 @@
                 "result_stack": []
             },
             {
-                "cells": {
-                    "state": "##*^**",
-                    "words": null
-                },
+                "cells": null,
                 "apply_stack": [],
                 "result_stack": [
                     3

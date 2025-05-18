@@ -391,12 +391,41 @@ sint _eval_cells_load_json(struct json_parser_t* parser, eval_state_t* state) {
             goto cleanup;
           }
           err = eval_cells_set_word(
-              cells, val_index, _tv_new_tagged_value_signed(NATIVE_TAG_FUNC, (i64)symbol));
+              cells, val_index, _tv_new_tagged_value_signed(WORD_TAG_FUNC, (i64)symbol));
           if (err) {
             goto cleanup;
           }
-
           continue;
+        }
+        if (strcmp(tag_str, "number") == 0) {
+          _JSON_PARSER_EAT_KEY("payload", 1)
+          if (_json_parser_match(parser, JSON_TOKEN_NUMBER)) {
+            _JSON_PARSER_EAT(NUMBER, 1);
+            err = eval_cells_set_word(
+                cells,
+                val_index,
+                _tv_new_tagged_value_signed(WORD_TAG_NUMBER, parser->digested_number));
+            if (err) {
+              goto cleanup;
+            }
+            continue;
+          }
+          if (_json_parser_match(parser, JSON_TOKEN_STRING)) {
+            _JSON_PARSER_EAT(STRING, 1);
+            if (strcmp(tag_str, "type.number") == 0) {
+              err = eval_cells_set_word(
+                  cells,
+                  val_index,
+                  _tv_new_tagged_value_signed(WORD_TAG_NUMBER, VALUE_TYPE_NUMBER));
+              if (err) {
+                goto cleanup;
+              }
+            } else {
+              assert(0 && "unreachable");
+            }
+            continue;
+          }
+          assert(0 && "unreachable");
         }
       }
       assert(0 && "unreachable");

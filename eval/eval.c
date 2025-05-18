@@ -305,7 +305,7 @@ sint eval_step(eval_state_t* state) {
     sint word = eval_cells_get_word(state->cells, F);
     ASSERT(word != ERR_VAL, ERROR_GENERIC, "");
     u8 tag = _tv_get_tag(word);
-    ASSERT(tag == NATIVE_TAG_FUNC, ERROR_APPLY_TO_VALUE, "");
+    ASSERT(tag == WORD_TAG_FUNC, ERROR_APPLY_TO_VALUE, "");
     u64 func_ptr = _tv_get_payload_unsigned(word);
     native_symbol_t func = (native_symbol_t)func_ptr;
     size_t res = func(state, z);
