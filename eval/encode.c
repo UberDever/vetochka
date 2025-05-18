@@ -338,57 +338,65 @@ sint _eval_cells_load_json(struct json_parser_t* parser, EvalState state) {
   Allocator cells = state->cells;
   _JSON_PARSER_EAT(OBJECT, 1);
   _JSON_PARSER_EAT_KEY("state", 1)
-  _JSON_PARSER_EAT(STRING, 1);
-  const char* state_str = _json_parser_get_string(parser);
-  for (size_t i = 0; i < strlen(state_str); ++i) {
-    eval_cells_set(cells, i, get_cell(state_str[i]));
+  if (_json_parser_match(parser, JSON_TOKEN_NULL)) {
+    _JSON_PARSER_EAT(NULL, 1);
+  } else {
+    _JSON_PARSER_EAT(STRING, 1);
+    const char* state_str = _json_parser_get_string(parser);
+    for (size_t i = 0; i < strlen(state_str); ++i) {
+      eval_cells_set(cells, i, get_cell(state_str[i]));
+    }
   }
 
   _JSON_PARSER_EAT_KEY("words", 1)
-  _JSON_PARSER_EAT(ARRAY, 1);
-  size_t words_count = parser->entries_count;
-  for (size_t i = 0; i < words_count; ++i) {
-    _JSON_PARSER_EAT(OBJECT, 1);
-    _JSON_PARSER_EAT(STRING, 1);
-    if (strcmp(_json_parser_get_string(parser), "ref") == 0) {
-      _JSON_PARSER_EAT(NUMBER, 1);
-      i64 ref_value = parser->digested_number;
-      _JSON_PARSER_EAT_KEY("index", 1)
-      _JSON_PARSER_EAT(NUMBER, 1);
-      size_t ref_index = parser->digested_number;
-      err = eval_cells_set_word(cells, ref_index, ref_value);
-      if (err) {
-        goto cleanup;
-      }
-      continue;
-    }
-
-    if (strcmp(_json_parser_get_string(parser), "index") == 0) {
-      _JSON_PARSER_EAT(NUMBER, 1);
-      size_t val_index = parser->digested_number;
-      _JSON_PARSER_EAT_KEY("tag", 1)
+  if (_json_parser_match(parser, JSON_TOKEN_NULL)) {
+    _JSON_PARSER_EAT(NULL, 1);
+  } else {
+    _JSON_PARSER_EAT(ARRAY, 1);
+    size_t words_count = parser->entries_count;
+    for (size_t i = 0; i < words_count; ++i) {
+      _JSON_PARSER_EAT(OBJECT, 1);
       _JSON_PARSER_EAT(STRING, 1);
-      const char* tag_str = _json_parser_get_string(parser);
-      if (strcmp(tag_str, "function") == 0) {
-        _JSON_PARSER_EAT_KEY("payload", 1)
-        _JSON_PARSER_EAT(STRING, 1);
-        const char* payload_str = _json_parser_get_string(parser);
-        native_symbol_t symbol = NULL;
-        err = eval_get_native(state, payload_str, &symbol);
-        if (err) {
-          logg("can't find native %s", payload_str);
-          goto cleanup;
-        }
-        err = eval_cells_set_word(
-            cells, val_index, eval_tv_new_tagged_value_signed(NATIVE_TAG_FUNC, (i64)symbol));
+      if (strcmp(_json_parser_get_string(parser), "ref") == 0) {
+        _JSON_PARSER_EAT(NUMBER, 1);
+        i64 ref_value = parser->digested_number;
+        _JSON_PARSER_EAT_KEY("index", 1)
+        _JSON_PARSER_EAT(NUMBER, 1);
+        size_t ref_index = parser->digested_number;
+        err = eval_cells_set_word(cells, ref_index, ref_value);
         if (err) {
           goto cleanup;
         }
-
         continue;
       }
+
+      if (strcmp(_json_parser_get_string(parser), "index") == 0) {
+        _JSON_PARSER_EAT(NUMBER, 1);
+        size_t val_index = parser->digested_number;
+        _JSON_PARSER_EAT_KEY("tag", 1)
+        _JSON_PARSER_EAT(STRING, 1);
+        const char* tag_str = _json_parser_get_string(parser);
+        if (strcmp(tag_str, "function") == 0) {
+          _JSON_PARSER_EAT_KEY("payload", 1)
+          _JSON_PARSER_EAT(STRING, 1);
+          const char* payload_str = _json_parser_get_string(parser);
+          native_symbol_t symbol = NULL;
+          err = eval_get_native(state, payload_str, &symbol);
+          if (err) {
+            logg("can't find native %s", payload_str);
+            goto cleanup;
+          }
+          err = eval_cells_set_word(
+              cells, val_index, eval_tv_new_tagged_value_signed(NATIVE_TAG_FUNC, (i64)symbol));
+          if (err) {
+            goto cleanup;
+          }
+
+          continue;
+        }
+      }
+      assert(0 && "unreachable");
     }
-    assert(0 && "unreachable");
   }
 
 cleanup:

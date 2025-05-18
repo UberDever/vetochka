@@ -7,9 +7,15 @@
                 "object"
             ],
             "properties": {
-                "state": "string",
+                "state": [
+                    "null",
+                    "string"
+                ],
                 "words": {
-                    "type": "array",
+                    "type": [
+                        "null",
+                        "array"
+                    ],
                     "items": {
                         "type": [
                             {

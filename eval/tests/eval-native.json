@@ -40,13 +40,7 @@
             {
                 "cells": {
                     "state": "##*^**",
-                    "words": [
-                        {
-                            "index": 0,
-                            "tag": "function",
-                            "payload": "io.println"
-                        }
-                    ]
+                    "words": null
                 },
                 "apply_stack": [],
                 "result_stack": [
