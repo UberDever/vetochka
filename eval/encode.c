@@ -9,11 +9,15 @@
 #define JSMN_HEADER
 #include "vendor/jsmn.h"
 
-#include "common.h"
+#include "encode.h"
+#include "eval.h"
+#include "memory.h"
+#include "native.h"
+#include "util.h"
 
 static char CELL_TO_CHAR[] = {'*', '^', '#'};
 
-void _eval_debug_dump(EvalState state, string_buffer_t* buffer) {
+void _eval_debug_dump(eval_state_t* state, string_buffer_t* buffer) {
   const size_t WINDOW_SIZE = 4;
   const size_t LINE_LEN = 120;
   const size_t WINDOWS_LINE = LINE_LEN / WINDOW_SIZE;
@@ -240,7 +244,7 @@ const char* _json_parser_get_string(json_parser_t* parser) {
 
 // ********************** JSON LOADING **********************
 
-sint eval_load_json(const char* json, EvalState state) {
+sint eval_load_json(const char* json, eval_state_t* state) {
   sint err = 0;
 
   json_parser_t parser = {};
@@ -260,7 +264,7 @@ cleanup:
   return 0;
 }
 
-sint _eval_load_json(json_parser_t* parser, EvalState state) {
+sint _eval_load_json(json_parser_t* parser, eval_state_t* state) {
   sint err = 0;
 
   state->error_code = 0;
@@ -333,9 +337,9 @@ static u8 get_cell(char symbol) {
   assert(false && "unreachable");
 }
 
-sint _eval_cells_load_json(struct json_parser_t* parser, EvalState state) {
+sint _eval_cells_load_json(struct json_parser_t* parser, eval_state_t* state) {
   sint err = 0;
-  Allocator cells = state->cells;
+  allocator_t* cells = state->cells;
   _JSON_PARSER_EAT(OBJECT, 1);
   _JSON_PARSER_EAT_KEY("state", 1)
   if (_json_parser_match(parser, JSON_TOKEN_NULL)) {
@@ -387,7 +391,7 @@ sint _eval_cells_load_json(struct json_parser_t* parser, EvalState state) {
             goto cleanup;
           }
           err = eval_cells_set_word(
-              cells, val_index, eval_tv_new_tagged_value_signed(NATIVE_TAG_FUNC, (i64)symbol));
+              cells, val_index, _tv_new_tagged_value_signed(NATIVE_TAG_FUNC, (i64)symbol));
           if (err) {
             goto cleanup;
           }
@@ -440,7 +444,7 @@ static sint dump_result_stack(struct string_buffer_t* json_out, const size_t* st
   return result;
 }
 
-sint eval_dump_json(struct string_buffer_t* json_out, EvalState state) {
+sint eval_dump_json(struct string_buffer_t* json_out, eval_state_t* state) {
   sint result = 0;
   _sb_append_str(json_out, "{\n");
 
@@ -464,7 +468,7 @@ cleanup:
   return result;
 }
 
-sint _eval_cells_dump_json(struct string_buffer_t* json_out, Allocator cells) {
+sint _eval_cells_dump_json(struct string_buffer_t* json_out, allocator_t* cells) {
   sint result = 0;
   char mappings[] = {'*', '^', '$', '#'};
 
@@ -486,8 +490,8 @@ sint _eval_cells_dump_json(struct string_buffer_t* json_out, Allocator cells) {
       if (i_cell == SIGIL_REF) {
         _sb_printf(json_out, "{ \"index\": %zu, \"ref\": %ld }, ", i, i_word);
       } else {
-        u8 tag = eval_tv_get_tag(i_word);
-        u64 payload = eval_tv_get_payload_unsigned(i_word);
+        u8 tag = _tv_get_tag(i_word);
+        u64 payload = _tv_get_payload_unsigned(i_word);
         _sb_printf(
             json_out, "{ \"index\": %zu, \"tag\": %d, \"payload\": %zu }, ", i, tag, payload);
       }

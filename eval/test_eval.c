@@ -1,4 +1,4 @@
-#include "api.h"
+
 #include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -6,9 +6,11 @@
 
 #include "vendor/stb_ds.h"
 
-#include "common.h"
 #include "config.h"
+#include "encode.h"
+#include "eval.h"
 #include "native.h"
+#include "util.h"
 
 #ifndef PROJECT_ROOT
 #error "must be defined in the config.h"
@@ -115,7 +117,7 @@ cleanup:
     goto failed;                                                                                   \
   }
 
-bool compare_trees(EvalState lhs_state, EvalState rhs_state, size_t lhs, size_t rhs) {
+bool compare_trees(eval_state_t* lhs_state, eval_state_t* rhs_state, size_t lhs, size_t rhs) {
   sint lhs_cell = eval_cells_get(lhs_state->cells, lhs);
   if (lhs_cell == ERR_VAL) {
     logg("invalid cell [%zu] %ld", lhs, lhs_cell);
@@ -180,7 +182,7 @@ bool compare_stacks(size_t* actual, size_t* expected) {
   return true;
 }
 
-bool compare_states(EvalState actual, EvalState expected) {
+bool compare_states(eval_state_t* actual, eval_state_t* expected) {
   if (!compare_trees(actual, expected, 0, 0)) {
     return false;
   }
@@ -199,7 +201,7 @@ bool compare_states(EvalState actual, EvalState expected) {
 bool test_memory_smoke(test_data_t _) {
   bool result = true;
 
-  Allocator cells;
+  allocator_t* cells;
   eval_cells_init(&cells, 10);
 
   size_t idx = 0;
@@ -235,7 +237,7 @@ typedef struct {
 bool test_memory_many_cells(test_data_t _) {
   bool result = true;
 
-  Allocator cells;
+  allocator_t* cells;
   eval_cells_init(&cells, 1);
 
   int seed = time(0);
@@ -280,7 +282,7 @@ cleanup:
   return result;
 }
 
-static void load_standard_natives(EvalState state) {
+static void load_standard_natives(eval_state_t* state) {
   eval_add_native(state, "io.println", _native_io_println);
 }
 
@@ -288,8 +290,8 @@ bool test_eval(test_data_t data) {
   sint err = 0;
   assert(data.tag == test_data_json);
   const char* json = data.as_json;
-  EvalState state = NULL;
-  EvalState reference_state = NULL;
+  eval_state_t* state = NULL;
+  eval_state_t* reference_state = NULL;
 
   json_parser_t parser_ = {};
   json_parser_t* parser = &parser_;

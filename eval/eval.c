@@ -1,6 +1,5 @@
 
 
-#include "api.h"
 #include <assert.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -8,17 +7,20 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include "common.h"
 #include "vendor/stb_ds.h"
+
+#include "eval.h"
+#include "memory.h"
+#include "native.h"
 
 #define ERROR_BUF_SIZE 65536
 static char g_error_buf[ERROR_BUF_SIZE] = {};
 
-void _errbuf_clear() {
+static void _errbuf_clear() {
   g_error_buf[0] = '\0';
 }
 
-void _errbuf_write(const char* format, ...) {
+static void _errbuf_write(const char* format, ...) {
   va_list args;
   va_start(args, format);
 
@@ -38,8 +40,8 @@ void _errbuf_write(const char* format, ...) {
 #define ERROR_INVALID_TREE    4
 #define ERROR_GENERIC         127
 
-sint eval_init(EvalState* state) {
-  EvalState s = calloc(1, sizeof(struct EvalState_impl));
+sint eval_init(eval_state_t** state) {
+  eval_state_t* s = calloc(1, sizeof(struct eval_state_t));
   if (s == NULL) {
     return ERR_VAL;
   }
@@ -57,8 +59,8 @@ sint eval_init(EvalState* state) {
   return 0;
 }
 
-sint eval_free(EvalState* state) {
-  EvalState s = *state;
+sint eval_free(eval_state_t** state) {
+  eval_state_t* s = *state;
   eval_cells_free(&s->cells);
   stbds_arrfree(s->apply_stack);
   stbds_arrfree(s->result_stack);
@@ -70,31 +72,39 @@ sint eval_free(EvalState* state) {
   return 0;
 }
 
-sint _eval_reset_cells(EvalState state) {
+sint _eval_reset_cells(eval_state_t* state) {
   sint err = eval_cells_reset(state->cells);
   memset(state->free_bitmap, 0, state->free_capacity * sizeof(*state->free_bitmap));
   return err;
 }
 
-sint eval_reset(EvalState state) {
+sint eval_reset(eval_state_t* state) {
   if (!state) {
     return ERR_VAL;
   }
+  _errbuf_clear();
   sint err = _eval_reset_cells(state);
   if (err) {
     return err;
+  }
+  stbds_arrsetlen(state->apply_stack, 0);
+  stbds_arrsetlen(state->result_stack, 0);
+  stbds_arrsetlen(state->match_stack, 0);
+  for (size_t i = 0; i < stbds_shlenu(state->native_symbols); i++) {
+    native_entry_t e = state->native_symbols[i];
+    stbds_shdel(state->native_symbols, e.key);
   }
   stbds_arrsetlen(state->apply_stack, 0);
   state->error_code = 0;
   return 0;
 }
 
-sint eval_add_native(EvalState state, const char* name, native_symbol_t symbol) {
+sint eval_add_native(eval_state_t* state, const char* name, native_symbol_t symbol) {
   stbds_shput(state->native_symbols, name, symbol);
   return 0;
 }
 
-sint eval_get_native(EvalState state, const char* name, native_symbol_t* symbol) {
+sint eval_get_native(eval_state_t* state, const char* name, native_symbol_t* symbol) {
   sint entry = stbds_shgeti(state->native_symbols, name);
   if (entry == -1) {
     return entry;
@@ -122,7 +132,7 @@ sint eval_get_native(EvalState state, const char* name, native_symbol_t* symbol)
     goto cleanup;                                                                                  \
   }
 
-static size_t next_n_vacant_cells(EvalState state, size_t n) {
+static size_t next_n_vacant_cells(eval_state_t* state, size_t n) {
   assert(n != 0);
   for (size_t w = 0; w < state->free_capacity; ++w) {
     if (state->free_bitmap[w] != (u64)-1) {
@@ -152,7 +162,7 @@ static size_t next_n_vacant_cells(EvalState state, size_t n) {
 // assumes a valid tree
 // returns the passed index if no corresponding node exists
 
-size_t _get_left_node(EvalState state, size_t root_index) {
+size_t _get_left_node(eval_state_t* state, size_t root_index) {
   sint root_cell = eval_cells_get(state->cells, root_index);
   if (root_cell == ERR_VAL || root_cell != SIGIL_TREE) {
     return root_index;
@@ -176,7 +186,7 @@ size_t _get_left_node(EvalState state, size_t root_index) {
   return lhs_index;
 }
 
-size_t _get_right_node(EvalState state, size_t root_index) {
+size_t _get_right_node(eval_state_t* state, size_t root_index) {
   stbds_arrsetlen(state->match_stack, 0);
   sint root_cell = eval_cells_get(state->cells, root_index);
   if (root_cell == ERR_VAL || root_cell != SIGIL_TREE) {
@@ -223,7 +233,7 @@ size_t _get_right_node(EvalState state, size_t root_index) {
   return cur;
 }
 
-static size_t dereference(EvalState state, size_t index) {
+static size_t dereference(eval_state_t* state, size_t index) {
   sint index_cell = eval_cells_get(state->cells, index);
   sint index_left_cell = eval_cells_get(state->cells, index + 1);
   sint index_right_cell = eval_cells_get(state->cells, index + 2);
@@ -236,7 +246,7 @@ cleanup:
   return index;
 }
 
-bool _is_terminal(EvalState state, size_t index) {
+bool _is_terminal(eval_state_t* state, size_t index) {
   sint root = eval_cells_get(state->cells, index);
   sint left = eval_cells_get(state->cells, index + 1);
   sint right = eval_cells_get(state->cells, index + 2);
@@ -246,15 +256,8 @@ bool _is_terminal(EvalState state, size_t index) {
   }
 
   bool result = false;
-  // NOTE: leaf
   result |= _is_leaf(root, left, right);
-  // NOTE: stem
-  result |= _is_stem(root, left, right);
-  // NOTE: fork
-  result |= _is_fork(root, left, right);
-  // NOTE: ref
   result |= _is_ref(root, left, right);
-  // NOTE: native
   result |= _is_native(root, left, right);
   return result;
 }
@@ -271,7 +274,7 @@ bool _is_terminal(EvalState state, size_t index) {
 
 // clang-format on
 
-sint eval_step(EvalState state) {
+sint eval_step(eval_state_t* state) {
   if (stbds_arrlenu(state->apply_stack) == 0) {
     return true;
   }
@@ -301,9 +304,9 @@ sint eval_step(EvalState state) {
   if (_is_native(F_cell, F_left, F_right)) {
     sint word = eval_cells_get_word(state->cells, F);
     ASSERT(word != ERR_VAL, ERROR_GENERIC, "");
-    u8 tag = eval_tv_get_tag(word);
+    u8 tag = _tv_get_tag(word);
     ASSERT(tag == NATIVE_TAG_FUNC, ERROR_APPLY_TO_VALUE, "");
-    u64 func_ptr = eval_tv_get_payload_unsigned(word);
+    u64 func_ptr = _tv_get_payload_unsigned(word);
     native_symbol_t func = (native_symbol_t)func_ptr;
     size_t res = func(state, z);
     stbds_arrput(state->apply_stack, res);
@@ -337,7 +340,6 @@ sint eval_step(EvalState state) {
     stbds_arrput(state->apply_stack, new);
     return false;
   }
-  ASSERT(_is_terminal(state, A), ERROR_GENERIC, "");
   ASSERT(w != A, ERROR_INVALID_TREE, "");
   ASSERT(x != A, ERROR_INVALID_TREE, "");
 

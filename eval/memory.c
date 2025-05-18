@@ -1,11 +1,13 @@
-#include "common.h"
-#include "vendor/stb_ds.h"
 
 #include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "vendor/stb_ds.h"
+
+#include "memory.h"
 
 #define CELLS_BITMAP_SIZE(cap) BITMAP_SIZE(cap* CELLS_PER_WORD)
 
@@ -29,13 +31,13 @@ void _bitmap_set_bit(u64* bitmap, size_t index, u8 value) {
   }
 }
 
-static uint8_t get_cell_val(const struct Allocator_impl* alloc, size_t index) {
+static uint8_t get_cell_val(const struct allocator_t* alloc, size_t index) {
   size_t word_index = index / CELLS_PER_WORD;
   size_t shift = (index % CELLS_PER_WORD) * BITS_PER_CELL;
   return (alloc->cells[word_index] >> shift) & 0x3;
 }
 
-static void set_cell_val(struct Allocator_impl* alloc, size_t index, uint8_t cell_value) {
+static void set_cell_val(struct allocator_t* alloc, size_t index, uint8_t cell_value) {
   size_t word_index = index / CELLS_PER_WORD;
   size_t shift = (index % CELLS_PER_WORD) * BITS_PER_CELL;
   alloc->cells[word_index] &= ~((uint64_t)0x3 << shift);
@@ -46,8 +48,8 @@ static bool index_valid(size_t index, size_t cap) {
   return index / CELLS_PER_WORD < cap;
 }
 
-sint eval_cells_init(Allocator* alloc, size_t words_count) {
-  Allocator cells = calloc(1, sizeof(struct Allocator_impl));
+sint eval_cells_init(allocator_t** alloc, size_t words_count) {
+  allocator_t* cells = calloc(1, sizeof(struct allocator_t));
   if (!cells) {
     return ERR_VAL;
   }
@@ -68,8 +70,8 @@ sint eval_cells_init(Allocator* alloc, size_t words_count) {
   return 0;
 }
 
-sint eval_cells_free(Allocator* alloc) {
-  Allocator cells = *alloc;
+sint eval_cells_free(allocator_t** alloc) {
+  allocator_t* cells = *alloc;
   free(cells->cells);
   free(cells->cells_bitmap);
   stbds_hmfree(cells->payload_index);
@@ -79,14 +81,14 @@ sint eval_cells_free(Allocator* alloc) {
   return 0;
 }
 
-sint eval_cells_get(Allocator cells, size_t index) {
+sint eval_cells_get(allocator_t* cells, size_t index) {
   if (!index_valid(index, cells->cells_capacity) || !_bitmap_get_bit(cells->cells_bitmap, index)) {
     return ERR_VAL;
   }
   return get_cell_val(cells, index);
 }
 
-i64 eval_cells_get_word(Allocator cells, size_t index) {
+i64 eval_cells_get_word(allocator_t* cells, size_t index) {
   if (!index_valid(index, cells->cells_capacity) || !_bitmap_get_bit(cells->cells_bitmap, index)) {
     return ERR_VAL;
   }
@@ -98,7 +100,7 @@ i64 eval_cells_get_word(Allocator cells, size_t index) {
   return cells->payloads[payload_idx];
 }
 
-sint eval_cells_set(Allocator cells, size_t index, u8 value) {
+sint eval_cells_set(allocator_t* cells, size_t index, u8 value) {
   if (!index_valid(index, cells->cells_capacity)) {
     cells->cells_capacity *= 2;
     cells->cells = realloc(cells->cells, cells->cells_capacity * sizeof(*cells->cells));
@@ -118,7 +120,7 @@ sint eval_cells_set(Allocator cells, size_t index, u8 value) {
   return 0;
 }
 
-sint eval_cells_set_word(Allocator cells, size_t index, i64 value) {
+sint eval_cells_set_word(allocator_t* cells, size_t index, i64 value) {
   if (!index_valid(index, cells->cells_capacity) || !_bitmap_get_bit(cells->cells_bitmap, index)) {
     return ERR_VAL;
   }
@@ -135,7 +137,7 @@ sint eval_cells_set_word(Allocator cells, size_t index, i64 value) {
   return 0;
 }
 
-sint eval_cells_is_set(Allocator cells, size_t index) {
+sint eval_cells_is_set(allocator_t* cells, size_t index) {
   sint result = eval_cells_get(cells, index);
   if (result == ERR_VAL) {
     return 0;
@@ -143,7 +145,7 @@ sint eval_cells_is_set(Allocator cells, size_t index) {
   return 1;
 }
 
-sint eval_cells_reset(Allocator cells) {
+sint eval_cells_reset(allocator_t* cells) {
   if (!cells) {
     return ERR_VAL;
   }
