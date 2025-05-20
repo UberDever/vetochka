@@ -1,4 +1,5 @@
 
+#include "api.h"
 #include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -23,7 +24,7 @@
   if (!(x)) {                                                                                      \
     result = false;                                                                                \
     printf("%s", #x);                                                                              \
-    goto cleanup;                                                                                  \
+    goto error;                                                                                    \
   }
 
 #define STR(x) #x
@@ -79,7 +80,7 @@ bool load_and_execute_testsuite(test_data_t data) {
   FILE* file_json = fopen(_sb_str_view(&path_json), "r");
   if (file_json == NULL) {
     perror(_sb_str_view(&path_json));
-    goto cleanup;
+    goto error;
   }
 
   char chunk[1024];
@@ -90,7 +91,7 @@ bool load_and_execute_testsuite(test_data_t data) {
   if (ferror(file_json)) {
     perror(_sb_str_view(&path_json));
     fclose(file_json);
-    goto cleanup;
+    goto error;
   }
 
   const char* testsuite = _sb_str_view(&file_contents);
@@ -99,7 +100,7 @@ bool load_and_execute_testsuite(test_data_t data) {
       data.as_file_testsuite_t.test((test_data_t){.tag = test_data_json, .as_json = testsuite});
 
   fclose(file_json);
-cleanup:
+error:
   _sb_free(&path_json);
   _sb_free(&file_contents);
   return test_result;
@@ -215,11 +216,14 @@ bool test_memory_smoke(test_data_t _) {
   ASSERT_TRUE(eval_cells_get(cells, 1) == 1);
   ASSERT_TRUE(eval_cells_get(cells, 2) == 2);
   ASSERT_TRUE(eval_cells_get(cells, 3) == 3);
-  ASSERT_TRUE(eval_cells_get_word(cells, 3) == 0xDEADBEEF);
+  sint word = 0;
+  sint err = eval_cells_get_word(cells, 3, &word);
+  ASSERT_TRUE(err != -1);
+  ASSERT_TRUE(word == 0xDEADBEEF);
 
-  goto cleanup;
+  goto error;
 
-cleanup:
+error:
   eval_cells_free(&cells);
   return result;
 }
@@ -264,26 +268,23 @@ bool test_memory_many_cells(test_data_t _) {
     if (cell_val != set_cells[i].value.cell) {
       result = false;
       logg("cell_val %zu != [%zu] %zu", cell_val, idx, set_cells[i].key);
-      goto cleanup;
+      goto error;
     }
     if (set_cells[i].value.word != (sint)-1) {
-      sint word = eval_cells_get_word(cells, idx);
-      if (word != set_cells[i].value.word) {
+      sint word = 0;
+      sint err = eval_cells_get_word(cells, idx, &word);
+      if (err == -1 || word != set_cells[i].value.word) {
         result = false;
         logg("word %zu != [%zu] %zu", word, idx, set_cells[i].value.word);
-        goto cleanup;
+        goto error;
       }
     }
   }
 
-cleanup:
+error:
   eval_cells_free(&cells);
   stbds_hmfree(set_cells);
   return result;
-}
-
-static void load_standard_natives(eval_state_t* state) {
-  eval_add_native(state, "io.println", _native_io_println);
 }
 
 bool test_eval(test_data_t data) {
@@ -297,17 +298,11 @@ bool test_eval(test_data_t data) {
   json_parser_t* parser = &parser_;
 
   err = eval_init(&state);
-  if (err) {
-    logg_s("failed eval_init");
-    goto cleanup;
-  }
+  CHECK_ERROR({ logg_s("failed eval_init"); })
   err = eval_init(&reference_state);
-  if (err) {
-    logg_s("failed eval_init");
-    goto cleanup;
-  }
-  load_standard_natives(state);
-  load_standard_natives(reference_state);
+  CHECK_ERROR({ logg_s("failed eval_init"); })
+  native_load_standard(state);
+  native_load_standard(reference_state);
 
   _json_parser_init(json, parser);
   _JSON_PARSER_EAT(ARRAY, 1);
@@ -332,10 +327,7 @@ bool test_eval(test_data_t data) {
     _JSON_PARSER_EAT_KEY("input", 1);
 
     err = _eval_load_json(parser, state);
-    if (err) {
-      logg_s("failed eval_load_json");
-      goto cleanup;
-    }
+    CHECK_ERROR({ logg_s("failed eval_load_json"); })
 
     sint fully_evaluated = 0;
 
@@ -356,17 +348,14 @@ bool test_eval(test_data_t data) {
       _JSON_PARSER_EAT_KEY("output", 1);
       _JSON_PARSER_EAT(ARRAY, 1);
       err = _eval_load_json(parser, reference_state);
-      if (err) {
-        logg_s("failed eval_load_json");
-        goto cleanup;
-      }
+      CHECK_ERROR({ logg_s("failed eval_load_json"); })
       if (!compare_states(state, reference_state)) {
         err = 1;
         logg_s("states are not equal");
         goto dump_states;
       }
 
-      goto cleanup;
+      goto error;
     }
 
     _JSON_PARSER_EAT_KEY("output", 1);
@@ -374,10 +363,7 @@ bool test_eval(test_data_t data) {
     size_t output_count = parser->entries_count;
     for (size_t step_count = 0; step_count < output_count; ++step_count) {
       err = _eval_load_json(parser, reference_state);
-      if (err) {
-        logg_s("failed eval_load_json");
-        goto cleanup;
-      }
+      CHECK_ERROR({ logg_s("failed eval_load_json"); })
 
       fully_evaluated = eval_step(state);
       if (state->error_code) {
@@ -403,7 +389,7 @@ bool test_eval(test_data_t data) {
     // _sb_clear(&debug_buffer);
   }
 
-  goto cleanup;
+  goto error;
 
 dump_states:
   logg_s("got:");
@@ -415,7 +401,7 @@ dump_states:
   printf("%s", _sb_str_view(&debug_buffer));
   _sb_clear(&debug_buffer);
 
-cleanup:
+error:
   _sb_free(&debug_buffer);
   _json_parser_free(parser);
   eval_free(&state);

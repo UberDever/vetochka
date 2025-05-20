@@ -21,25 +21,14 @@
                             {
                                 "type": "object",
                                 "properties": {
-                                    "ref": {
-                                        "type": "number"
-                                    },
                                     "index": {
-                                        "type": "number"
-                                    }
-                                }
-                            },
-                            {
-                                "type": "object",
-                                "properties": {
-                                    "index": {
-                                        "type": "number"
-                                    },
-                                    "tag": {
                                         "type": "number"
                                     },
                                     "payload": {
-                                        "type": "number"
+                                        "type": [
+                                            "number",
+                                            "string"
+                                        ]
                                     }
                                 }
                             }

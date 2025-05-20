@@ -11,17 +11,17 @@
 
 #define CELLS_BITMAP_SIZE(cap) BITMAP_SIZE(cap* CELLS_PER_WORD)
 
-u64* _bitmap_init(size_t capacity) {
-  return calloc(1, BITMAP_SIZE(capacity) * sizeof(u64));
+uint* _bitmap_init(size_t capacity) {
+  return calloc(1, BITMAP_SIZE(capacity) * sizeof(uint));
 }
 
-u8 _bitmap_get_bit(const u64* bitmap, size_t index) {
+u8 _bitmap_get_bit(const uint* bitmap, size_t index) {
   size_t word_idx = index / BITS_PER_WORD;
   size_t bit_idx = index % BITS_PER_WORD;
   return (bitmap[word_idx] >> bit_idx) & 1;
 }
 
-void _bitmap_set_bit(u64* bitmap, size_t index, u8 value) {
+void _bitmap_set_bit(uint* bitmap, size_t index, u8 value) {
   size_t word_idx = index / BITS_PER_WORD;
   size_t bit_idx = index % BITS_PER_WORD;
   if (value) {
@@ -88,7 +88,7 @@ sint eval_cells_get(allocator_t* cells, size_t index) {
   return get_cell_val(cells, index);
 }
 
-i64 eval_cells_get_word(allocator_t* cells, size_t index) {
+sint eval_cells_get_word(allocator_t* cells, size_t index, sint* word) {
   if (!index_valid(index, cells->cells_capacity) || !_bitmap_get_bit(cells->cells_bitmap, index)) {
     return ERR_VAL;
   }
@@ -97,7 +97,8 @@ i64 eval_cells_get_word(allocator_t* cells, size_t index) {
     return ERR_VAL;
   }
   size_t payload_idx = cells->payload_index[pair_idx].value;
-  return cells->payloads[payload_idx];
+  *word = cells->payloads[payload_idx];
+  return 0;
 }
 
 sint eval_cells_set(allocator_t* cells, size_t index, u8 value) {
@@ -120,7 +121,7 @@ sint eval_cells_set(allocator_t* cells, size_t index, u8 value) {
   return 0;
 }
 
-sint eval_cells_set_word(allocator_t* cells, size_t index, i64 value) {
+sint eval_cells_set_word(allocator_t* cells, size_t index, sint value) {
   if (!index_valid(index, cells->cells_capacity) || !_bitmap_get_bit(cells->cells_bitmap, index)) {
     return ERR_VAL;
   }

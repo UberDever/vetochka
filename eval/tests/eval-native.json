@@ -8,17 +8,14 @@
                 "words": [
                     {
                         "index": 0,
-                        "tag": "function",
                         "payload": "io.println"
                     },
                     {
                         "index": 4,
-                        "tag": "number",
                         "payload": "type.number"
                     },
                     {
                         "index": 7,
-                        "tag": "number",
                         "payload": 42
                     }
                 ]
@@ -37,17 +34,14 @@
                     "words": [
                         {
                             "index": 0,
-                            "tag": "function",
                             "payload": "io.println"
                         },
                         {
                             "index": 4,
-                            "tag": "number",
                             "payload": "type.number"
                         },
                         {
                             "index": 7,
-                            "tag": "number",
                             "payload": 42
                         }
                     ]

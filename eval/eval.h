@@ -10,11 +10,30 @@
 
 #define TOKEN_APPLY SIZE_MAX
 
+#define ERROR_PARSE           1
+#define ERROR_STACK_UNDERFLOW 2
+#define ERROR_APPLY_TO_VALUE  3
+#define ERROR_INVALID_TREE    4
+#define ERROR_INVALID_CAST    5
+#define ERROR_GENERIC         127
+
+#define EVAL_ASSERT(cond, code, msg)                                                               \
+  if (!(cond)) {                                                                                   \
+    state->error_code = (code);                                                                    \
+    _errbuf_write("%s %s %s\n", #cond, #code, msg);                                                \
+    goto error;                                                                                    \
+  }
+
+#define EVAL_CHECK_STATE(state)                                                                    \
+  if (state->error_code) {                                                                         \
+    goto error;                                                                                    \
+  }
+
 struct json_parser_t;
 
 typedef struct {
   const char* key;
-  native_symbol_t value;
+  uint value;
 } native_entry_t;
 
 struct eval_state_t {
@@ -22,7 +41,7 @@ struct eval_state_t {
   size_t* apply_stack;
   size_t* result_stack;
 
-  u64* free_bitmap;
+  uint* free_bitmap;
   size_t free_capacity;
   u8* match_stack;
 
@@ -49,5 +68,7 @@ static inline bool _is_native(sint root, sint left, sint right) {
 bool _is_terminal(eval_state_t* state, size_t index);
 size_t _get_left_node(eval_state_t* state, size_t root_index);
 size_t _get_right_node(eval_state_t* state, size_t root_index);
+void _errbuf_write(const char* format, ...);
+void _errbuf_clear();
 
 #endif

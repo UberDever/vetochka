@@ -54,16 +54,16 @@ const char* _json_parser_get_string(json_parser_t* parser);
 
 #define _JSON_PARSER_EAT(type, errval)                                                             \
   if (parser->at_eof) {                                                                            \
-    goto cleanup;                                                                                  \
+    goto error;                                                                                    \
   }                                                                                                \
   if (!_json_parser_eat(parser, JSON_TOKEN_##type)) {                                              \
     logg_s("failed to eat " #type);                                                                \
     err = errval;                                                                                  \
-    goto cleanup;                                                                                  \
+    goto error;                                                                                    \
   }                                                                                                \
   if (parser->was_err) {                                                                           \
     err = errval;                                                                                  \
-    goto cleanup;                                                                                  \
+    goto error;                                                                                    \
   }
 
 #define _JSON_PARSER_EAT_KEY(key, errval)                                                          \
@@ -71,7 +71,7 @@ const char* _json_parser_get_string(json_parser_t* parser);
   if (strcmp(_json_parser_get_string(parser), key) != 0) {                                         \
     err = errval;                                                                                  \
     logg_s("expected " key " field");                                                              \
-    goto cleanup;                                                                                  \
+    goto error;                                                                                    \
   }
 
 void _eval_debug_dump(eval_state_t* state, string_buffer_t* buffer);

@@ -9,6 +9,12 @@
 #define logg(fmt, ...) printf("[%s:%d] " fmt "\n", __FILE__, __LINE__, __VA_ARGS__);
 #define logg_s(s)      printf("[%s:%d] " s "\n", __FILE__, __LINE__);
 
+#define CHECK_ERROR(on_error)                                                                      \
+  if (err) {                                                                                       \
+    on_error;                                                                                      \
+    goto error;                                                                                    \
+  }
+
 struct string_buffer_t {
   char* buf;
   size_t len;
@@ -26,8 +32,7 @@ const char* _sb_str_view(struct string_buffer_t* s);
 char* _sb_detach(struct string_buffer_t* s);
 int _sb_try_chop_suffix(struct string_buffer_t* s, const char* suffix);
 
-
-u8 _bitmap_get_bit(const u64* bitmap, size_t index);
-void _bitmap_set_bit(u64* bitmap, size_t index, u8 value);
+u8 _bitmap_get_bit(const uint* bitmap, size_t index);
+void _bitmap_set_bit(uint* bitmap, size_t index, u8 value);
 
 #endif // __EVAL_UTIL__
