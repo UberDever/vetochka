@@ -1,6 +1,6 @@
 [
     {
-        "name": "native call with tree node",
+        "name": "io.print number",
         "output_final": false,
         "input": {
             "cells": {
@@ -8,7 +8,7 @@
                 "words": [
                     {
                         "index": 0,
-                        "payload": "io.println"
+                        "payload": "io.print"
                     },
                     {
                         "index": 4,
@@ -34,7 +34,7 @@
                     "words": [
                         {
                             "index": 0,
-                            "payload": "io.println"
+                            "payload": "io.print"
                         },
                         {
                             "index": 4,
@@ -46,6 +46,95 @@
                         }
                     ]
                 },
+                "apply_stack": [
+                    3
+                ],
+                "result_stack": []
+            },
+            {
+                "cells": null,
+                "apply_stack": [],
+                "result_stack": [
+                    3
+                ]
+            }
+        ]
+    },
+    {
+        "name": "io.print list",
+        "output_final": false,
+        "input": {
+            "cells": {
+                "state": "##*^##*^^##*##*^^##*##*^^##*##*^^##*##*^^##*##*^^##*##**",
+                "words": [
+                    {
+                        "index": 0,
+                        "payload": "io.print"
+                    },
+                    {
+                        "index": 4,
+                        "payload": "type.list"
+                    },
+                    {
+                        "index": 12,
+                        "payload": 104
+                    },
+                    {
+                        "index": 20,
+                        "payload": 101
+                    },
+                    {
+                        "index": 28,
+                        "payload": 108
+                    },
+                    {
+                        "index": 36,
+                        "payload": 108
+                    },
+                    {
+                        "index": 44,
+                        "payload": 111
+                    },
+                    {
+                        "index": 52,
+                        "payload": 10
+                    },
+                    {
+                        "index": 9,
+                        "payload": "type.number"
+                    },
+                    {
+                        "index": 17,
+                        "payload": "type.number"
+                    },
+                    {
+                        "index": 25,
+                        "payload": "type.number"
+                    },
+                    {
+                        "index": 33,
+                        "payload": "type.number"
+                    },
+                    {
+                        "index": 41,
+                        "payload": "type.number"
+                    },
+                    {
+                        "index": 49,
+                        "payload": "type.number"
+                    }
+                ]
+            },
+            "apply_stack": [
+                -1,
+                0,
+                3
+            ],
+            "result_stack": []
+        },
+        "output": [
+            {
+                "cells": null,
                 "apply_stack": [
                     3
                 ],

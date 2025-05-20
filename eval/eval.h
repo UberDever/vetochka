@@ -53,21 +53,35 @@ struct eval_state_t {
 sint _eval_reset_cells(eval_state_t* state);
 void _eval_result_stack_push(eval_state_t* state, size_t value);
 
-static inline bool _is_leaf(sint root, sint left, sint right) {
+static inline bool _eval_is_nil(sint root) {
+  return root == SIGIL_NIL;
+}
+
+static inline bool _eval_is_leaf(sint root, sint left, sint right) {
   return root == SIGIL_TREE && left == SIGIL_NIL && right == SIGIL_NIL;
 }
 
-static inline bool _is_ref(sint root, sint left, sint right) {
+static inline bool _eval_is_ref(sint root, sint left, sint right) {
   return root == SIGIL_REF && left == SIGIL_NIL && right == SIGIL_NIL;
 }
 
-static inline bool _is_native(sint root, sint left, sint right) {
+static inline bool _eval_is_native(sint root, sint left, sint right) {
   return root == SIGIL_REF && left == SIGIL_REF && right == SIGIL_NIL;
 }
 
-bool _is_terminal(eval_state_t* state, size_t index);
-size_t _get_left_node(eval_state_t* state, size_t root_index);
-size_t _get_right_node(eval_state_t* state, size_t root_index);
+static inline bool _eval_cell_test(
+    eval_state_t* state, size_t index, bool (*tester)(sint root, sint left, sint right)) {
+  sint root = eval_cells_get(state->cells, index);
+  sint left = eval_cells_get(state->cells, index + 1);
+  sint right = eval_cells_get(state->cells, index + 2);
+  return tester(root, left, right);
+}
+
+bool _eval_is_terminal(eval_state_t* state, size_t index);
+size_t _eval_get_left_node(eval_state_t* state, size_t root_index);
+size_t _eval_get_right_node(eval_state_t* state, size_t root_index);
+size_t _eval_dereference(eval_state_t* state, size_t index);
+
 void _errbuf_write(const char* format, ...);
 void _errbuf_clear();
 

@@ -137,8 +137,8 @@ bool compare_trees(eval_state_t* lhs_state, eval_state_t* rhs_state, size_t lhs,
 
   bool result = true;
 
-  if (_is_terminal(lhs_state, lhs)) {
-    if (!_is_terminal(rhs_state, rhs)) {
+  if (_eval_is_terminal(lhs_state, lhs)) {
+    if (!_eval_is_terminal(rhs_state, rhs)) {
       logg("%ld[%zu] != %ld[%zu]", lhs_cell, lhs, rhs_cell, rhs);
       return false;
     }
@@ -154,12 +154,12 @@ bool compare_trees(eval_state_t* lhs_state, eval_state_t* rhs_state, size_t lhs,
     return result;
   }
 
-  size_t lhs_left = _get_left_node(lhs_state, lhs);
-  size_t rhs_left = _get_left_node(rhs_state, rhs);
+  size_t lhs_left = _eval_get_left_node(lhs_state, lhs);
+  size_t rhs_left = _eval_get_left_node(rhs_state, rhs);
   UPDATE_RESULT(compare_trees(lhs_state, rhs_state, lhs_left, rhs_left));
 
-  size_t lhs_right = _get_right_node(lhs_state, lhs);
-  size_t rhs_right = _get_right_node(rhs_state, rhs);
+  size_t lhs_right = _eval_get_right_node(lhs_state, lhs);
+  size_t rhs_right = _eval_get_right_node(rhs_state, rhs);
   UPDATE_RESULT(compare_trees(lhs_state, rhs_state, lhs_right, rhs_right));
 
   return result;
