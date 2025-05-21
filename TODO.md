@@ -306,9 +306,11 @@ Vetochka 0:
 - [x] Tokenizer + Parser
     - [x] Smoke tests
 - [x] Semantics (aren't checked)
-- [ ] Backend
+- [x] Backend
     - [x] Bytecode generation
-    - [~] Evaluation
+    - [x] Evaluation
+- [ ] GC
+- [ ] FFI calls
 
 Vetochka 1:
 
@@ -321,6 +323,7 @@ Vetochka 1:
     - [ ] Evaluation
 
 Vetochka Full:
+
 - [ ] Tokenizer + Parser
     - [~] Module system
     - [ ] Lambdas
@@ -328,21 +331,4 @@ Vetochka Full:
         - [x] Smoke tests
 - [ ] Semantics
 - [x] Backend (aren't changed)
-
-Misc:
-
-Vetochka 0:
-
-- [ ] Add `$` as a node with payload
-- [x] Remove tagging for references
-- [ ] Migrate from `test_eval.c` to `test_eval.py`
-- [ ] Write a native func example `[print ^, print ^^]` and assess the output
-
-- [ ] Tokenizer source information
-- [ ] Tokenizer unicode
-- [ ] Tokenizer comments
-- [ ] Tokenizer refactor to be less a mess
-- [ ] Stdlib
-- [ ] REPL
-    - [x] First draft
 
