@@ -17,6 +17,8 @@ Diagnostics:
       - modernize-*
       - cppcoreguidelines-*
       - readability-identifier-length
+      - readability-function-cognitive-complexity
+      - readability-magic-numbers
 Index:
   Background: Build
 

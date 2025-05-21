@@ -7,8 +7,8 @@
 
 sint native_load_standard(eval_state_t* state) {
   sint err = 0;
-  // ^ T [number]
-  err = eval_add_native(state, "type.number", NATIVE_TYPE_NUMBER);
+  // ^ T [integer]
+  err = eval_add_native(state, "type.integer", NATIVE_TYPE_INTEGER);
   CHECK_ERROR({})
   // ^ T [ref] -> ^ a ^ b ... ^ z *
   err = eval_add_native(state, "type.list", NATIVE_TYPE_LIST);
@@ -33,15 +33,15 @@ static inline bool _check_tag(eval_state_t* state, size_t value, uint tag) {
   return (uint)word == tag;
 }
 
-static bool _native_is_number(eval_state_t* state, size_t value) {
-  return _check_tag(state, value, NATIVE_TYPE_NUMBER);
+static bool _native_is_integer(eval_state_t* state, size_t value) {
+  return _check_tag(state, value, NATIVE_TYPE_INTEGER);
 }
 
 static bool _native_is_list(eval_state_t* state, size_t value) {
   return _check_tag(state, value, NATIVE_TYPE_LIST);
 }
 
-static sint _native_as_number(eval_state_t* state, size_t value) {
+static sint _native_as_integer(eval_state_t* state, size_t value) {
   size_t cell = _eval_get_right_node(state, value);
   EVAL_ASSERT(cell != value, ERROR_INVALID_CAST, "");
   sint word = 0;
@@ -52,20 +52,9 @@ error:
   return -1;
 }
 
-// static sint _native_as_list(eval_state_t* state, size_t value) {
-//   size_t cell = _get_right_node(state, value);
-//   EVAL_ASSERT(cell != value, ERROR_INVALID_CAST, "");
-//   sint word = 0;
-//   sint err = eval_cells_get_word(state->cells, cell, &word);
-//   EVAL_ASSERT(err != ERR_VAL, ERROR_GENERIC, "")
-//   return word;
-// error:
-//   return -1;
-// }
-
 size_t _native_io_print(eval_state_t* state, size_t arg) {
-  if (_native_is_number(state, arg)) {
-    sint n = _native_as_number(state, arg);
+  if (_native_is_integer(state, arg)) {
+    sint n = _native_as_integer(state, arg);
     EVAL_CHECK_STATE(state)
     // TODO: no unicode for now :(
     printf("%c", (char)n);

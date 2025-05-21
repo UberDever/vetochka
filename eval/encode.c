@@ -145,7 +145,7 @@ bool _json_parser_match(json_parser_t* parser, enum json_token_t token) {
       return t.type == JSMN_PRIMITIVE
              && (parser->json[t.start] == 'f' || parser->json[t.start] == 't');
     }
-    case JSON_TOKEN_NUMBER: {
+    case JSON_TOKEN_INTEGER: {
       return t.type == JSMN_PRIMITIVE
              && (isdigit(parser->json[t.start]) || parser->json[t.start] == '-');
     }
@@ -165,7 +165,7 @@ bool _json_parser_match(json_parser_t* parser, enum json_token_t token) {
 static void json_digest(json_parser_t* parser) {
   parser->digested = JSON_DIGESTED_INVALID;
   _sb_clear(&parser->digested_string);
-  parser->digested_number = 0;
+  parser->digested_integer = 0;
   parser->entries_count = 0;
 
   jsmntok_t t = parser->tokens[parser->cur_token];
@@ -200,13 +200,13 @@ static void json_digest(json_parser_t* parser) {
         parser->digested_bool = parser->json[t.start] == 't';
         goto error;
       }
-      if (_json_parser_match(parser, JSON_TOKEN_NUMBER)) {
-        parser->digested = JSON_TOKEN_NUMBER;
+      if (_json_parser_match(parser, JSON_TOKEN_INTEGER)) {
+        parser->digested = JSON_TOKEN_INTEGER;
         _sb_append_data(&parser->digested_string, &parser->json[t.start], t.end - t.start);
         const char* tok_str = _sb_str_view(&parser->digested_string);
         char* endptr;
         errno = 0;
-        parser->digested_number = strtod(tok_str, &endptr);
+        parser->digested_integer = strtod(tok_str, &endptr);
         _sb_clear(&parser->digested_string);
         if (errno == ERANGE || endptr == tok_str || *endptr != '\0') {
           parser->was_err = true;
@@ -287,11 +287,11 @@ sint _eval_load_json(json_parser_t* parser, eval_state_t* state) {
     _JSON_PARSER_EAT(ARRAY, 1);
     size_t apply_count = parser->entries_count;
     for (size_t i = 0; i < apply_count; ++i) {
-      _JSON_PARSER_EAT(NUMBER, 1);
-      if (parser->digested_number == -1) {
+      _JSON_PARSER_EAT(INTEGER, 1);
+      if (parser->digested_integer == -1) {
         stbds_arrpush(state->apply_stack, TOKEN_APPLY);
       } else {
-        stbds_arrpush(state->apply_stack, parser->digested_number);
+        stbds_arrpush(state->apply_stack, parser->digested_integer);
       }
     }
   }
@@ -304,8 +304,8 @@ sint _eval_load_json(json_parser_t* parser, eval_state_t* state) {
     _JSON_PARSER_EAT(ARRAY, 1);
     size_t apply_count = parser->entries_count;
     for (size_t i = 0; i < apply_count; ++i) {
-      _JSON_PARSER_EAT(NUMBER, 1);
-      stbds_arrpush(state->result_stack, parser->digested_number);
+      _JSON_PARSER_EAT(INTEGER, 1);
+      stbds_arrpush(state->result_stack, parser->digested_integer);
     }
   }
 
@@ -350,12 +350,12 @@ sint _eval_cells_load_json(struct json_parser_t* parser, eval_state_t* state) {
     for (size_t i = 0; i < words_count; ++i) {
       _JSON_PARSER_EAT(OBJECT, 1);
       _JSON_PARSER_EAT_KEY("index", 1)
-      _JSON_PARSER_EAT(NUMBER, 1);
-      size_t index = parser->digested_number;
+      _JSON_PARSER_EAT(INTEGER, 1);
+      size_t index = parser->digested_integer;
       _JSON_PARSER_EAT_KEY("payload", 1)
-      if (_json_parser_match(parser, JSON_TOKEN_NUMBER)) {
-        _JSON_PARSER_EAT(NUMBER, 1);
-        sint payload = parser->digested_number;
+      if (_json_parser_match(parser, JSON_TOKEN_INTEGER)) {
+        _JSON_PARSER_EAT(INTEGER, 1);
+        sint payload = parser->digested_integer;
         err = eval_cells_set_word(cells, index, payload);
         CHECK_ERROR({})
       } else if (_json_parser_match(parser, JSON_TOKEN_STRING)) {

@@ -1,6 +1,6 @@
 [
     {
-        "name": "io.print number",
+        "name": "io.print integer",
         "output_final": false,
         "input": {
             "cells": {
@@ -12,7 +12,7 @@
                     },
                     {
                         "index": 4,
-                        "payload": "type.number"
+                        "payload": "type.integer"
                     },
                     {
                         "index": 7,
@@ -38,7 +38,7 @@
                         },
                         {
                             "index": 4,
-                            "payload": "type.number"
+                            "payload": "type.integer"
                         },
                         {
                             "index": 7,
@@ -101,27 +101,27 @@
                     },
                     {
                         "index": 9,
-                        "payload": "type.number"
+                        "payload": "type.integer"
                     },
                     {
                         "index": 17,
-                        "payload": "type.number"
+                        "payload": "type.integer"
                     },
                     {
                         "index": 25,
-                        "payload": "type.number"
+                        "payload": "type.integer"
                     },
                     {
                         "index": 33,
-                        "payload": "type.number"
+                        "payload": "type.integer"
                     },
                     {
                         "index": 41,
-                        "payload": "type.number"
+                        "payload": "type.integer"
                     },
                     {
                         "index": 49,
-                        "payload": "type.number"
+                        "payload": "type.integer"
                     }
                 ]
             },

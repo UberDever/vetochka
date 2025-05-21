@@ -9,7 +9,7 @@
 enum json_token_t {
   JSON_TOKEN_NULL,
   JSON_TOKEN_BOOL,
-  JSON_TOKEN_NUMBER,
+  JSON_TOKEN_INTEGER,
   JSON_TOKEN_STRING,
   JSON_TOKEN_ARRAY,
   JSON_TOKEN_OBJECT,
@@ -31,7 +31,7 @@ typedef struct json_parser_t {
     JSON_DIGESTED_INVALID,
     JSON_DIGESTED_NULL,
     JSON_DIGESTED_BOOL,
-    JSON_DIGESTED_NUMBER,
+    JSON_DIGESTED_INTEGER,
     JSON_DIGESTED_STRING,
     JSON_DIGESTED_ARRAY,
     JSON_DIGESTED_OBJECT,
@@ -40,7 +40,7 @@ typedef struct json_parser_t {
   string_buffer_t digested_string;
 
   union {
-    double digested_number;
+    double digested_integer;
     bool digested_bool;
   };
 } json_parser_t;

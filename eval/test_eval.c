@@ -10,7 +10,6 @@
 #include "config.h"
 #include "encode.h"
 #include "eval.h"
-#include "native.h"
 #include "util.h"
 
 #ifndef PROJECT_ROOT
