@@ -76,7 +76,17 @@ pub fn build(b: *std.Build) !void {
     lib.root_module.addIncludePath(b.path(eval_dir));
 
     const test_sources = &.{"eval/test_eval.c"};
-    const test_exe = b.addExecutable(.{ .name = try std.fmt.allocPrint(b.allocator, "test_{s}", .{eval_dir}), .root_module = b.createModule(.{ .target = target, .optimize = optimize, .sanitize_c = .full, .link_libc = true }) });
+    const test_exe = b.addExecutable(.{
+        .name = try std.fmt.allocPrint(b.allocator, "test_{s}", .{eval_dir}),
+        .root_module = b.createModule(
+            .{
+                .target = target,
+                .optimize = optimize,
+                .sanitize_c = .full,
+                .link_libc = true,
+            },
+        ),
+    });
 
     test_exe.root_module.addCSourceFiles(.{ .files = test_sources, .flags = flags.items });
     test_exe.root_module.addIncludePath(b.path(eval_dir));
@@ -94,6 +104,23 @@ pub fn build(b: *std.Build) !void {
 
     test_exe.step.dependOn(&lib.step);
 
+    const test_exe_zig = b.addTest(.{
+        .name = try std.fmt.allocPrint(b.allocator, "test_{s}_zig", .{eval_dir}),
+        .root_module = b.createModule(
+            .{
+                .root_source_file = b.path(b.pathJoin(&.{ eval_dir, "test_eval.zig" })),
+                .target = target,
+                .optimize = optimize,
+            },
+        ),
+    });
+
+    test_exe_zig.step.dependOn(&lib.step);
+
     b.installArtifact(lib);
     b.installArtifact(test_exe);
+    const run_eval_tests = b.addRunArtifact(test_exe_zig);
+
+    const test_step = b.step("test", "Run all unit tests");
+    test_step.dependOn(&run_eval_tests.step);
 }
