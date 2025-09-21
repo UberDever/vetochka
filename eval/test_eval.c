@@ -7,16 +7,17 @@
 
 #include "vendor/stb_ds.h"
 
-#include "config.h"
 #include "encode.h"
 #include "eval.h"
 #include "util.h"
 
 #ifndef PROJECT_ROOT
-#error "must be defined in the config.h"
+#warning "must be defined in the by the build"
+#define PROJECT_ROOT ""
 #endif
 #ifndef PATH_SEP
-#error "must be defined in the config.h"
+#warning "must be defined in the config.h"
+#define PATH_SEP
 #endif
 
 #define ASSERT_TRUE(x)                                                                             \

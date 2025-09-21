@@ -49,23 +49,19 @@ pub fn build(b: *std.Build) !void {
         "-Werror",
     });
     if (sanitize) {
-        try flags.appendSlice(b.allocator, &.{
-            "-g",
-            "-fno-omit-frame-pointer",
-            "-fsanitize=address,leak,undefined",
-        });
+        try flags.appendSlice(b.allocator, &.{ "-g", "-fno-omit-frame-pointer", "-fsanitize=address,leak,bounds,undefined" });
     }
     try flags.append(b.allocator, if (sanitize) "-O0" else "-O2");
 
     const project_root = try std.fs.cwd().realpathAlloc(b.allocator, ".");
-    const cfg_text = b.fmt(
-        \\#pragma once
-        \\#define PROJECT_ROOT "{s}"
-        \\#define PATH_SEP "/"
-    , .{try std.fs.path.join(b.allocator, &.{ project_root, eval_dir })});
-    const wf = b.addWriteFiles();
-    const cfg = wf.add("config.h", cfg_text);
-    const install_cfg = b.addInstallFileWithDir(cfg, .prefix, "config.h");
+    try flags.appendSlice(b.allocator, &.{
+        b.fmt(
+            \\-DPROJECT_ROOT="{s}"
+        , .{b.pathJoin(&.{ project_root, eval_dir })}),
+        b.fmt(
+            \\-DPATH_SEP="{c}"
+        , .{std.fs.path.sep}),
+    });
 
     const lib = b.addLibrary(.{
         .name = eval_dir,
@@ -78,14 +74,16 @@ pub fn build(b: *std.Build) !void {
     });
     lib.root_module.addCSourceFiles(.{ .files = eval_sources, .flags = flags.items });
     lib.root_module.addIncludePath(b.path(eval_dir));
-    lib.root_module.addIncludePath(wf.getDirectory());
 
     const test_sources = &.{"eval/test_eval.c"};
     const test_exe = b.addExecutable(.{ .name = try std.fmt.allocPrint(b.allocator, "test_{s}", .{eval_dir}), .root_module = b.createModule(.{ .target = target, .optimize = optimize, .sanitize_c = .full, .link_libc = true }) });
 
     test_exe.root_module.addCSourceFiles(.{ .files = test_sources, .flags = flags.items });
     test_exe.root_module.addIncludePath(b.path(eval_dir));
-    test_exe.root_module.addIncludePath(wf.getDirectory());
+    if (sanitize) {
+        test_exe.root_module.linkSystemLibrary("asan", .{ .needed = true });
+        test_exe.root_module.linkSystemLibrary("ubsan", .{ .needed = true });
+    }
     test_exe.root_module.linkLibrary(lib);
 
     switch (target.result.os.tag) {
@@ -94,9 +92,6 @@ pub fn build(b: *std.Build) !void {
         else => {}, // On Windows, the DLL must be next to the exe or on PATH
     }
 
-    lib.step.dependOn(&wf.step);
-    lib.step.dependOn(&wf.step);
-    test_exe.step.dependOn(&install_cfg.step);
     test_exe.step.dependOn(&lib.step);
 
     b.installArtifact(lib);
