@@ -1,60 +1,38 @@
 const std = @import("std");
+const c = @cImport(
+    @cInclude("api.h"),
+);
 
 const str = []const u8;
 
-const TestDataTag = enum {
-    json,
-    file_testsuite,
-};
-const TestData = struct {
-    name: str,
-    as: ?union(TestDataTag) {
-        json: str,
-        file_testsuite: struct { name: str, test_fn: *const fn (std.mem.Allocator, TestData) bool },
-    },
-};
-const TestFn = *const fn (std.mem.Allocator, TestData) bool;
-const TestCase = struct {
-    test_fn: TestFn,
-    name: str,
-    data: TestData,
-};
-
-fn testMemorySmoke(gpa: std.mem.Allocator, _: TestData) bool {
-    _ = gpa;
-    return true;
-}
-
-test "testmain" {
+test "smoke memory" {
     const gpa = std.testing.allocator;
+    _ = gpa;
 
-    var cases = std.ArrayList(TestCase).empty;
-    defer cases.deinit(gpa);
-
-    const name = "testMemorySmoke";
-    const test_case: TestCase = .{ .test_fn = testMemorySmoke, .name = name, .data = .{
-        .name = name,
-        .as = null,
-    } };
-    try cases.append(gpa, test_case);
-
-    var result = true;
-    const GREEN = "\x1b[32m";
-    const CYAN = "\x1b[36m";
-    const RED = "\x1b[31m";
-    const RESET = "\x1b[0m";
-    for (cases.items) |testcase| {
-        std.debug.print("{s}{s}{s}\n", .{ CYAN, testcase.name, RESET });
-        if (testcase.test_fn(gpa, testcase.data)) {
-            std.debug.print("{s}PASSED{s}\n\n", .{ GREEN, RESET });
-        } else {
-            std.debug.print("{s}FAILED{s}\n\n", .{ RED, RESET });
-            result = false;
-        }
-    }
-    if (!result) {
-        std.debug.print("{s}You have failed tests :({s}\n\n", .{ RED, RESET });
+    var cells: ?*c.allocator_t = undefined;
+    _ = c.eval_cells_init(&cells, 10);
+    defer {
+        _ = c.eval_cells_free(&cells);
     }
 
-    try std.testing.expect(result);
+    var idx: u64 = 0;
+
+    _ = c.eval_cells_set(cells, idx, 0);
+    idx += 1;
+    _ = c.eval_cells_set(cells, idx, 1);
+    idx += 1;
+    _ = c.eval_cells_set(cells, idx, 2);
+    idx += 1;
+    _ = c.eval_cells_set(cells, idx, 3);
+    idx += 1;
+    _ = c.eval_cells_set_word(cells, idx - 1, 0xDEADBEEF);
+
+    try std.testing.expect(c.eval_cells_get(cells, 0) == 0);
+    try std.testing.expect(c.eval_cells_get(cells, 1) == 1);
+    try std.testing.expect(c.eval_cells_get(cells, 2) == 2);
+    try std.testing.expect(c.eval_cells_get(cells, 3) == 3);
+    var word: i64 = 0;
+    const err = c.eval_cells_get_word(cells, 3, &word);
+    try std.testing.expect(err != -1);
+    try std.testing.expect(word == 0xDEADBEEF);
 }

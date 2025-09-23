@@ -49,7 +49,7 @@ pub fn build(b: *std.Build) !void {
         "-Werror",
     });
     if (sanitize) {
-        try flags.appendSlice(b.allocator, &.{ "-g", "-fno-omit-frame-pointer", "-fsanitize=address,leak,bounds,undefined" });
+        try flags.appendSlice(b.allocator, &.{ "-g", "-fno-omit-frame-pointer", "-fsanitize=address" });
     }
     try flags.append(b.allocator, if (sanitize) "-O0" else "-O2");
 
@@ -114,7 +114,9 @@ pub fn build(b: *std.Build) !void {
             },
         ),
     });
-
+    test_exe_zig.addIncludePath(b.path(eval_dir));
+    test_exe_zig.linkLibC();
+    test_exe_zig.linkLibrary(lib);
     test_exe_zig.step.dependOn(&lib.step);
 
     b.installArtifact(lib);

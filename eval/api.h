@@ -3,11 +3,11 @@
 
 #include <stdint.h>
 #include <sys/cdefs.h>
-#include <sys/types.h>
 
 typedef uint8_t u8;
 typedef intptr_t sint;
 typedef uintptr_t uint;
+typedef uint size_t;
 
 #define ERR_VAL -1
 
