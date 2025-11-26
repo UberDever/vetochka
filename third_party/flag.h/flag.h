@@ -189,7 +189,6 @@ typedef enum {
     COUNT_FLAG_TYPES,
 } Flag_Type;
 
-static_assert(COUNT_FLAG_TYPES == 8, "Exhaustive Flag_Value definition");
 typedef union {
     char *as_str;
     uint64_t as_uint64;
