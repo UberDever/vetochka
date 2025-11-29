@@ -7,6 +7,8 @@ CompileFlags:
     - -Werror
     - -Wextra
     - -Wno-unused-function
+    - -I.
+    - -I/home/uber/dev/vetochka
   Compiler: clang
 Diagnostics:
   ClangTidy:

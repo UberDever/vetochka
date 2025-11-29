@@ -1,14 +1,12 @@
+#include "string_buffer_api.h"
+#include "string_buffer_impl.h"
+
 #include <assert.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <stdio.h>
-
-#define STB_DS_IMPLEMENTATION
-#include "vendor/stb_ds.h"
-
-// NOTE: this is an implementation
-#include "vendor/jsmn.h"
-
-#include "util.h"
+#include <stdlib.h>
+#include <string.h>
 
 // Initialize an empty buffer with a small initial capacity
 void _sb_init(struct string_buffer_t* s) {

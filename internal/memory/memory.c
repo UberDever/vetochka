@@ -1,13 +1,13 @@
-
 #include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "vendor/stb_ds.h"
+#include "third_party/stb_ds/stb_ds.h"
 
-#include "memory.h"
+#include "memory_api.h"
+#include "memory_impl.h"
 
 #define CELLS_BITMAP_SIZE(cap) BITMAP_SIZE(cap* CELLS_PER_WORD)
 

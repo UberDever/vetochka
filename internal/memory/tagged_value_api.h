@@ -1,27 +1,7 @@
-#ifndef __EVAL_MEMORY__
-#define __EVAL_MEMORY__
+#ifndef __TAGGED_VALUE_API_H__
+#define __TAGGED_VALUE_API_H__
 
-#include "api.h"
-
-#define BITS_PER_CELL    2
-#define CELLS_PER_WORD   (BITS_PER_WORD / BITS_PER_CELL)
-#define BITS_PER_WORD    (sizeof(uint) * 8)
-#define BITMAP_SIZE(cap) (((cap) + BITS_PER_WORD - 1) / BITS_PER_WORD)
-
-typedef struct {
-  size_t key;
-  size_t value;
-} cell_word_t;
-
-struct allocator_t {
-  uint* cells;
-  uint* cells_bitmap;
-  size_t cells_capacity;
-
-  cell_word_t* payload_index;
-
-  sint* payloads;
-};
+#include "internal/domain/domain_api.h"
 
 static inline u8 _tv_get_tag(uint tagged_value) {
   return (u8)(tagged_value & 0xF);

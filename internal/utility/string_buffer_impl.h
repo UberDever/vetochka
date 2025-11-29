@@ -1,0 +1,4 @@
+#ifndef __UTILITY_STRING_BUFFER_IMPL_H__
+#define __UTILITY_STRING_BUFFER_IMPL_H__
+
+#endif

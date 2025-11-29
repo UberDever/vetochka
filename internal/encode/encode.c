@@ -1,18 +1,24 @@
-#include "api.h"
+
 #include <assert.h>
-#include <ctype.h>
-#include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 
-#include "vendor/stb_ds.h"
-#define JSMN_HEADER
-#include "vendor/jsmn.h"
+#include "third_party/stb_ds/stb_ds.h"
 
 #include "encode.h"
-#include "eval.h"
-#include "util.h"
+#include "internal/eval/eval_api.h"
+#include "internal/json_parser/json_parser_api.h"
+#include "internal/memory/bitmap_api.h"
+#include "internal/memory/memory_api.h"
+#include "internal/utility/logging_api.h"
+#include "internal/utility/string_buffer_api.h"
+
+#define CHECK_ERROR(on_error)                                                                      \
+  if (err) {                                                                                       \
+    on_error;                                                                                      \
+    goto error;                                                                                    \
+  }
 
 static char CELL_TO_CHAR[] = {'*', '^', '#'};
 
@@ -29,8 +35,9 @@ void _eval_debug_dump(eval_state_t* state, string_buffer_t* buffer) {
   _sb_append_str(buffer, _sb_str_view(&words_line));                                               \
   _sb_append_char(buffer, '\n');                                                                   \
   _sb_printf(buffer, "apply: ");                                                                   \
-  for (size_t i = 0; i < stbds_arrlenu(state->apply_stack); ++i) {                                 \
-    size_t value = state->apply_stack[i];                                                          \
+  size_t* apply_stack = eval_get_apply_stack(state);                                               \
+  for (size_t i = 0; i < stbds_arrlenu(apply_stack); ++i) {                                        \
+    size_t value = apply_stack[i];                                                                 \
     if (value == TOKEN_APPLY) {                                                                    \
       _sb_printf(buffer, "%d ", -1);                                                               \
     } else {                                                                                       \
@@ -39,8 +46,9 @@ void _eval_debug_dump(eval_state_t* state, string_buffer_t* buffer) {
   }                                                                                                \
   _sb_append_char(buffer, '\n');                                                                   \
   _sb_printf(buffer, "result: ");                                                                  \
-  for (size_t i = 0; i < stbds_arrlenu(state->result_stack); ++i) {                                \
-    size_t value = state->result_stack[i];                                                         \
+  size_t* result_stack = eval_get_result_stack(state);                                             \
+  for (size_t i = 0; i < stbds_arrlenu(result_stack); ++i) {                                       \
+    size_t value = result_stack[i];                                                                \
     _sb_printf(buffer, "%zu ", value);                                                             \
   }                                                                                                \
   _sb_append_char(buffer, '\n');                                                                   \
@@ -59,7 +67,8 @@ void _eval_debug_dump(eval_state_t* state, string_buffer_t* buffer) {
   snprintf(char_format, sizeof(char_format), "%%-%zuc", WINDOW_SIZE);
 
   size_t i = 0;
-  while (eval_cells_is_set(state->cells, i)) {
+  allocator_t* cells = eval_get_cells(state);
+  while (eval_cells_is_set(cells, i)) {
     if ((i % WINDOWS_LINE == 0) && i > 0) {
       DUMP_BUFFER
       _sb_clear(&indices_line);
@@ -67,12 +76,12 @@ void _eval_debug_dump(eval_state_t* state, string_buffer_t* buffer) {
       _sb_clear(&words_line);
     }
     _sb_printf(&indices_line, num_format, i);
-    u8 cell = eval_cells_get(state->cells, i);
+    u8 cell = eval_cells_get(cells, i);
     _sb_printf(&cells_line, char_format, CELL_TO_CHAR[cell]);
     // TODO: fix for natives
     if (cell == SIGIL_REF) {
       sint ref = 0;
-      sint err = eval_cells_get_word(state->cells, i, &ref);
+      sint err = eval_cells_get_word(cells, i, &ref);
       if (err != ERR_VAL) {
         size_t ref_index = ref + i;
         _sb_printf(&words_line, num_format, ref_index);
@@ -96,154 +105,6 @@ void _eval_debug_dump(eval_state_t* state, string_buffer_t* buffer) {
   _sb_free(&words_line);
 }
 
-// ********************** JSON COMMON **********************
-
-// NOTE: doesn't take ownership of json
-sint _json_parser_init(const char* json, json_parser_t* parser) {
-  *parser = (json_parser_t){};
-  parser->json = json;
-
-  jsmn_parser p = {};
-  jsmn_init(&p);
-  size_t tokens_len = 32;
-  jsmntok_t* tokens = malloc(tokens_len * sizeof(jsmntok_t));
-  while (true) {
-    assert(tokens_len <= 2 << 20); // NOTE: pretty random
-    int res = jsmn_parse(&p, json, strlen(json), tokens, tokens_len);
-    if (res == JSMN_ERROR_NOMEM) {
-      tokens_len *= 2;
-      tokens = realloc(tokens, tokens_len * sizeof(jsmntok_t));
-      continue;
-    }
-    if (res < 0) {
-      return res;
-    }
-    tokens_len = res;
-    break;
-  }
-  parser->tokens = tokens;
-  parser->tokens_len = tokens_len;
-  _sb_init(&parser->digested_string);
-  return 0;
-}
-
-void _json_parser_free(json_parser_t* parser) {
-  _sb_free(&parser->digested_string);
-  free(parser->tokens);
-}
-
-bool _json_parser_match(json_parser_t* parser, enum json_token_t token) {
-  if (parser->was_err || parser->at_eof) {
-    return false;
-  }
-  jsmntok_t t = parser->tokens[parser->cur_token];
-  switch (token) {
-    case JSON_TOKEN_NULL: {
-      return t.type == JSMN_PRIMITIVE && parser->json[t.start] == 'n';
-    }
-    case JSON_TOKEN_BOOL: {
-      return t.type == JSMN_PRIMITIVE
-             && (parser->json[t.start] == 'f' || parser->json[t.start] == 't');
-    }
-    case JSON_TOKEN_INTEGER: {
-      return t.type == JSMN_PRIMITIVE
-             && (isdigit(parser->json[t.start]) || parser->json[t.start] == '-');
-    }
-    case JSON_TOKEN_STRING: {
-      return t.type == JSMN_STRING;
-    }
-    case JSON_TOKEN_ARRAY: {
-      return t.type == JSMN_ARRAY;
-    }
-    case JSON_TOKEN_OBJECT: {
-      return t.type == JSMN_OBJECT;
-    }
-    default: parser->was_err = true; return false;
-  }
-}
-
-static void json_digest(json_parser_t* parser) {
-  parser->digested = JSON_DIGESTED_INVALID;
-  _sb_clear(&parser->digested_string);
-  parser->digested_integer = 0;
-  parser->entries_count = 0;
-
-  jsmntok_t t = parser->tokens[parser->cur_token];
-
-  switch (t.type) {
-    case JSMN_UNDEFINED: {
-      parser->was_err = true;
-      goto error;
-    }
-    case JSMN_OBJECT: {
-      parser->digested = JSON_DIGESTED_OBJECT;
-      parser->entries_count = t.size;
-      goto error;
-    }
-    case JSMN_ARRAY: {
-      parser->digested = JSON_DIGESTED_ARRAY;
-      parser->entries_count = t.size;
-      goto error;
-    }
-    case JSMN_STRING: {
-      parser->digested = JSON_DIGESTED_STRING;
-      _sb_append_data(&parser->digested_string, &parser->json[t.start], t.end - t.start);
-      goto error;
-    }
-    case JSMN_PRIMITIVE: {
-      if (_json_parser_match(parser, JSON_TOKEN_NULL)) {
-        parser->digested = JSON_DIGESTED_NULL;
-        goto error;
-      }
-      if (_json_parser_match(parser, JSON_TOKEN_BOOL)) {
-        parser->digested = JSON_TOKEN_BOOL;
-        parser->digested_bool = parser->json[t.start] == 't';
-        goto error;
-      }
-      if (_json_parser_match(parser, JSON_TOKEN_INTEGER)) {
-        parser->digested = JSON_TOKEN_INTEGER;
-        _sb_append_data(&parser->digested_string, &parser->json[t.start], t.end - t.start);
-        const char* tok_str = _sb_str_view(&parser->digested_string);
-        char* endptr;
-        errno = 0;
-        parser->digested_integer = strtod(tok_str, &endptr);
-        _sb_clear(&parser->digested_string);
-        if (errno == ERANGE || endptr == tok_str || *endptr != '\0') {
-          parser->was_err = true;
-          goto error;
-        }
-      }
-    }
-  }
-
-error:
-  parser->cur_token++;
-  if (parser->cur_token >= parser->tokens_len) {
-    parser->at_eof = true;
-  }
-}
-
-bool _json_parser_eat(json_parser_t* parser, enum json_token_t token) {
-  if (parser->was_err || parser->at_eof) {
-    return false;
-  }
-  bool res = _json_parser_match(parser, token);
-  if (res == false || parser->was_err || parser->at_eof) {
-    return false;
-  }
-  json_digest(parser);
-  return true;
-}
-
-const char* _json_parser_get_string(json_parser_t* parser) {
-  if (parser->was_err || parser->at_eof || parser->digested != JSON_DIGESTED_STRING) {
-    return NULL;
-  }
-  return _sb_str_view(&parser->digested_string);
-}
-
-// ********************** JSON LOADING **********************
-
 sint eval_load_json(const char* json, eval_state_t* state) {
   sint err = 0;
 
@@ -260,7 +121,7 @@ error:
 sint _eval_load_json(json_parser_t* parser, eval_state_t* state) {
   sint err = 0;
 
-  state->error_code = 0;
+  eval_reset_errors(state);
 
   _JSON_PARSER_EAT(OBJECT, 1);
   _JSON_PARSER_EAT_KEY("cells", 1)
@@ -273,39 +134,41 @@ sint _eval_load_json(json_parser_t* parser, eval_state_t* state) {
     CHECK_ERROR({})
 
     size_t i = 0;
-    while (eval_cells_is_set(state->cells, i)) {
-      _bitmap_set_bit(state->free_bitmap, i, 1);
+    while (eval_cells_is_set(eval_get_cells(state), i)) {
+      _bitmap_set_bit(eval_get_free_bitmap(state), i, 1);
       i++;
     }
   }
 
+  size_t* apply_stack = eval_get_apply_stack(state);
   _JSON_PARSER_EAT_KEY("apply_stack", 1)
   if (_json_parser_match(parser, JSON_TOKEN_NULL)) {
     _JSON_PARSER_EAT(NULL, 1);
   } else {
-    stbds_arrsetlen(state->apply_stack, 0);
+    stbds_arrsetlen(apply_stack, 0);
     _JSON_PARSER_EAT(ARRAY, 1);
     size_t apply_count = parser->entries_count;
     for (size_t i = 0; i < apply_count; ++i) {
       _JSON_PARSER_EAT(INTEGER, 1);
       if (parser->digested_integer == -1) {
-        stbds_arrpush(state->apply_stack, TOKEN_APPLY);
+        stbds_arrpush(apply_stack, TOKEN_APPLY);
       } else {
-        stbds_arrpush(state->apply_stack, parser->digested_integer);
+        stbds_arrpush(apply_stack, parser->digested_integer);
       }
     }
   }
 
+  size_t* result_stack = eval_get_result_stack(state);
   _JSON_PARSER_EAT_KEY("result_stack", 1)
   if (_json_parser_match(parser, JSON_TOKEN_NULL)) {
     _JSON_PARSER_EAT(NULL, 1);
   } else {
-    stbds_arrsetlen(state->result_stack, 0);
+    stbds_arrsetlen(result_stack, 0);
     _JSON_PARSER_EAT(ARRAY, 1);
     size_t apply_count = parser->entries_count;
     for (size_t i = 0; i < apply_count; ++i) {
       _JSON_PARSER_EAT(INTEGER, 1);
-      stbds_arrpush(state->result_stack, parser->digested_integer);
+      stbds_arrpush(result_stack, parser->digested_integer);
     }
   }
 
@@ -328,7 +191,7 @@ static u8 get_cell(char symbol) {
 
 sint _eval_cells_load_json(struct json_parser_t* parser, eval_state_t* state) {
   sint err = 0;
-  allocator_t* cells = state->cells;
+  allocator_t* cells = eval_get_cells(state);
   _JSON_PARSER_EAT(OBJECT, 1);
   _JSON_PARSER_EAT_KEY("state", 1)
   if (_json_parser_match(parser, JSON_TOKEN_NULL)) {
@@ -416,16 +279,17 @@ sint eval_dump_json(struct string_buffer_t* json_out, eval_state_t* state) {
   sint result = 0;
   _sb_append_str(json_out, "{\n");
 
-  result = _eval_cells_dump_json(json_out, state->cells);
+  result = _eval_cells_dump_json(json_out, eval_get_cells(state));
   CHECK(result == 0);
   _sb_append_str(json_out, ",\n");
 
-  result = dump_apply_stack(json_out, state->apply_stack);
+  result = dump_apply_stack(json_out, eval_get_apply_stack(state));
   CHECK(result == 0);
   _sb_append_str(json_out, ",\n");
 
-  result = dump_result_stack(json_out, state->result_stack);
   CHECK(result == 0);
+  result = dump_result_stack(json_out, eval_get_result_stack(state));
+
   _sb_append_str(json_out, ",\n");
 
   if (_sb_try_chop_suffix(json_out, ",\n")) {

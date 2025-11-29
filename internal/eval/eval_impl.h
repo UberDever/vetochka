@@ -1,14 +1,11 @@
 #ifndef __EVAL_EVAL__
 #define __EVAL_EVAL__
 
-#include "api.h"
+#include "eval_api.h"
+#include "internal/memory/memory_api.h"
+
 #include <stdbool.h>
-
-#define SIGIL_NIL  0
-#define SIGIL_TREE 1
-#define SIGIL_REF  2
-
-#define TOKEN_APPLY SIZE_MAX
+#include <stddef.h>
 
 #define ERROR_PARSE           1
 #define ERROR_STACK_UNDERFLOW 2
@@ -50,7 +47,6 @@ struct eval_state_t {
   const char* error;
 };
 
-sint _eval_reset_cells(eval_state_t* state);
 void _eval_result_stack_push(eval_state_t* state, size_t value);
 
 static inline bool _eval_is_nil(sint root) {
@@ -78,8 +74,6 @@ static inline bool _eval_cell_test(
 }
 
 bool _eval_is_terminal(eval_state_t* state, size_t index);
-size_t _eval_get_left_node(eval_state_t* state, size_t root_index);
-size_t _eval_get_right_node(eval_state_t* state, size_t root_index);
 size_t _eval_dereference(eval_state_t* state, size_t index);
 
 void _errbuf_write(const char* format, ...);

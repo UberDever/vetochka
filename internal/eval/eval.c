@@ -1,7 +1,6 @@
 
 
-#include "api.h"
-#include "util.h"
+#include "eval_api.h"
 #include <assert.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -9,13 +8,20 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include "vendor/stb_ds.h"
+#include "third_party/stb_ds/stb_ds.h"
 
-#include "eval.h"
-#include "memory.h"
+#include "eval_impl.h"
+#include "internal/memory/memory_api.h"
+#include "internal/native/native_api.h"
 
 #define ERROR_BUF_SIZE 65536
 static char g_error_buf[ERROR_BUF_SIZE] = {};
+
+#define CHECK_ERROR(on_error)                                                                      \
+  if (err) {                                                                                       \
+    on_error;                                                                                      \
+    goto error;                                                                                    \
+  }
 
 void _errbuf_clear() {
   g_error_buf[0] = '\0';
@@ -71,6 +77,11 @@ sint _eval_reset_cells(eval_state_t* state) {
   sint err = eval_cells_reset(state->cells);
   memset(state->free_bitmap, 0, state->free_capacity * sizeof(*state->free_bitmap));
   return err;
+}
+
+void eval_reset_errors(eval_state_t* state) {
+  state->error_code = 0;
+  state->error = NULL;
 }
 
 sint eval_reset(eval_state_t* state) {
@@ -409,3 +420,19 @@ error:
 #undef EXPECT
 #undef ASSERT
 #undef CHECK
+
+struct allocator_t* eval_get_cells(eval_state_t* state) {
+  return state->cells;
+}
+
+size_t* eval_get_apply_stack(eval_state_t* state) {
+  return state->apply_stack;
+}
+
+size_t* eval_get_result_stack(eval_state_t* state) {
+  return state->result_stack;
+}
+
+uint* eval_get_free_bitmap(eval_state_t* state) {
+  return state->free_bitmap;
+}

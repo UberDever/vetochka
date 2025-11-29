@@ -1,9 +1,15 @@
-#include "api.h"
+#include <stdbool.h>
 #include <stdio.h>
 
-#include "eval.h"
-#include "native.h"
-#include "util.h"
+#include "internal/eval/eval_api.h"
+#include "internal/memory/memory_api.h"
+#include "native_impl.h"
+
+#define CHECK_ERROR(on_error)                                                                      \
+  if (err) {                                                                                       \
+    on_error;                                                                                      \
+    goto error;                                                                                    \
+  }
 
 sint native_load_standard(eval_state_t* state) {
   sint err = 0;
