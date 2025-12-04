@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
-#define FLAG_IMPLEMENTATION
-#include "third_party/flag.h/flag.h"
+
+char g_project_path[1024] = {0};
 
 // clang-format off
 #define NOB_IMPLEMENTATION
@@ -15,24 +15,25 @@
 #    endif
 #  else
 #    define NOB_REBUILD_URSELF(binary_path, source_path) \
-       "cc", "-g", "-fsanitize=address,undefined",       \
-       "-I.", "-I/home/uber/dev/vetochka",               \
-       "-o", binary_path, source_path,                   \
-       "internal/util.string/string.c"
+       "cc", "--std=c99", "-g", "-fsanitize=address,undefined",       \
+       "-D_POSIX_C_SOURCE=200809L",                                  \
+       "-I.", nob_temp_sprintf("-I%s", g_project_path),               \
+       "-o", binary_path, source_path,                               \
+       "internal/util.string/string.c",                              \
+       "internal/util.headeronly/arena.c",                           \
+       "internal/util.headeronly/flag.c",                            \
+       "internal/util.headeronly/stb_ds.c"
 #  endif
 // clang-format on
 
 #include "third_party/nob.h/nob.h"
+#undef NOB_IMPLEMENTATION
 
-#define ARENA_IMPLEMENTATION
 #include "third_party/arena-allocator/arena.h"
-
-#define STB_DS_IMPLEMENTATION
+#include "third_party/flag.h/flag.h"
 #include "third_party/stb_ds/stb_ds.h"
 
 #include "internal/util.string/string_api.h"
-
-#define ARENA_SIZE (10 * 1024 * 1024)
 
 #ifdef _WIN32
 #define FS_SEP "\\"
@@ -40,7 +41,7 @@
 #define FS_SEP "/"
 #endif
 
-static char g_project_path[1024] = {0};
+#define ARENA_SIZE (10 * 1024 * 1024)
 
 #define CC     "cc"
 #define CFLAGS "--std=c99 -Wall -Wextra"
@@ -258,6 +259,9 @@ void usage(const char* program, FILE* stream) {
 }
 
 int main(int argc, char** argv) {
+  char* got_cwd = getcwd(g_project_path, NOB_ARRAY_LEN(g_project_path));
+  assert(got_cwd);
+
   NOB_GO_REBUILD_URSELF(argc, argv);
   const char* program = argv[0];
 
@@ -308,9 +312,6 @@ int main(int argc, char** argv) {
   }
 
   const char* build_dir = build_dir_flag ? *build_dir_flag : NULL;
-
-  char* got_cwd = getcwd(g_project_path, NOB_ARRAY_LEN(g_project_path));
-  assert(got_cwd);
 
   build_target_t t_exe = {0};
 

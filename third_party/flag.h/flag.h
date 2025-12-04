@@ -52,6 +52,11 @@
 #include <errno.h>
 #include <float.h>
 
+// NOTE(uber): this is a patch to support c99 compilers that don't have static_assert
+#ifndef static_assert
+#define static_assert(cond, msg) typedef char static_assertion_##__LINE__[(cond) ? 1 : -1]
+#endif
+
 #ifndef FLAGS_CAP
 #define FLAGS_CAP 256
 #endif // FLAGS_CAP
