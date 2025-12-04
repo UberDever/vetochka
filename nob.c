@@ -3,7 +3,25 @@
 #define FLAG_IMPLEMENTATION
 #include "third_party/flag.h/flag.h"
 
+// clang-format off
 #define NOB_IMPLEMENTATION
+#  if defined(_WIN32)
+#    if defined(__GNUC__)
+#       define NOB_REBUILD_URSELF(binary_path, source_path) "gcc", "-o", binary_path, source_path
+#    elif defined(__clang__)
+#       define NOB_REBUILD_URSELF(binary_path, source_path) "clang", "-o", binary_path, source_path
+#    elif defined(_MSC_VER)
+#       define NOB_REBUILD_URSELF(binary_path, source_path) "cl.exe", nob_temp_sprintf("/Fe:%s", (binary_path)), source_path
+#    endif
+#  else
+#    define NOB_REBUILD_URSELF(binary_path, source_path) \
+       "cc", "-g", "-fsanitize=address,undefined",       \
+       "-I.", "-I/home/uber/dev/vetochka",               \
+       "-o", binary_path, source_path,                   \
+       "internal/util.string/string.c"
+#  endif
+// clang-format on
+
 #include "third_party/nob.h/nob.h"
 
 #define ARENA_IMPLEMENTATION
@@ -11,6 +29,8 @@
 
 #define STB_DS_IMPLEMENTATION
 #include "third_party/stb_ds/stb_ds.h"
+
+#include "internal/util.string/string_api.h"
 
 #define ARENA_SIZE (10 * 1024 * 1024)
 
@@ -34,8 +54,8 @@ static arena_t* g_arena;
     NOB_UNREACHABLE("assertion failed");                                                           \
   }
 
-char* str_concat_v(arena_t* arena, ...) {
-  size_t len = 0;
+const char* path_join_v(arena_t* arena, ...) {
+  size_t assumed_len = 0;
   va_list args;
   va_start(args, arena);
   while (1) {
@@ -43,48 +63,47 @@ char* str_concat_v(arena_t* arena, ...) {
     if (arg == NULL) {
       break;
     }
-    len += strlen(arg);
+    assumed_len += strlen(arg) + 1;
   }
-  va_end(args);
-  char* result = arena_alloc(arena, len + 1);
-  if (!result) {
+  arena_t* local_arena = arena_create(assumed_len + 1);
+  char* region = local_arena->region;
+
+  va_start(args, arena);
+  bool ok = false;
+  const char* arg = va_arg(args, const char*);
+  if (arg == NULL) {
     return NULL;
   }
-  result[0] = '\0';
-
-  va_start(args, arena);
-  while (1) {
-    const char* arg = va_arg(args, const char*);
-    if (arg == NULL) {
-      break;
-    }
-    strcat(result, arg);
+  ok = str_append_cstr(local_arena, arg, false);
+  if (!ok) {
+    return NULL;
   }
-  va_end(args);
-  return result;
-}
-
-#define STR_CONCAT(arena, ...) str_concat_v(arena, __VA_ARGS__, NULL)
-
-char* str_alloc(arena_t* arena, const char* str) {
-  return STR_CONCAT(arena, str);
-}
-
-const char* path_join_v(arena_t* arena, ...) {
-  char* result = "";
-  va_list args;
-  va_start(args, arena);
-  const char* arg = va_arg(args, const char*);
-  result = STR_CONCAT(arena, arg);
   while (arg != NULL) {
     arg = va_arg(args, const char*);
     if (arg == NULL) {
       break;
     }
-    result = STR_CONCAT(arena, result, FS_SEP, arg);
+    ok = str_append_cstr(local_arena, FS_SEP, false);
+    if (!ok) {
+      return NULL;
+    }
+    ok = str_append_cstr(local_arena, arg, false);
+    if (!ok) {
+      return NULL;
+    }
   }
   va_end(args);
-  return result;
+  ok = str_append_cstr(local_arena, "", true);
+  if (!ok) {
+    return NULL;
+  }
+
+  opt_str_t result_opt = str_from_cstr(arena, region);
+  if (!result_opt.has_value) {
+    return NULL;
+  }
+  arena_destroy(local_arena);
+  return str_to_cstr(arena, result_opt.value);
 }
 
 #define PATH_JOIN(arena, ...) path_join_v(arena, __VA_ARGS__, NULL)
@@ -95,8 +114,12 @@ typedef struct {
 } build_arg_t;
 
 build_arg_t new_build_arg(arena_t* arena, const char* key, const char* value) {
-  const char* k = str_alloc(arena, key);
-  char* v = str_alloc(arena, value);
+  opt_str_t k_opt = str_concat_cstr(arena, key);
+  assert(k_opt.has_value);
+  const char* k = str_to_cstr(arena, k_opt.value);
+  opt_str_t v_opt = str_concat_cstr(arena, value);
+  assert(v_opt.has_value);
+  char* v = str_to_cstr_mut(arena, v_opt.value);
   return (build_arg_t){k, v};
 }
 
@@ -197,6 +220,7 @@ bool build_rule_compile(build_target_t t) {
   result = true;
 
 defer:
+  nob_cmd_free(cmd);
   return result;
 }
 
@@ -223,6 +247,7 @@ bool build_rule_link_exe(build_target_t t) {
   result = true;
 
 defer:
+  nob_cmd_free(cmd);
   return result;
 }
 
@@ -322,7 +347,6 @@ int main(int argc, char** argv) {
   }
 
   build_run(t_exe);
-  // TODO: clear targets
 
   goto defer;
 

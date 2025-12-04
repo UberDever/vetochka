@@ -1,5 +1,4 @@
 #include "string_buffer_api.h"
-#include "string_buffer_impl.h"
 
 #include <assert.h>
 #include <stdarg.h>
