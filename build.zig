@@ -29,14 +29,15 @@ pub fn build(b: *std.Build) !void {
     const optimize = b.standardOptimizeOption(.{});
     const sanitize = b.option(bool, "sanitize", "Enable ASan/UBSan-style flags") orelse false;
 
-    const eval_dir = "eval";
+    const c_core_dir = "reducer";
 
-    const eval_sources = &.{
-        b.pathJoin(&.{ eval_dir, "eval.c" }),
-        b.pathJoin(&.{ eval_dir, "util.c" }),
-        b.pathJoin(&.{ eval_dir, "memory.c" }),
-        b.pathJoin(&.{ eval_dir, "encode.c" }),
-        b.pathJoin(&.{ eval_dir, "native.c" }),
+    const c_core_sources = &.{
+        b.pathJoin(&.{ c_core_dir, "cells_cells.c" }),
+        // b.pathJoin(&.{ eval_dir, "eval.c" }),
+        // b.pathJoin(&.{ eval_dir, "util.c" }),
+        // b.pathJoin(&.{ eval_dir, "memory.c" }),
+        // b.pathJoin(&.{ eval_dir, "encode.c" }),
+        // b.pathJoin(&.{ eval_dir, "native.c" }),
     };
 
     var flags = std.ArrayList([]const u8).empty;
@@ -57,14 +58,14 @@ pub fn build(b: *std.Build) !void {
     try flags.appendSlice(b.allocator, &.{
         b.fmt(
             \\-DPROJECT_ROOT="{s}"
-        , .{b.pathJoin(&.{ project_root, eval_dir })}),
+        , .{b.pathJoin(&.{ project_root, c_core_dir })}),
         b.fmt(
             \\-DPATH_SEP="{c}"
         , .{std.fs.path.sep}),
     });
 
     const lib = b.addLibrary(.{
-        .name = eval_dir,
+        .name = c_core_dir,
         .linkage = .dynamic,
         .root_module = b.createModule(.{
             .target = target,
@@ -72,57 +73,33 @@ pub fn build(b: *std.Build) !void {
             .link_libc = true,
         }),
     });
-    lib.root_module.addCSourceFiles(.{ .files = eval_sources, .flags = flags.items });
-    lib.root_module.addIncludePath(b.path(eval_dir));
+    lib.root_module.addCSourceFiles(.{ .files = c_core_sources, .flags = flags.items });
+    lib.root_module.addIncludePath(b.path(c_core_dir));
 
-    const test_sources = &.{"eval/test_eval.c"};
-    const test_exe = b.addExecutable(.{
-        .name = try std.fmt.allocPrint(b.allocator, "test_{s}", .{eval_dir}),
+    const test_name = try std.fmt.allocPrint(b.allocator, "test_{s}", .{c_core_dir});
+    const test_exe = b.addTest(.{
+        .name = test_name,
         .root_module = b.createModule(
             .{
+                .root_source_file = b.path(
+                    b.pathJoin(&.{
+                        c_core_dir,
+                        std.mem.concat(b.allocator, u8, &[_][]const u8{ test_name, ".zig" }) catch unreachable,
+                    }),
+                ),
                 .target = target,
                 .optimize = optimize,
-                .sanitize_c = .full,
-                .link_libc = true,
             },
         ),
     });
-
-    test_exe.root_module.addCSourceFiles(.{ .files = test_sources, .flags = flags.items });
-    test_exe.root_module.addIncludePath(b.path(eval_dir));
-    if (sanitize) {
-        test_exe.root_module.linkSystemLibrary("asan", .{ .needed = true });
-        test_exe.root_module.linkSystemLibrary("ubsan", .{ .needed = true });
-    }
-    test_exe.root_module.linkLibrary(lib);
-
-    switch (target.result.os.tag) {
-        .linux => test_exe.addRPath(b.path("$ORIGIN/../lib")),
-        .macos => test_exe.addRPath(b.path("@executable_path/../lib")),
-        else => {}, // On Windows, the DLL must be next to the exe or on PATH
-    }
-
+    test_exe.addIncludePath(b.path(c_core_dir));
+    test_exe.linkLibC();
+    test_exe.linkLibrary(lib);
     test_exe.step.dependOn(&lib.step);
 
-    const test_exe_zig = b.addTest(.{
-        .name = try std.fmt.allocPrint(b.allocator, "test_{s}_zig", .{eval_dir}),
-        .root_module = b.createModule(
-            .{
-                .root_source_file = b.path(b.pathJoin(&.{ eval_dir, "test_eval.zig" })),
-                .target = target,
-                .optimize = optimize,
-            },
-        ),
-    });
-    test_exe_zig.addIncludePath(b.path(eval_dir));
-    test_exe_zig.linkLibC();
-    test_exe_zig.linkLibrary(lib);
-    test_exe_zig.step.dependOn(&lib.step);
-
     b.installArtifact(lib);
-    b.installArtifact(test_exe);
-    const run_eval_tests = b.addRunArtifact(test_exe_zig);
+    const run_tests = b.addRunArtifact(test_exe);
 
     const test_step = b.step("test", "Run all unit tests");
-    test_step.dependOn(&run_eval_tests.step);
+    test_step.dependOn(&run_tests.step);
 }
