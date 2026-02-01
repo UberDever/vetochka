@@ -21,6 +21,8 @@ comptime {
         ;
         @compileError(std.fmt.comptimePrint(error_message, .{min_zig}));
     }
+    if (@sizeOf(usize) != 8) @compileError("need 64-bit pointers");
+    if (@sizeOf(isize) != 8) @compileError("need 64-bit pointers");
 }
 
 // https://ziggit.dev/t/build-system-tricks/3531
@@ -98,8 +100,8 @@ pub fn build(b: *std.Build) !void {
     test_exe.step.dependOn(&lib.step);
 
     b.installArtifact(lib);
-    const run_tests = b.addRunArtifact(test_exe);
 
     const test_step = b.step("test", "Run all unit tests");
+    const run_tests = b.addRunArtifact(test_exe);
     test_step.dependOn(&run_tests.step);
 }
