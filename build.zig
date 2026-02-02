@@ -52,7 +52,7 @@ pub fn build(b: *std.Build) !void {
         "-Werror",
     });
     if (sanitize) {
-        try flags.appendSlice(b.allocator, &.{ "-g", "-fno-omit-frame-pointer", "-fsanitize=address" });
+        try flags.appendSlice(b.allocator, &.{ "-g", "-fno-omit-frame-pointer", "-fsanitize=address", "-shared-libasan" });
     }
     try flags.append(b.allocator, if (sanitize) "-O0" else "-O2");
 
@@ -76,6 +76,12 @@ pub fn build(b: *std.Build) !void {
         }),
     });
     lib.root_module.addCSourceFiles(.{ .files = c_core_sources, .flags = flags.items });
+    if (sanitize) {
+        // Add ASan linker flags for the shared library
+        lib.root_module.addLibraryPath(.{ .cwd_relative = "/usr/lib/gcc/x86_64-linux-gnu/11" });
+        lib.root_module.addObjectFile(.{ .cwd_relative = "/usr/lib/gcc/x86_64-linux-gnu/11/libasan_preinit.o" });
+        lib.root_module.linkSystemLibrary("asan", .{});
+    }
     lib.root_module.addIncludePath(b.path(c_core_dir));
 
     const test_name = try std.fmt.allocPrint(b.allocator, "test_{s}", .{c_core_dir});
@@ -94,9 +100,9 @@ pub fn build(b: *std.Build) !void {
             },
         ),
     });
-    test_exe.addIncludePath(b.path(c_core_dir));
-    test_exe.linkLibC();
-    test_exe.linkLibrary(lib);
+    test_exe.root_module.addIncludePath(b.path(c_core_dir));
+    test_exe.root_module.link_libc = true;
+    test_exe.root_module.linkLibrary(lib);
     test_exe.step.dependOn(&lib.step);
 
     b.installArtifact(lib);

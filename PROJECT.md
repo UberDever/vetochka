@@ -93,9 +93,9 @@ for any term `t` that is known statically, I have its corresponding location
     * Tree2 `fork` is `11010000`, followed by any `ref` and then any `node`
     * Natives/opcodes start with `10`
     * Native payload starts with `10000000` (a whole byte)
-    * Native0-fixed `n0f`: `[10000000][000][53bit]` 
-    * Native1-fixed `n1f`: `[10000000][001][53bit]` followed by any `ref`
-    * Native2-fixed `n2f`: `[10000000][010][53bit]` followed by any `ref` and then any `node`
+    * Native0-fixed `n0f`: `[10000000][000][5bits][48bits]` 
+    * Native1-fixed `n1f`: `[10000000][001][5bits][48bits]` followed by any `ref`
+    * Native2-fixed `n2f`: `[10000000][010][5bits][48bits]` followed by any `ref` unsigned int total_bitsand then any `node`
     * Native0-var `n0v`: `[10000000][100][ULEB128][payload]`, where ULEB128 is len of the payload
     * Native1-var `n1v`: `[10000000][101][ULEB128][payload]`, where ULEB128 is len of the payload; the node is followed by any `ref`
     * Native1-var `n2v`: `[10000000][110][ULEB128][payload]`, where ULEB128 is len of the payload; the node is followed by any `ref` and any `node`
