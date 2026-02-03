@@ -45,35 +45,24 @@ static int read_signed_int(
   uint8_t tag;
   unsigned total_bits;
   SIGNED_VALUES_META();
-  if (total_bits == 0 || total_bits > 63) { return -2; }
+
   size_t bytes = (total_bits <= 5) ? 1 : 1 + ((total_bits - 5 + 7) / 8);
   if (index + bytes > cap) { return -1; }
+
   const byte* cur = base + index;
-  // Check tag (top 3 bits) matches expected tag.
-  // tag should already have only top 3 bits set (e.g. 0x00,0x20,0x40,0x60).
-  if (((*cur) & 0xE0U) != (tag & 0xE0U)) { return -3; }
-  uint64_t u = 0;
-  // low 5 bits from tag byte
-  u |= (uint64_t)(*cur & 0x1FU);
-  // remaining bytes are the value shifted right by 5, little-endian
+  if ((*cur & 0xE0U) != tag) { return -3; }
+
+  uint64_t raw = *cur & 0x1FU;
   cur++;
-  for (size_t i = 1; i < bytes; i++, cur++) {
-    u |= ((uint64_t)(*cur) << (5 + 8 * (i - 1)));
+  for (size_t i = 1; i < bytes; i++) {
+    raw |= (uint64_t)(*cur++) << (5 + 8 * (i - 1));
   }
-  // Mask to total_bits (defensive; should already be within range)
-  uint64_t mask = (UINT64_C(1) << total_bits) - 1;
-  u &= mask;
-  // Sign-extend from total_bits to int64_t
-  uint64_t sign_bit = UINT64_C(1) << (total_bits - 1);
-  int64_t value;
-  if (u & sign_bit) {
-    // negative: fill upper bits with 1s
-    uint64_t extend_mask = ~mask;
-    value = (int64_t)(u | extend_mask);
-  } else {
-    value = (int64_t)u;
-  }
-  *out_value = value;
+
+  // Sign extend
+  int64_t val = (int64_t)(raw << (64 - total_bits));
+  val >>= (64 - total_bits);
+
+  *out_value = val;
   return 0;
 }
 
@@ -83,27 +72,22 @@ static int write_signed_int(
   uint8_t tag;
   unsigned total_bits;
   SIGNED_VALUES_META();
+
   size_t bytes = (total_bits <= 5) ? 1 : 1 + ((total_bits - 5 + 7) / 8);
   if (index + bytes > cap) { return -1; }
-  // Range check for signed value in total_bits two's complement
-  // min = -2^(b-1), max = 2^(b-1)-1
-  if (total_bits == 64) { return -2; }
-  int64_t min = -(INT64_C(1) << (total_bits - 1));
-  int64_t max = (INT64_C(1) << (total_bits - 1)) - 1;
-  if (value < min || value > max) { return -2; }
-  // Convert to unsigned two's complement in total_bits
-  uint64_t u = (uint64_t)value;
-  if (total_bits < 64) {
-    uint64_t mask = (UINT64_C(1) << total_bits) - 1;
-    u &= mask;
-  }
+
+  // Check if value fits in total_bits
+  int64_t check = (int64_t)((uint64_t)value << (64 - total_bits)) >> (64 - total_bits);
+  if (check != value) { return -2; }
+
   byte* cur = base + index;
-  // Tag byte: [tag(3 bits)][low 5 bits]
-  *cur++ = (byte)(tag | (u & 0x1fU));
+  uint64_t u = (uint64_t)value;
+
+  *cur++ = (byte)(tag | (u & 0x1FU));
   u >>= 5;
-  // Remaining bytes (little-endian)
+
   for (size_t i = 1; i < bytes; i++) {
-    *cur++ = (byte)(u & 0xFFU);
+    *cur++ = (byte)u;
     u >>= 8;
   }
   return 0;
@@ -210,9 +194,9 @@ static int write_payload(byte* data, size_t capacity, size_t index, struct cells
   size_t total = 1 + uleb128_size(node.as.nativev.len >> 5) + node.as.nativev.len;
   if (index + total > capacity) { return -1; }
   data[index] = (byte)((tag << 5) | (byte)(node.as.nativev.len & 0x1fU));
-  size_t w = uleb128_write(data + 1, node.as.nativev.len >> 5);
+  size_t w = uleb128_write(data + index + 1, node.as.nativev.len >> 5);
   assert(node.as.nativev.data && "node.as.nativev.data");
-  memcpy(data + 1 + w, node.as.nativev.data, node.as.nativev.len);
+  memcpy(data + index + 1 + w, node.as.nativev.data, node.as.nativev.len);
   return 0;
 }
 
@@ -297,15 +281,15 @@ struct cells_node_meta_t cells_get_node_meta(struct cells_t* cells, size_t index
     }
 
     byte tag = (b2 & 0xe0) >> 5;
-    byte uleb_start = cells->data[index + 1] & 0x1f;
-    u64 uleb_value = uleb_start;
-    size_t uleb_len = 1;
-    if (((uleb_start << 3) & 0x7f) != 0) {
-      if (uleb128_read(cells->data, cells->capacity, index + 2, &uleb_len, &uleb_value) != 0) {
-        return meta;
-      }
+    size_t lo5 = b2 & 0x1f;
+    size_t uleb_len = 0;
+    size_t uleb_val = 0;
+    if (uleb128_read(cells->data, cells->capacity, index + 2, &uleb_len, &uleb_val) != 0) {
+      return meta;
     }
-    meta.size = 1 + uleb_len + uleb_value;
+    size_t len = lo5 | (uleb_val << 5);
+    meta.size = 1 + 1 + uleb_len + len;
+
     if (tag == 0x04) { meta.type = CELLS_NODE_TYPE_NATIVE0V; }
     if (tag == 0x05) { meta.type = CELLS_NODE_TYPE_NATIVE1V; }
     if (tag == 0x06) { meta.type = CELLS_NODE_TYPE_NATIVE2V; }
@@ -403,7 +387,12 @@ int cells_alloc_node(struct cells_t* cells, size_t node_size, size_t* index_out)
   size_t start_index = cells->next_free_index % (cells->capacity / 2);
   size_t free_bytes_count = 0;
   for (size_t i = start_index; i < cells->capacity; i++) {
-    if (_bitmap_get_bit(cells->occupied_bitmap, i) == 0) { free_bytes_count++; }
+    if (_bitmap_get_bit(cells->occupied_bitmap, i) == 0) {
+      free_bytes_count++;
+    } else {
+      free_bytes_count = 0;
+    }
+
     if (free_bytes_count == node_size) {
       *index_out = i - free_bytes_count + 1;
       for (size_t j = *index_out; j < *index_out + node_size; j++) {
@@ -561,7 +550,7 @@ struct cells_node_t cells_new_native0v(span_byte_t payload) {
   struct cells_node_t node = {0};
   node.meta.type = CELLS_NODE_TYPE_NATIVE0V;
   node.as.nativev = payload;
-  node.meta.size = 1 + uleb128_size(node.as.nativev.len >> 5) + node.as.nativev.len;
+  node.meta.size = 1 + 1 + uleb128_size(node.as.nativev.len >> 5) + node.as.nativev.len;
   return node;
 }
 
@@ -569,14 +558,14 @@ struct cells_node_t cells_new_native1v(span_byte_t payload) {
   struct cells_node_t node = {0};
   node.meta.type = CELLS_NODE_TYPE_NATIVE1V;
   node.as.nativev = payload;
-  node.meta.size = 1 + uleb128_size(node.as.nativev.len >> 5) + node.as.nativev.len;
+  node.meta.size = 1 + 1 + uleb128_size(node.as.nativev.len >> 5) + node.as.nativev.len;
   return node;
 }
 
 struct cells_node_t cells_new_native2v(span_byte_t payload) {
   struct cells_node_t node = {0};
-  node.meta.type = CELLS_NODE_TYPE_NATIVE1V;
+  node.meta.type = CELLS_NODE_TYPE_NATIVE2V;
   node.as.nativev = payload;
-  node.meta.size = 1 + uleb128_size(node.as.nativev.len >> 5) + node.as.nativev.len;
+  node.meta.size = 1 + 1 + uleb128_size(node.as.nativev.len >> 5) + node.as.nativev.len;
   return node;
 }

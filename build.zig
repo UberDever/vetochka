@@ -35,6 +35,7 @@ pub fn build(b: *std.Build) !void {
 
     const c_core_sources = &.{
         b.pathJoin(&.{ c_core_dir, "cells_cells.c" }),
+        b.pathJoin(&.{ c_core_dir, "cells_debug.c" }),
         // b.pathJoin(&.{ eval_dir, "eval.c" }),
         // b.pathJoin(&.{ eval_dir, "util.c" }),
         // b.pathJoin(&.{ eval_dir, "memory.c" }),

@@ -8,34 +8,34 @@
 #define CELL_SIZE_BITS 8
 #define BITMAP_SIZE(x) (((x) + CELL_SIZE_BITS - 1) / CELL_SIZE_BITS)
 
-static u64* _bitmap_alloc(size_t capacity) {
-    return calloc(1, BITMAP_SIZE(capacity) * sizeof(u64));
+static inline u64 *_bitmap_alloc(size_t capacity) {
+  return calloc(1, BITMAP_SIZE(capacity) * sizeof(u64));
 }
 
-static byte _bitmap_get_bit(const u64* bitmap, size_t index) {
-    size_t word_idx = index / CELL_SIZE_BITS;
-    size_t bit_idx = index % CELL_SIZE_BITS;
-    return (bitmap[word_idx] >> bit_idx) & 1;
+static inline byte _bitmap_get_bit(const u64 *bitmap, size_t index) {
+  size_t word_idx = index / CELL_SIZE_BITS;
+  size_t bit_idx = index % CELL_SIZE_BITS;
+  return (bitmap[word_idx] >> bit_idx) & 1;
 }
 
-static void _bitmap_set_bit(u64* bitmap, size_t index, byte value) {
-    size_t word_idx = index / CELL_SIZE_BITS;
-    size_t bit_idx = index % CELL_SIZE_BITS;
-    if (value) {
-        bitmap[word_idx] |= (1ULL << bit_idx);
-    } else {
-        bitmap[word_idx] &= ~(1ULL << bit_idx);
-    }
+static inline void _bitmap_set_bit(u64 *bitmap, size_t index, byte value) {
+  size_t word_idx = index / CELL_SIZE_BITS;
+  size_t bit_idx = index % CELL_SIZE_BITS;
+  if (value) {
+    bitmap[word_idx] |= (1ULL << bit_idx);
+  } else {
+    bitmap[word_idx] &= ~(1ULL << bit_idx);
+  }
 }
 
 typedef struct cells_t {
-    byte* data;
-    // since I'm basically writing an allocator here
-    // I want it to be dead simple for now
-    // so I would use just a bitmap + next_free for scan speedup
-    u64* occupied_bitmap;
-    size_t next_free_index;
-    size_t capacity;
+  byte *data;
+  // since I'm basically writing an allocator here
+  // I want it to be dead simple for now
+  // so I would use just a bitmap + next_free for scan speedup
+  u64 *occupied_bitmap;
+  size_t next_free_index;
+  size_t capacity;
 } cells_t;
 
 #endif // __REDUCER_CELLS_IMPL_H__
