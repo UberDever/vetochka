@@ -1,6 +1,7 @@
 #ifndef __REDUCER_TYPEDEFS_H__
 #define __REDUCER_TYPEDEFS_H__
 
+#include <stdbool.h>
 #include <stdint.h>
 
 typedef unsigned char byte;
@@ -16,8 +17,17 @@ typedef int32_t i32;
 typedef intptr_t i64;
 
 typedef struct span_byte_t {
-    byte* data;
-    u64 len;
+  byte *data;
+  u64 len;
 } span_byte_t;
+
+typedef bool bool_t;
+typedef i32 error_t;
+
+#define ERROR_SUCCESS 0
+#define ERROR_GENERIC -1
+#define ERROR_INVALID_PARAM -2
+#define ERROR_OUT_OF_BOUNDS -3
+#define ERROR_OVERFLOW -4
 
 #endif // __REDUCER_TYPEDEFS_H__

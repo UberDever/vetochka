@@ -41,15 +41,15 @@ struct cells_node_t {
 };
 
 /**
- * Initialize a cells_t structure with the given capacity.
- * @return 0 on success, or -1 on failure.
+ * Alloc and initialize a cells_t structure with the given capacity.
+ * @return ERROR_SUCCESS on success, or error code on failure.
  */
-int cells_init(struct cells_t **cells, size_t capacity);
+error_t cells_create(struct cells_t **cells, size_t capacity);
 
 /**
- * Free the cells structure.
+ * Deinit and free the cells structure.
  */
-void cells_free(struct cells_t **cells);
+void cells_destroy(struct cells_t **cells);
 
 /**
  * Get meta of the node at the specified index in the cells structure.
@@ -70,26 +70,26 @@ struct cells_node_t cells_get_node(struct cells_t *cells, size_t index,
 /**
  * Allocate node with current metadata and get its index.
  * Marks bytes of the node as occupied.
- * @return 0 on success, -1 on failure.
+ * @return ERROR_SUCCESS on success, error code on failure.
  */
-int cells_alloc_node(struct cells_t *cells, size_t node_size,
-                     size_t *index_out);
+error_t cells_alloc_node(struct cells_t *cells, size_t node_size,
+                         size_t *index_out);
 
 /**
  * Writes node inplace at provided index.
  * Expects that memory was allocated for specified type of node at specified
  * index. Note that if node at this index is not of type that is expected, this
  * would result in memory override or even out of bounds UB.
- * @return 0 on success, -1 on failure.
+ * @return ERROR_SUCCESS on success, error code on failure.
  */
-int cells_write_node(struct cells_t *cells, size_t index,
-                     struct cells_node_t node);
+error_t cells_write_node(struct cells_t *cells, size_t index,
+                         struct cells_node_t node);
 
 /**
  * Mark the chunk of memory at the specified index of node size as free.
- * @return 0 on success, or -1 on failure.
+ * @return ERROR_SUCCESS on success, or error code on failure.
  */
-int cells_node_free(struct cells_t *cells, size_t index, size_t node_size);
+error_t cells_node_free(struct cells_t *cells, size_t index, size_t node_size);
 
 // NOTE: deliberately not using CELLS_NODE_TYPE here because
 // there will be less places to make a mistake

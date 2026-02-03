@@ -12,13 +12,13 @@ static inline u64 *_bitmap_alloc(size_t capacity) {
   return calloc(1, BITMAP_SIZE(capacity) * sizeof(u64));
 }
 
-static inline byte _bitmap_get_bit(const u64 *bitmap, size_t index) {
+static inline bool_t _bitmap_get_bit(const u64 *bitmap, size_t index) {
   size_t word_idx = index / CELL_SIZE_BITS;
   size_t bit_idx = index % CELL_SIZE_BITS;
   return (bitmap[word_idx] >> bit_idx) & 1;
 }
 
-static inline void _bitmap_set_bit(u64 *bitmap, size_t index, byte value) {
+static inline void _bitmap_set_bit(u64 *bitmap, size_t index, bool_t value) {
   size_t word_idx = index / CELL_SIZE_BITS;
   size_t bit_idx = index % CELL_SIZE_BITS;
   if (value) {

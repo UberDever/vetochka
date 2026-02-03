@@ -76,7 +76,7 @@ for any term `t` that is known statically, I have its corresponding location
     + `parameters` is nonempty: parameters must be bound to their corresponding argument locations; then, access to a parameter inside lambda body will do two jumps: reference to parameter and then reference to the argument; Note that this is sane, since if we rewrite the parameters in the body itself, we effectively would need to copy the body, which is not ideal
 - ⬜ this way, the code could inspect natives and opcodes (provided there is a rule 4 or something for builtin inspection)
 - update on binary encoding:
-    * ⬜ I need to treat the tree as a stream of bytes, with payload stored inplace; hence, I need to cleanly visualize this stream as a tree-like bytecode, which can change itself, since code is data here
+    * ✅ I need to treat the tree as a stream of bytes, with payload stored inplace; hence, I need to cleanly visualize this stream as a tree-like bytecode, which can change itself, since code is data here
     * References start with `0`
     * Reference `ref` could be variable size; Lets make them:
         + `[000][5bits]` 1 byte `ref1`

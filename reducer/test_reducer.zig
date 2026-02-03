@@ -11,7 +11,7 @@ const str = []const u8;
 
 pub const CError = error{Unknown};
 
-inline fn cTry(rc: c_int) CError!void {
+inline fn cTry(rc: c.error_t) CError!void {
     if (rc >= 0) return;
     return switch (rc) {
         else => error.Unknown,
@@ -36,8 +36,8 @@ test "smoke memory" {
     _ = gpa;
 
     var cells: ?*c.struct_cells_t = null;
-    try cTry(c.cells_init(&cells, 64));
-    defer c.cells_free(&cells);
+    try cTry(c.cells_create(&cells, 64));
+    defer c.cells_destroy(&cells);
 
     const tree_node = c.cells_new_tree0();
     const lhs_ref = c.cells_new_ref4(12345);
@@ -83,8 +83,8 @@ test "debug view demo" {
     std.testing.log_level = .debug;
 
     var cells: ?*c.struct_cells_t = null;
-    try cTry(c.cells_init(&cells, 128));
-    defer c.cells_free(&cells);
+    try cTry(c.cells_create(&cells, 128));
+    defer c.cells_destroy(&cells);
 
     // Create a mix of nodes
     const n1 = c.cells_new_tree2();
