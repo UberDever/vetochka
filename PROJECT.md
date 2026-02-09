@@ -144,3 +144,16 @@ for any term `t` that is known statically, I have its corresponding location
   * Programs are trusted; native call payloads are forgeable; safety is the responsibility of the embedding
   * `set_type` may change the interpretation of an existing payload without validation; doing so is unsafe and may crash or call arbitrary native code
   * there is a match `payload_kind(type) ∈ {none, int, bytes, …}` and `set_payload(node, p)` is an error unless `kind(p)` matches `payload_kind(get_type(node))`
+
+### 09.02.2026
+- on encoding
+- ref2 and ref8 only one remaining
+- refs2 start with 00, ref8 with 01, rest of the bits are payload; 
+- for ref2 is 14bit (13bit int), for ref8 62bit (61bit int)
+- everything else: tag starting from 0x80 [10000000] and actual payload later
+- delta0, delta1, delta2: 0x80, 0x81, 0x82
+- value0, value1, value2 (fixed): 0x83, 0x84, 0x85, followed by 8bytes of signed payload
+- value0, value1, value2 (variable): 0x86, 0x87, 0x88, followed by len (uleb128) and the payload as bytes
+- opcode0, opcode1, opcode2: basically, three versions of the same opcode as a single byte;
+    the payload should go as a children
+- ⬜ on gc: need to use free list in the cells

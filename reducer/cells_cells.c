@@ -6,155 +6,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#define SIGNED_VALUES_META()                                                                       \
-  switch (meta.type) {                                                                             \
-    case CELLS_NODE_TYPE_REF1:                                                                     \
-      tag = 0x00;                                                                                  \
-      total_bits = 5;                                                                              \
-      break;                                                                                       \
-    case CELLS_NODE_TYPE_REF2:                                                                     \
-      tag = 0x20;                                                                                  \
-      total_bits = 13;                                                                             \
-      break;                                                                                       \
-    case CELLS_NODE_TYPE_REF4:                                                                     \
-      tag = 0x40;                                                                                  \
-      total_bits = 29;                                                                             \
-      break;                                                                                       \
-    case CELLS_NODE_TYPE_REF8:                                                                     \
-      tag = 0x60;                                                                                  \
-      total_bits = 61;                                                                             \
-      break;                                                                                       \
-    case CELLS_NODE_TYPE_NATIVE0F:                                                                 \
-      tag = 0x00;                                                                                  \
-      total_bits = 53;                                                                             \
-      break;                                                                                       \
-    case CELLS_NODE_TYPE_NATIVE1F:                                                                 \
-      tag = 0x20;                                                                                  \
-      total_bits = 53;                                                                             \
-      break;                                                                                       \
-    case CELLS_NODE_TYPE_NATIVE2F:                                                                 \
-      tag = 0x40;                                                                                  \
-      total_bits = 53;                                                                             \
-      break;                                                                                       \
-    default: fprintf(stderr, "%d\n", meta.type); assert(0 && "unreachable");                       \
-  }
-
-static error_t read_signed_int(
-    const byte* base, size_t cap, size_t index, struct cells_node_meta_t meta, int64_t* out_value) {
-  if (!base || !out_value) { return ERROR_INVALID_PARAM; }
-  uint8_t tag;
-  unsigned total_bits;
-  SIGNED_VALUES_META();
-
-  size_t bytes = (total_bits <= 5) ? 1 : 1 + ((total_bits - 5 + 7) / 8);
-  if (index + bytes > cap) { return ERROR_OUT_OF_BOUNDS; }
-
-  const byte* cur = base + index;
-  if ((*cur & 0xE0U) != tag) { return ERROR_OUT_OF_BOUNDS; }
-
-  uint64_t raw = *cur & 0x1FU;
-  cur++;
-  for (size_t i = 1; i < bytes; i++) {
-    raw |= (uint64_t)(*cur++) << (5 + 8 * (i - 1));
-  }
-
-  // Sign extend
-  int64_t val = (int64_t)(raw << (64 - total_bits));
-  val >>= (64 - total_bits);
-
-  *out_value = val;
-  return 0;
-}
-
-static error_t write_signed_int(
-    byte* base, size_t cap, size_t index, struct cells_node_meta_t meta, int64_t value) {
-  if (!base) { return ERROR_INVALID_PARAM; }
-  uint8_t tag;
-  unsigned total_bits;
-  SIGNED_VALUES_META();
-
-  size_t bytes = (total_bits <= 5) ? 1 : 1 + ((total_bits - 5 + 7) / 8);
-  if (index + bytes > cap) { return ERROR_OUT_OF_BOUNDS; }
-
-  // Check if value fits in total_bits
-  int64_t check = (int64_t)((uint64_t)value << (64 - total_bits)) >> (64 - total_bits);
-  if (check != value) { return ERROR_OVERFLOW; }
-
-  byte* cur = base + index;
-  uint64_t u = (uint64_t)value;
-
-  *cur++ = (byte)(tag | (u & 0x1FU));
-  u >>= 5;
-
-  for (size_t i = 1; i < bytes; i++) {
-    *cur++ = (byte)u;
-    u >>= 8;
-  }
-  return 0;
-}
-
-#undef SIGNED_VALUES_META
-
-static inline error_t read_payload(
-    const byte* data,
-    size_t capacity,
-    size_t index,
-    struct cells_node_meta_t meta,
-    struct span_byte_t* out_data) {
-  if (!data || !out_data) { return ERROR_INVALID_PARAM; }
-  if (index >= capacity) { return ERROR_OUT_OF_BOUNDS; }
-
-  byte b0 = data[index];
-  byte tag = (byte)(b0 >> 5);
-  size_t lo5 = (size_t)(b0 & 0x1FU);
-  switch (tag) {
-    case 0x04:
-      if (meta.type != CELLS_NODE_TYPE_NATIVE0V) { return ERROR_INVALID_PARAM; };
-      break;
-    case 0x05:
-      if (meta.type != CELLS_NODE_TYPE_NATIVE1V) { return ERROR_INVALID_PARAM; };
-      ;
-      break;
-    case 0x06:
-      if (meta.type != CELLS_NODE_TYPE_NATIVE2V) { return ERROR_INVALID_PARAM; };
-      break;
-    default: return ERROR_INVALID_PARAM;
-  }
-  size_t uleb_len = 0;
-  size_t uleb_value = 0;
-  if (index + 1 > capacity) { return ERROR_OUT_OF_BOUNDS; }
-  int rc = uleb128_read(data, capacity, index + 1, &uleb_len, &uleb_value);
-  if (rc != 0) { return rc; }
-  // Guard against overflow of size_t
-  if (uleb_value > (SIZE_MAX >> 5)) { return ERROR_OVERFLOW; }
-  size_t len = lo5 | (uleb_value << 5);
-  size_t header_total = 1 + uleb_len;
-  if (index + header_total > capacity) { return ERROR_OUT_OF_BOUNDS; }
-  if (len > capacity - (index + header_total)) { return ERROR_OUT_OF_BOUNDS; }
-  out_data->len = len;
-  out_data->data = (byte*)(data + index + header_total);
-  return 0;
-}
-
-static error_t write_payload(byte* data, size_t capacity, size_t index, struct cells_node_t node) {
-  byte tag = 0;
-  if (node.meta.type == CELLS_NODE_TYPE_NATIVE0V) {
-    tag = 0x04;
-  } else if (node.meta.type == CELLS_NODE_TYPE_NATIVE1V) {
-    tag = 0x05;
-  } else if (node.meta.type == CELLS_NODE_TYPE_NATIVE2V) {
-    tag = 0x06;
-  }
-
-  size_t total = 1 + uleb128_size(node.as.nativev.len >> 5) + node.as.nativev.len;
-  if (index + total > capacity) { return ERROR_OUT_OF_BOUNDS; }
-  data[index] = (byte)((tag << 5) | (byte)(node.as.nativev.len & 0x1fU));
-  size_t w = uleb128_write(data + index + 1, node.as.nativev.len >> 5);
-  assert(node.as.nativev.data && "node.as.nativev.data");
-  memcpy(data + index + 1 + w, node.as.nativev.data, node.as.nativev.len);
-  return ERROR_SUCCESS;
-}
-
 error_t cells_create(struct cells_t** cells, size_t capacity) {
   *cells = calloc(1, sizeof(struct cells_t));
   (*cells)->data = calloc(1, capacity);
@@ -174,107 +25,105 @@ void cells_destroy(struct cells_t** cells) {
   free(*cells);
 }
 
+static inline byte tag_from_type(enum CELLS_NODE_TYPE type) {
+  assert(type != CELLS_NODE_TYPE_INVALID);
+  // we just encode all nodes as tag + payload, so mapping from type to tag is straightforward
+  return 0x80 - 1 + (byte)type;
+}
+
+static inline u16 read_u16_be(const byte* p) {
+  return ((u16)p[0] << 8) | (u16)p[1];
+}
+
+static inline void write_u16_be(byte* p, u16 v) {
+  p[0] = (byte)(v >> 8);
+  p[1] = (byte)(v & 0xffU);
+}
+
+static inline u64 read_u64_be(const byte* p) {
+  u64 v = 0;
+  for (size_t i = 0; i < sizeof(v); i++) {
+    v = (v << 8) | (u64)p[i];
+  }
+  return v;
+}
+
+static inline void write_u64_be(byte* p, u64 v) {
+  for (size_t i = 0; i < sizeof(v); i++) {
+    p[sizeof(v) - 1 - i] = (byte)(v & 0xffU);
+    v >>= 8;
+  }
+}
+
 struct cells_node_meta_t cells_get_node_meta(struct cells_t* cells, size_t index) {
   struct cells_node_meta_t meta = {0};
   if (index > cells->capacity) { return meta; }
   byte b = cells->data[index];
 
-  if ((b & 0xe0) == 0) {
-    meta.type = CELLS_NODE_TYPE_REF1;
-    meta.size = 1;
-    goto check_occupied;
-  }
-  if ((b & 0xe0) >> 5 == 1) {
+  if ((b >> 6) == 0x00) {
     meta.type = CELLS_NODE_TYPE_REF2;
-    meta.size = 2;
-  }
-  if ((b & 0xe0) >> 5 == 2) {
-    meta.type = CELLS_NODE_TYPE_REF4;
-    meta.size = 4;
+    meta.size = sizeof(i16);
     goto check_occupied;
   }
-  if ((b & 0xe0) >> 5 == 3) {
+  if ((b >> 6) == 0x01) {
     meta.type = CELLS_NODE_TYPE_REF8;
-    meta.size = 8;
+    meta.size = sizeof(i64);
     goto check_occupied;
   }
 
-  if (b == 0xc0) {
-    meta.type = CELLS_NODE_TYPE_TREE0;
-    meta.size = 1;
-    goto check_occupied;
-  }
-  if (b == 0xe0) {
-    meta.type = CELLS_NODE_TYPE_TREE1;
-    meta.size = 1;
-    goto check_occupied;
-  }
-  if (b == 0xd0) {
-    meta.type = CELLS_NODE_TYPE_TREE2;
-    meta.size = 1;
-    goto check_occupied;
+#define CASE_TAG(t, sz)                                                                            \
+  if (b == tag_from_type(CELLS_NODE_TYPE_##t)) {                                                   \
+    meta.type = CELLS_NODE_TYPE_##t;                                                               \
+    meta.size = (sz);                                                                              \
+    goto check_occupied;                                                                           \
   }
 
-  // native payload
-  if (b == 0x80) {
+  CASE_TAG(DELTA0, 1);
+  CASE_TAG(DELTA1, 1);
+  CASE_TAG(DELTA2, 1);
+  CASE_TAG(VALUEF0, 9);
+  CASE_TAG(VALUEF1, 9);
+  CASE_TAG(VALUEF2, 9);
+
+  bool is_valuev = false;
+  if (b == tag_from_type(CELLS_NODE_TYPE_VALUEV0)) {
+    is_valuev = true;
+    meta.type = CELLS_NODE_TYPE_VALUEV0;
+  }
+  if (b == tag_from_type(CELLS_NODE_TYPE_VALUEV1)) {
+    is_valuev = true;
+    meta.type = CELLS_NODE_TYPE_VALUEV1;
+  }
+  if (b == tag_from_type(CELLS_NODE_TYPE_VALUEV2)) {
+    is_valuev = true;
+    meta.type = CELLS_NODE_TYPE_VALUEV2;
+  }
+  if (is_valuev) {
     if (index + 1 > cells->capacity) { return meta; }
-    byte b2 = cells->data[index + 1];
-    if ((b2 & 0xe0) >> 5 == 0) {
-      meta.type = CELLS_NODE_TYPE_NATIVE0F;
-      meta.size = 1 + sizeof(int64_t);
-      goto check_occupied;
-    }
-    if ((b2 & 0xe0) >> 5 == 1) {
-      meta.type = CELLS_NODE_TYPE_NATIVE1F;
-      meta.size = 1 + sizeof(int64_t);
-      goto check_occupied;
-    }
-    if ((b2 & 0xe0) >> 5 == 2) {
-      meta.type = CELLS_NODE_TYPE_NATIVE2F;
-      meta.size = 1 + sizeof(int64_t);
-      goto check_occupied;
-    }
-
-    byte tag = (b2 & 0xe0) >> 5;
-    size_t lo5 = b2 & 0x1f;
     size_t uleb_len = 0;
     size_t uleb_val = 0;
-    if (uleb128_read(cells->data, cells->capacity, index + 2, &uleb_len, &uleb_val) != 0) {
-      return meta;
+    if (uleb128_read(cells->data, cells->capacity, index + 1, &uleb_len, &uleb_val) != 0) {
+      return (struct cells_node_meta_t){0};
     }
-    size_t len = lo5 | (uleb_val << 5);
-    meta.size = 1 + 1 + uleb_len + len;
-
-    if (tag == 0x04) { meta.type = CELLS_NODE_TYPE_NATIVE0V; }
-    if (tag == 0x05) { meta.type = CELLS_NODE_TYPE_NATIVE1V; }
-    if (tag == 0x06) { meta.type = CELLS_NODE_TYPE_NATIVE2V; }
+    meta.size = 1 + uleb_len + uleb_val;
     goto check_occupied;
   }
 
-  if (b == 0x81) {
-    meta.type = CELLS_NODE_TYPE_SEQ;
-    meta.size = 1;
-    goto check_occupied;
-  }
-  if (b == 0x82) {
-    meta.type = CELLS_NODE_TYPE_SET;
-    meta.size = 1;
-    goto check_occupied;
-  }
-  if (b == 0x83) {
-    meta.type = CELLS_NODE_TYPE_LAMBDA;
-    meta.size = 1;
-    goto check_occupied;
-  }
+  CASE_TAG(SEQ0, 1);
+  CASE_TAG(SEQ1, 1);
+  CASE_TAG(SEQ2, 1);
+
+#undef CASE_TAG
 
 check_occupied:
   for (size_t i = index; i < index + meta.size; i++) {
     if (!_bitmap_get_bit(cells->occupied_bitmap, i)) {
       meta.type = CELLS_NODE_TYPE_INVALID;
       meta.size = 0;
-      break;
+      return meta;
     }
   }
+
   return meta;
 }
 
@@ -284,49 +133,82 @@ struct cells_node_t cells_get_node(
   if (index > cells->capacity) { return node; }
 
   switch (meta.type) {
-    case CELLS_NODE_TYPE_REF1:
-    case CELLS_NODE_TYPE_REF2:
-    case CELLS_NODE_TYPE_REF4:
-    case CELLS_NODE_TYPE_REF8: {
-      i64 offset = 0;
-      if (read_signed_int(cells->data, cells->capacity, index, meta, &offset) < 0) { return node; }
+    case CELLS_NODE_TYPE_REF2: {
+      i16 offset = 0;
+      if ((cells->data[index] >> 6) != 0x00) { return node; }
+      if (index + sizeof(offset) > cells->capacity) { return node; }
+      u16 raw = read_u16_be(cells->data + index);
+      offset = (i16)(raw & 0x3fffU);
+      if ((offset & 0x2000) != 0) { offset |= (i16)0xc000; }
       node.meta = meta;
       node.as.ref = offset;
       return node;
     }
-    case CELLS_NODE_TYPE_TREE0:
-    case CELLS_NODE_TYPE_TREE1:
-    case CELLS_NODE_TYPE_TREE2: {
+
+    case CELLS_NODE_TYPE_REF8: {
+      i64 offset = 0;
+      if ((cells->data[index] >> 6) != 0x01) { return node; }
+      if (index + sizeof(offset) > cells->capacity) { return node; }
+      u64 raw = read_u64_be(cells->data + index);
+      offset = (i64)(raw & UINT64_C(0x3fffffffffffffff));
+      if ((offset & (i64)UINT64_C(0x2000000000000000)) != 0) {
+        offset |= (i64)UINT64_C(0xc000000000000000);
+      }
+      node.meta = meta;
+      node.as.ref = offset;
+      return node;
+    }
+    case CELLS_NODE_TYPE_DELTA0:
+    case CELLS_NODE_TYPE_DELTA1:
+    case CELLS_NODE_TYPE_DELTA2: {
       node.meta = meta;
       return node;
     }
-    case CELLS_NODE_TYPE_NATIVE0F:
-    case CELLS_NODE_TYPE_NATIVE1F:
-    case CELLS_NODE_TYPE_NATIVE2F: {
-      if (cells->data[index] != 0x80) { return node; }
+    case CELLS_NODE_TYPE_VALUEF0: {
+      if (tag_from_type(CELLS_NODE_TYPE_VALUEF0) != cells->data[index]) { return node; }
+      goto handle_valuef;
+    }
+    case CELLS_NODE_TYPE_VALUEF1: {
+      if (tag_from_type(CELLS_NODE_TYPE_VALUEF1) != cells->data[index]) { return node; }
+      goto handle_valuef;
+    }
+    case CELLS_NODE_TYPE_VALUEF2: {
+      if (tag_from_type(CELLS_NODE_TYPE_VALUEF2) != cells->data[index]) { return node; }
       i64 value = 0;
-      if (read_signed_int(cells->data, cells->capacity, index + 1, meta, &value) < 0) {
-        return node;
-      }
+    handle_valuef:
+      if (index + sizeof(value) + 1 > cells->capacity) { return node; }
+      memcpy(&value, cells->data + index + 1, sizeof(i64));
       node.meta = meta;
       node.as.nativef = value;
       return node;
     }
-    case CELLS_NODE_TYPE_NATIVE0V:
-    case CELLS_NODE_TYPE_NATIVE1V:
-    case CELLS_NODE_TYPE_NATIVE2V: {
-      if (cells->data[index] != 0x80) { return node; }
-      span_byte_t payload;
-      if (read_payload(cells->data, cells->capacity, index + 1, meta, &payload) < 0) {
+    case CELLS_NODE_TYPE_VALUEV0: {
+      if (tag_from_type(CELLS_NODE_TYPE_VALUEV0) != cells->data[index]) { return node; }
+      goto handle_valuev;
+    }
+    case CELLS_NODE_TYPE_VALUEV1: {
+      if (tag_from_type(CELLS_NODE_TYPE_VALUEV1) != cells->data[index]) { return node; }
+      goto handle_valuev;
+    }
+    case CELLS_NODE_TYPE_VALUEV2: {
+      if (tag_from_type(CELLS_NODE_TYPE_VALUEV2) != cells->data[index]) { return node; }
+      struct span_byte_t payload = {0};
+      size_t uleb_len = 0;
+      size_t uleb_val = 0;
+    handle_valuev:
+      if (uleb128_read(cells->data, cells->capacity, index + 1, &uleb_len, &uleb_val) != 0) {
         return node;
       }
+      if (index + uleb_len + uleb_val + 1 > cells->capacity) { return node; }
+      payload.len = uleb_val;
+      payload.data = cells->data + index + 1 + uleb_len;
       node.as.nativev = payload;
       node.meta = meta;
       return node;
     }
-    case CELLS_NODE_TYPE_SEQ:
-    case CELLS_NODE_TYPE_SET:
-    case CELLS_NODE_TYPE_LAMBDA: {
+    case CELLS_NODE_TYPE_SEQ0:
+    case CELLS_NODE_TYPE_SEQ1:
+    case CELLS_NODE_TYPE_SEQ2: {
       node.meta = meta;
       return node;
     }
@@ -373,57 +255,67 @@ error_t cells_alloc_chunk(struct cells_t* cells, size_t chunk_size, size_t* inde
 
 error_t cells_write_node(struct cells_t* cells, size_t index, struct cells_node_t node) {
   switch (node.meta.type) {
-    case CELLS_NODE_TYPE_REF1:
-    case CELLS_NODE_TYPE_REF2:
-    case CELLS_NODE_TYPE_REF4:
-    case CELLS_NODE_TYPE_REF8:
-      return write_signed_int(cells->data, cells->capacity, index, node.meta, node.as.ref);
-
-    case CELLS_NODE_TYPE_TREE0:
-      if (index + 1 > cells->capacity) { return ERROR_OUT_OF_BOUNDS; }
-      cells->data[index] = 0xc0;
+    case CELLS_NODE_TYPE_REF2: {
+      u16 offset = 0;
+      if (index + sizeof(offset) > cells->capacity) { return ERROR_OUT_OF_BOUNDS; }
+      if (node.as.ref > 0x1fff || node.as.ref < -0x1fff) { return ERROR_INVALID_PARAM; }
+      offset = (u16)(0x00 << 14) | (u16)(node.as.ref & 0x3fff);
+      write_u16_be(cells->data + index, offset);
       return ERROR_SUCCESS;
-
-    case CELLS_NODE_TYPE_TREE1:
-      if (index + 1 > cells->capacity) { return ERROR_OUT_OF_BOUNDS; }
-      cells->data[index] = 0xe0;
-      return ERROR_SUCCESS;
-
-    case CELLS_NODE_TYPE_TREE2:
-      if (index + 1 > cells->capacity) { return ERROR_OUT_OF_BOUNDS; }
-      cells->data[index] = 0xd0;
-      return ERROR_SUCCESS;
-    case CELLS_NODE_TYPE_NATIVE0F:
-    case CELLS_NODE_TYPE_NATIVE1F:
-    case CELLS_NODE_TYPE_NATIVE2F:
-      if (index + 1 > cells->capacity) { return ERROR_OUT_OF_BOUNDS; }
-      cells->data[index] = 0x80;
-      return write_signed_int(cells->data, cells->capacity, index + 1, node.meta, node.as.nativef);
-
-    case CELLS_NODE_TYPE_NATIVE0V:
-    case CELLS_NODE_TYPE_NATIVE1V:
-    case CELLS_NODE_TYPE_NATIVE2V: {
-      if (index + 1 > cells->capacity) { return ERROR_OUT_OF_BOUNDS; }
-      cells->data[index] = 0x80;
-      return write_payload(cells->data, cells->capacity, index + 1, node);
     }
-    case CELLS_NODE_TYPE_SEQ:
-      if (index + 1 > cells->capacity) { return ERROR_OUT_OF_BOUNDS; }
-      cells->data[index] = 0x81;
+    case CELLS_NODE_TYPE_REF8: {
+      u64 offset = 0;
+      if (index + sizeof(offset) > cells->capacity) { return ERROR_OUT_OF_BOUNDS; }
+      if (node.as.ref > 0x1fffffffffffffff || node.as.ref < -0x1fffffffffffffff) {
+        return ERROR_INVALID_PARAM;
+      }
+      offset = (u64)(0x01LU << 62) | (u64)(node.as.ref & 0x3fffffffffffffffLU);
+      write_u64_be(cells->data + index, offset);
       return ERROR_SUCCESS;
-    case CELLS_NODE_TYPE_SET:
-      if (index + 1 > cells->capacity) { return ERROR_OUT_OF_BOUNDS; }
-      cells->data[index] = 0x82;
+    }
+
+#define CASE_WRITE_TAG(t)                                                                          \
+  case CELLS_NODE_TYPE_##t: {                                                                      \
+    if (index + 1 > cells->capacity) { return ERROR_OUT_OF_BOUNDS; }                               \
+    cells->data[index] = tag_from_type(CELLS_NODE_TYPE_##t);                                       \
+    return ERROR_SUCCESS;                                                                          \
+  }
+
+      CASE_WRITE_TAG(DELTA0)
+      CASE_WRITE_TAG(DELTA1)
+      CASE_WRITE_TAG(DELTA2)
+
+    case CELLS_NODE_TYPE_VALUEF0:
+    case CELLS_NODE_TYPE_VALUEF1:
+    case CELLS_NODE_TYPE_VALUEF2:
+      if (index + 1 + sizeof(i64) > cells->capacity) { return ERROR_OUT_OF_BOUNDS; }
+      cells->data[index] = tag_from_type(node.meta.type);
+      memcpy(cells->data + index + 1, &node.as.nativef, sizeof(i64));
       return ERROR_SUCCESS;
-    case CELLS_NODE_TYPE_LAMBDA:
+
+    case CELLS_NODE_TYPE_VALUEV0:
+    case CELLS_NODE_TYPE_VALUEV1:
+    case CELLS_NODE_TYPE_VALUEV2: {
       if (index + 1 > cells->capacity) { return ERROR_OUT_OF_BOUNDS; }
-      cells->data[index] = 0x83;
+      cells->data[index] = tag_from_type(node.meta.type);
+      size_t uleb_len = uleb128_write(cells->data + index + 1, node.as.nativev.len);
+      if (index + 1 + uleb_len + node.as.nativev.len > cells->capacity) {
+        return ERROR_OUT_OF_BOUNDS;
+      }
+      memcpy(cells->data + index + 1 + uleb_len, node.as.nativev.data, node.as.nativev.len);
       return ERROR_SUCCESS;
+    }
+
+      CASE_WRITE_TAG(SEQ0)
+      CASE_WRITE_TAG(SEQ1)
+      CASE_WRITE_TAG(SEQ2)
 
     case CELLS_NODE_TYPE_INVALID:
       // TODO: report here, stacktrace + node data
       assert(0 && "invalid node");
   }
+
+#undef CASE_WRITE_TAG
 }
 
 error_t cells_node_free(struct cells_t* cells, size_t index, size_t node_size) {

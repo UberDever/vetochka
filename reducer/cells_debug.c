@@ -1,4 +1,5 @@
 #include "cells_debug.h"
+#include "cells_api.h"
 #include "cells_impl.h"
 #include <inttypes.h>
 #include <stdarg.h>
@@ -15,22 +16,20 @@
 
 static const char* get_node_color(enum CELLS_NODE_TYPE type) {
   switch (type) {
-    case CELLS_NODE_TYPE_REF1:
     case CELLS_NODE_TYPE_REF2:
-    case CELLS_NODE_TYPE_REF4:
     case CELLS_NODE_TYPE_REF8: return COLOR_CYAN;
-    case CELLS_NODE_TYPE_TREE0:
-    case CELLS_NODE_TYPE_TREE1:
-    case CELLS_NODE_TYPE_TREE2: return COLOR_GREEN;
-    case CELLS_NODE_TYPE_NATIVE0F:
-    case CELLS_NODE_TYPE_NATIVE1F:
-    case CELLS_NODE_TYPE_NATIVE2F: return COLOR_YELLOW;
-    case CELLS_NODE_TYPE_NATIVE0V:
-    case CELLS_NODE_TYPE_NATIVE1V:
-    case CELLS_NODE_TYPE_NATIVE2V: return COLOR_MAGENTA;
-    case CELLS_NODE_TYPE_SEQ:
-    case CELLS_NODE_TYPE_SET:
-    case CELLS_NODE_TYPE_LAMBDA: return COLOR_BLUE;
+    case CELLS_NODE_TYPE_DELTA0:
+    case CELLS_NODE_TYPE_DELTA1:
+    case CELLS_NODE_TYPE_DELTA2: return COLOR_GREEN;
+    case CELLS_NODE_TYPE_VALUEF0:
+    case CELLS_NODE_TYPE_VALUEF1:
+    case CELLS_NODE_TYPE_VALUEF2: return COLOR_YELLOW;
+    case CELLS_NODE_TYPE_VALUEV0:
+    case CELLS_NODE_TYPE_VALUEV1:
+    case CELLS_NODE_TYPE_VALUEV2: return COLOR_MAGENTA;
+    case CELLS_NODE_TYPE_SEQ0:
+    case CELLS_NODE_TYPE_SEQ1:
+    case CELLS_NODE_TYPE_SEQ2: return COLOR_BLUE;
     case CELLS_NODE_TYPE_INVALID: return COLOR_RED;
     default: return COLOR_RED;
   }
@@ -47,35 +46,33 @@ static void print_node_desc(
   print(ctx, "%s", color);
 
   switch (meta.type) {
-    case CELLS_NODE_TYPE_REF1:
     case CELLS_NODE_TYPE_REF2:
-    case CELLS_NODE_TYPE_REF4:
     case CELLS_NODE_TYPE_REF8: print(ctx, "ref%zu{%" PRId64 "}", meta.size, node.as.ref); break;
-    case CELLS_NODE_TYPE_TREE0: print(ctx, "tree0"); break;
-    case CELLS_NODE_TYPE_TREE1: print(ctx, "tree1"); break;
-    case CELLS_NODE_TYPE_TREE2: print(ctx, "tree2"); break;
-    case CELLS_NODE_TYPE_NATIVE0F:
-    case CELLS_NODE_TYPE_NATIVE1F:
-    case CELLS_NODE_TYPE_NATIVE2F: {
+    case CELLS_NODE_TYPE_DELTA0: print(ctx, "delta0"); break;
+    case CELLS_NODE_TYPE_DELTA1: print(ctx, "delta1"); break;
+    case CELLS_NODE_TYPE_DELTA2: print(ctx, "delta2"); break;
+    case CELLS_NODE_TYPE_VALUEF0:
+    case CELLS_NODE_TYPE_VALUEF1:
+    case CELLS_NODE_TYPE_VALUEF2: {
       int n = 0;
-      if (meta.type == CELLS_NODE_TYPE_NATIVE1F) {
+      if (meta.type == CELLS_NODE_TYPE_VALUEF1) {
         n = 1;
-      } else if (meta.type == CELLS_NODE_TYPE_NATIVE2F) {
+      } else if (meta.type == CELLS_NODE_TYPE_VALUEF2) {
         n = 2;
       }
-      print(ctx, "native%df{%" PRId64 "}", n, node.as.nativef);
+      print(ctx, "value%df{%" PRId64 "}", n, node.as.nativef);
       break;
     }
-    case CELLS_NODE_TYPE_NATIVE0V:
-    case CELLS_NODE_TYPE_NATIVE1V:
-    case CELLS_NODE_TYPE_NATIVE2V: {
+    case CELLS_NODE_TYPE_VALUEV0:
+    case CELLS_NODE_TYPE_VALUEV1:
+    case CELLS_NODE_TYPE_VALUEV2: {
       int n = 0;
-      if (meta.type == CELLS_NODE_TYPE_NATIVE1V) {
+      if (meta.type == CELLS_NODE_TYPE_VALUEV1) {
         n = 1;
-      } else if (meta.type == CELLS_NODE_TYPE_NATIVE2V) {
+      } else if (meta.type == CELLS_NODE_TYPE_VALUEV2) {
         n = 2;
       }
-      print(ctx, "native%dv{len=%" PRIu64, n, node.as.nativev.len);
+      print(ctx, "value%dv{len=%" PRIu64, n, node.as.nativev.len);
       if (node.as.nativev.len > 0) {
         print(ctx, ", data=0x");
         size_t print_len = node.as.nativev.len > 4 ? 4 : node.as.nativev.len;
@@ -87,9 +84,9 @@ static void print_node_desc(
       print(ctx, "}");
       break;
     }
-    case CELLS_NODE_TYPE_SEQ: print(ctx, "seq"); break;
-    case CELLS_NODE_TYPE_SET: print(ctx, "set"); break;
-    case CELLS_NODE_TYPE_LAMBDA: print(ctx, "lambda"); break;
+    case CELLS_NODE_TYPE_SEQ0: print(ctx, "seq0"); break;
+    case CELLS_NODE_TYPE_SEQ1: print(ctx, "seq1"); break;
+    case CELLS_NODE_TYPE_SEQ2: print(ctx, "seq2"); break;
     case CELLS_NODE_TYPE_INVALID: print(ctx, "INVALID"); break;
   }
   print(ctx, "%s", COLOR_RESET);
