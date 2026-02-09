@@ -95,51 +95,6 @@ static error_t write_signed_int(
 
 #undef SIGNED_VALUES_META
 
-static inline error_t uleb128_read(
-    const byte* data, size_t capacity, size_t index, size_t* uleb_len, size_t* uleb_value) {
-  size_t shift = 0;
-  while (1) {
-    if (index > capacity) { return ERROR_OUT_OF_BOUNDS; }
-    byte b = data[index];
-    size_t chunk = b & 0x7f;
-
-    // overflow / shift guard
-    if (shift > 8 * sizeof(size_t)) { return ERROR_OVERFLOW; }
-    // also guard that shifting chunk won't overflow (conservative)
-    if (chunk != 0 && shift > 8 * sizeof(size_t) - 7) { return ERROR_OVERFLOW; }
-
-    *uleb_value |= chunk << shift;
-    shift += 7;
-    *uleb_len += 1;
-    index++;
-
-    if ((b & 0x80) == 0) { break; }
-    if (*uleb_len > 9) { assert(0 && "uleb_len > 9"); }
-  }
-  return 0;
-}
-
-static size_t uleb128_size(u64 x) {
-  size_t n = 1;
-  while (x >= 0x80) {
-    x >>= 7;
-    n++;
-  }
-  return n;
-}
-
-// writes ULEB128 for x into out, returns bytes written (>=1)
-static size_t uleb128_write(byte* out, u64 x) {
-  size_t n = 0;
-  do {
-    byte b = (byte)(x & 0x7F);
-    x >>= 7;
-    if (x) { b |= 0x80; }
-    out[n++] = b;
-  } while (x);
-  return n;
-}
-
 static inline error_t read_payload(
     const byte* data,
     size_t capacity,
@@ -382,8 +337,12 @@ struct cells_node_t cells_get_node(
   return node;
 }
 
-error_t cells_alloc_node(struct cells_t* cells, size_t node_size, size_t* index_out) {
-  // to keep next index close to the start of the memory, cap it to part of capacity
+/**
+ * Try to allocate a chunk of memory with the specified size and get its index.
+ * Does not mark the cells as occupied.
+ * @return index of the possibly allocated chunk, or 0 on failure.
+ */
+static error_t cells_try_alloc_chunk(struct cells_t* cells, size_t chunk_size, size_t* index_out) {
   size_t start_index = cells->next_free_index % (cells->capacity / 2);
   size_t free_bytes_count = 0;
   for (size_t i = start_index; i < cells->capacity; i++) {
@@ -392,17 +351,24 @@ error_t cells_alloc_node(struct cells_t* cells, size_t node_size, size_t* index_
     } else {
       free_bytes_count = 0;
     }
-
-    if (free_bytes_count == node_size) {
+    if (free_bytes_count == chunk_size) {
       *index_out = i - free_bytes_count + 1;
-      for (size_t j = *index_out; j < *index_out + node_size; j++) {
-        _bitmap_set_bit(cells->occupied_bitmap, j, 1);
-      }
-      cells->next_free_index = *index_out + node_size;
       return ERROR_SUCCESS;
     }
   }
   return ERROR_GENERIC;
+}
+
+error_t cells_alloc_chunk(struct cells_t* cells, size_t chunk_size, size_t* index_out) {
+  if (chunk_size == 0) { return ERROR_SUCCESS; }
+  // to keep next index close to the start of the memory, cap it to part of capacity
+  error_t err = cells_try_alloc_chunk(cells, chunk_size, index_out);
+  if (err != ERROR_SUCCESS) { return err; }
+  for (size_t j = *index_out; j < *index_out + chunk_size; j++) {
+    _bitmap_set_bit(cells->occupied_bitmap, j, 1);
+  }
+  cells->next_free_index = *index_out + chunk_size;
+  return ERROR_SUCCESS;
 }
 
 error_t cells_write_node(struct cells_t* cells, size_t index, struct cells_node_t node) {
@@ -467,105 +433,4 @@ error_t cells_node_free(struct cells_t* cells, size_t index, size_t node_size) {
   }
   cells->next_free_index = index % (cells->capacity / 2);
   return ERROR_SUCCESS;
-}
-
-struct cells_node_t cells_new_ref1(i8 offset) {
-  struct cells_node_t node = {0};
-  node.meta.type = CELLS_NODE_TYPE_REF1;
-  node.meta.size = sizeof(offset);
-  node.as.ref = offset;
-  return node;
-}
-
-struct cells_node_t cells_new_ref2(i16 offset) {
-  struct cells_node_t node = {0};
-  node.meta.type = CELLS_NODE_TYPE_REF2;
-  node.meta.size = sizeof(offset);
-  node.as.ref = offset;
-  return node;
-}
-
-struct cells_node_t cells_new_ref4(i32 offset) {
-  struct cells_node_t node = {0};
-  node.meta.type = CELLS_NODE_TYPE_REF4;
-  node.meta.size = sizeof(offset);
-  node.as.ref = offset;
-  return node;
-}
-
-struct cells_node_t cells_new_ref8(i64 offset) {
-  struct cells_node_t node = {0};
-  node.meta.type = CELLS_NODE_TYPE_REF8;
-  node.meta.size = sizeof(offset);
-  node.as.ref = offset;
-  return node;
-}
-
-struct cells_node_t cells_new_tree0() {
-  struct cells_node_t node = {0};
-  node.meta.type = CELLS_NODE_TYPE_TREE0;
-  node.meta.size = 1;
-  return node;
-}
-
-struct cells_node_t cells_new_tree1() {
-  struct cells_node_t node = {0};
-  node.meta.type = CELLS_NODE_TYPE_TREE1;
-  node.meta.size = 1;
-  return node;
-}
-
-struct cells_node_t cells_new_tree2() {
-  struct cells_node_t node = {0};
-  node.meta.type = CELLS_NODE_TYPE_TREE2;
-  node.meta.size = 1;
-  return node;
-}
-
-struct cells_node_t cells_new_native0f(i64 value) {
-  struct cells_node_t node = {0};
-  node.meta.type = CELLS_NODE_TYPE_NATIVE0F;
-  node.meta.size = 1 + sizeof(value);
-  node.as.nativef = value;
-  return node;
-}
-
-struct cells_node_t cells_new_native1f(i64 value) {
-  struct cells_node_t node = {0};
-  node.meta.type = CELLS_NODE_TYPE_NATIVE1F;
-  node.meta.size = 1 + sizeof(value);
-  node.as.nativef = value;
-  return node;
-}
-
-struct cells_node_t cells_new_native2f(i64 value) {
-  struct cells_node_t node = {0};
-  node.meta.type = CELLS_NODE_TYPE_NATIVE2F;
-  node.meta.size = 1 + sizeof(value);
-  node.as.nativef = value;
-  return node;
-}
-
-struct cells_node_t cells_new_native0v(span_byte_t payload) {
-  struct cells_node_t node = {0};
-  node.meta.type = CELLS_NODE_TYPE_NATIVE0V;
-  node.as.nativev = payload;
-  node.meta.size = 1 + 1 + uleb128_size(node.as.nativev.len >> 5) + node.as.nativev.len;
-  return node;
-}
-
-struct cells_node_t cells_new_native1v(span_byte_t payload) {
-  struct cells_node_t node = {0};
-  node.meta.type = CELLS_NODE_TYPE_NATIVE1V;
-  node.as.nativev = payload;
-  node.meta.size = 1 + 1 + uleb128_size(node.as.nativev.len >> 5) + node.as.nativev.len;
-  return node;
-}
-
-struct cells_node_t cells_new_native2v(span_byte_t payload) {
-  struct cells_node_t node = {0};
-  node.meta.type = CELLS_NODE_TYPE_NATIVE2V;
-  node.as.nativev = payload;
-  node.meta.size = 1 + 1 + uleb128_size(node.as.nativev.len >> 5) + node.as.nativev.len;
-  return node;
 }

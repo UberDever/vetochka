@@ -44,13 +44,13 @@ test "smoke memory" {
     const rhs_n0f = c.cells_new_native0f(-3516);
 
     var tree_index: usize = 0;
-    try cTry(c.cells_alloc_node(cells, tree_node.meta.size, &tree_index));
+    try cTry(c.cells_alloc_chunk(cells, tree_node.meta.size, &tree_index));
     try cTry(c.cells_write_node(cells, tree_index, tree_node));
     var lhs_index: usize = 0;
-    try cTry(c.cells_alloc_node(cells, lhs_ref.meta.size, &lhs_index));
+    try cTry(c.cells_alloc_chunk(cells, lhs_ref.meta.size, &lhs_index));
     try cTry(c.cells_write_node(cells, lhs_index, lhs_ref));
     var rhs_index: usize = 0;
-    try cTry(c.cells_alloc_node(cells, rhs_n0f.meta.size, &rhs_index));
+    try cTry(c.cells_alloc_chunk(cells, rhs_n0f.meta.size, &rhs_index));
     try cTry(c.cells_write_node(cells, rhs_index, rhs_n0f));
 
     const tree_meta = c.cells_get_node_meta(cells, tree_index);
@@ -89,7 +89,7 @@ test "debug view demo" {
     // Create a mix of nodes
     const n1 = c.cells_new_tree2();
     var idx1: usize = 0;
-    try cTry(c.cells_alloc_node(cells, n1.meta.size, &idx1));
+    try cTry(c.cells_alloc_chunk(cells, n1.meta.size, &idx1));
     try cTry(c.cells_write_node(cells, idx1, n1));
     try std.testing.expectEqual(c.CELLS_NODE_TYPE_TREE2, c.cells_get_node_meta(cells, idx1).type);
 
@@ -97,13 +97,13 @@ test "debug view demo" {
     const payload = c.span_byte_t{ .data = &payload_data, .len = payload_data.len };
     const n3 = c.cells_new_native0v(payload);
     var idx3: usize = 0;
-    try cTry(c.cells_alloc_node(cells, n3.meta.size, &idx3));
+    try cTry(c.cells_alloc_chunk(cells, n3.meta.size, &idx3));
     try cTry(c.cells_write_node(cells, idx3, n3));
     try std.testing.expectEqual(c.CELLS_NODE_TYPE_NATIVE0V, c.cells_get_node_meta(cells, idx3).type);
 
     const n2 = c.cells_new_ref4(1024);
     var idx2: usize = 0;
-    try cTry(c.cells_alloc_node(cells, n2.meta.size, &idx2));
+    try cTry(c.cells_alloc_chunk(cells, n2.meta.size, &idx2));
     try cTry(c.cells_write_node(cells, idx2, n2));
     try std.testing.expectEqual(c.CELLS_NODE_TYPE_REF4, c.cells_get_node_meta(cells, idx2).type);
 

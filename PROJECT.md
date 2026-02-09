@@ -74,9 +74,10 @@ for any term `t` that is known statically, I have its corresponding location
     + `mutables` is nonempty: during evaluation, the terms in the mutables array will be reduced, hence the reference to the mutable inside lambda body will see updated value
     + `closed-overs` is nonempty: need to shift indices of these closed-overs on lambda invocation
     + `parameters` is nonempty: parameters must be bound to their corresponding argument locations; then, access to a parameter inside lambda body will do two jumps: reference to parameter and then reference to the argument; Note that this is sane, since if we rewrite the parameters in the body itself, we effectively would need to copy the body, which is not ideal
-- ⬜ this way, the code could inspect natives and opcodes (provided there is a rule 4 or something for builtin inspection)
+- ✅ this way, the code could inspect natives and opcodes (provided there is a rule 4 or something for builtin inspection)
 - update on binary encoding:
     * ✅ I need to treat the tree as a stream of bytes, with payload stored inplace; hence, I need to cleanly visualize this stream as a tree-like bytecode, which can change itself, since code is data here
+    * ❌ I'm updating this list below
     * References start with `0`
     * Reference `ref` could be variable size; Lets make them:
         + `[000][5bits]` 1 byte `ref1`
@@ -104,3 +105,42 @@ for any term `t` that is known statically, I have its corresponding location
     * Set `set`: `[10000010]`, it can be considered a fork
     * Lambda `lambda` `[10000011]`, it can be considered a fork
     * Currently, there are these kinds of opcodes, but more can be added if necessary
+
+### 04.02.2026
+- So, the nodes and the encoding
+- References stay the same conceptually, their encoding probably wouldn't change
+    considering their count in resulting bytecode => I want as less overhead as possible here
+- I've decided to make new naming and new structural changes; mainly: all nodes are now either leaf, stem or fork.
+     **Every node adheres to rules 0.a and 0.b (saturation, as I've called them)**
+- Next, fundamentally, there are three kinds of nodes: `delta`, `value` and `opcode`
+- `value` can be split into two groups: with fixed payload and with variable one. `value` can be applied: 
+    when the payload is fixed, it is assumed to be `intptr_t`, so we just reinterpret this as a function address and call it.
+    When the payload is variable, there is no much (as of now) sense to apply it, so it would result in an error
+- `opcode` is a hatch into the VM. Basically, a VM-native instruction, that could execute
+    arbitrary code, affecting the VM/reducer state. Its length is always fixed (1 byte)
+- `delta` is both a *value* and the *opcode*. Its a specific instance of two: a `value` without the payload and an opcode with special meaning. Basically, this is a way to encode triage-calculus itself into the picture of lisp-like language that operaes not on symbols, but on bytesequences/numbers.
+- The whole picture looks like this:
+  * the tree **is homogenous** with respect to original reduction rules. Every node can be applied to 0.a and 0.b. The behavior changes on furhter application of the fork node
+  * some nodes supply payload, which can be expected via
+    + intrinsics (value/opcode)
+    + triage-calculus, when first converted to its representation (intrinsic `get_payload`)
+  * some nodes can direct the flow of computation
+    + `delta` nodes are just triage-calculus
+    + `value` nodes are native calls
+    + `opcode` nodes are VM-specific operations
+  * every node has its interpretation:
+    + when passed to intrinsics
+    +  triage-calculus, when first converted to its representation (intrinsic `get_type`)
+- Note the duality of `get_payload` and `get_type` above. So, basically, every node has a type.
+    And every node has a payload. But oftentimes it is just `nil/false/^`
+- So, any node (currently and further) has this interface with regards to its semantics:
+  * leaf, stem or fork (discovered by rule 3)
+  * type (discovered by intrinsic `get_type` which has stable mapping from type node to tagged value)
+  * payload (discovered by intrinsic `get_payload` which provides tagged value) 
+- Also, for symmetry there must be `set_type` and `set_payload` intrinsics to construct
+    arbitrary native nodes out of triage-calculus encoded tagged values; for symmetry
+- ⬜ revive the tagging, what is the status? And so: `get_type` returns tagged `^ int <value>`, but how `int` is encoded? And more: seems like it is a part of an ABI now.
+- Chat-gpt forced me to consider this, and this is quite the point, I should enforce it here: 
+  * Programs are trusted; native call payloads are forgeable; safety is the responsibility of the embedding
+  * `set_type` may change the interpretation of an existing payload without validation; doing so is unsafe and may crash or call arbitrary native code
+  * there is a match `payload_kind(type) ∈ {none, int, bytes, …}` and `set_payload(node, p)` is an error unless `kind(p)` matches `payload_kind(get_type(node))`

@@ -34,13 +34,11 @@ pub fn build(b: *std.Build) !void {
     const c_core_dir = "reducer";
 
     const c_core_sources = &.{
+        b.pathJoin(&.{ c_core_dir, "vendor_stbds.c" }),
         b.pathJoin(&.{ c_core_dir, "cells_cells.c" }),
         b.pathJoin(&.{ c_core_dir, "cells_debug.c" }),
-        // b.pathJoin(&.{ eval_dir, "eval.c" }),
-        // b.pathJoin(&.{ eval_dir, "util.c" }),
-        // b.pathJoin(&.{ eval_dir, "memory.c" }),
-        // b.pathJoin(&.{ eval_dir, "encode.c" }),
-        // b.pathJoin(&.{ eval_dir, "native.c" }),
+        b.pathJoin(&.{ c_core_dir, "cells_node.c" }),
+        // b.pathJoin(&.{ c_core_dir, "reducer_reducer.c" }),
     };
 
     var flags = std.ArrayList([]const u8).empty;
