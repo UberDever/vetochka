@@ -7,22 +7,49 @@
 #include <string.h>
 
 error_t cells_create(struct cells_t** cells, size_t capacity) {
+  if (!cells) { return ERROR_INVALID_PARAM; }
   *cells = calloc(1, sizeof(struct cells_t));
+  if (!(*cells)) { return ERROR_GENERIC; }
   (*cells)->data = calloc(1, capacity);
-  if (!(*cells)->data) { return ERROR_GENERIC; }
+  if (!(*cells)->data) {
+    free(*cells);
+    *cells = NULL;
+    return ERROR_GENERIC;
+  }
   (*cells)->occupied_bitmap = _bitmap_alloc(capacity);
   if (!(*cells)->occupied_bitmap) {
     free((*cells)->data);
+    free(*cells);
+    *cells = NULL;
     return ERROR_GENERIC;
   }
+  (*cells)->free_chunks_head = calloc(1, sizeof(struct cells_free_chunk_t));
+  if (!(*cells)->free_chunks_head) {
+    free((*cells)->occupied_bitmap);
+    free((*cells)->data);
+    free(*cells);
+    *cells = NULL;
+    return ERROR_GENERIC;
+  }
+  (*cells)->free_chunks_head->index = 0;
+  (*cells)->free_chunks_head->size = capacity;
+  (*cells)->free_chunks_head->next = NULL;
   (*cells)->capacity = capacity;
   return ERROR_SUCCESS;
 }
 
 void cells_destroy(struct cells_t** cells) {
+  if (!cells || !(*cells)) { return; }
+  struct cells_free_chunk_t* free_chunk = (*cells)->free_chunks_head;
+  while (free_chunk) {
+    struct cells_free_chunk_t* next = free_chunk->next;
+    free(free_chunk);
+    free_chunk = next;
+  }
   free((*cells)->data);
   free((*cells)->occupied_bitmap);
   free(*cells);
+  *cells = NULL;
 }
 
 static inline byte tag_from_type(enum CELLS_NODE_TYPE type) {
@@ -225,38 +252,37 @@ struct cells_node_t cells_get_node(
   return node;
 }
 
-/**
- * Try to allocate a chunk of memory with the specified size and get its index.
- * Does not mark the cells as occupied.
- * @return index of the possibly allocated chunk, or 0 on failure.
- */
-static error_t cells_try_alloc_chunk(struct cells_t* cells, size_t chunk_size, size_t* index_out) {
-  size_t start_index = cells->next_free_index % (cells->capacity / 2);
-  size_t free_bytes_count = 0;
-  for (size_t i = start_index; i < cells->capacity; i++) {
-    if (!_bitmap_get_bit(cells->occupied_bitmap, i)) {
-      free_bytes_count++;
-    } else {
-      free_bytes_count = 0;
-    }
-    if (free_bytes_count == chunk_size) {
-      *index_out = i - free_bytes_count + 1;
+error_t cells_alloc_chunk(struct cells_t* cells, size_t chunk_size, size_t* index_out) {
+  if (!cells || !index_out) { return ERROR_INVALID_PARAM; }
+  if (chunk_size == 0) {
+    *index_out = 0;
+    return ERROR_SUCCESS;
+  }
+  struct cells_free_chunk_t* prev = NULL;
+  struct cells_free_chunk_t* free_chunk = cells->free_chunks_head;
+  while (free_chunk) {
+    if (free_chunk->size >= chunk_size) {
+      *index_out = free_chunk->index;
+      free_chunk->index += chunk_size;
+      free_chunk->size -= chunk_size;
+      if (free_chunk->size == 0) {
+        if (prev) {
+          prev->next = free_chunk->next;
+        } else {
+          cells->free_chunks_head = free_chunk->next;
+        }
+        free(free_chunk);
+      }
+      for (size_t j = *index_out; j < *index_out + chunk_size; j++) {
+        _bitmap_set_bit(cells->occupied_bitmap, j, 1);
+      }
       return ERROR_SUCCESS;
     }
+    prev = free_chunk;
+    free_chunk = free_chunk->next;
   }
-  return ERROR_GENERIC;
-}
 
-error_t cells_alloc_chunk(struct cells_t* cells, size_t chunk_size, size_t* index_out) {
-  if (chunk_size == 0) { return ERROR_SUCCESS; }
-  // to keep next index close to the start of the memory, cap it to part of capacity
-  error_t err = cells_try_alloc_chunk(cells, chunk_size, index_out);
-  if (err != ERROR_SUCCESS) { return err; }
-  for (size_t j = *index_out; j < *index_out + chunk_size; j++) {
-    _bitmap_set_bit(cells->occupied_bitmap, j, 1);
-  }
-  cells->next_free_index = *index_out + chunk_size;
-  return ERROR_SUCCESS;
+  return ERROR_GENERIC;
 }
 
 error_t cells_write_node(struct cells_t* cells, size_t index, struct cells_node_t node) {
@@ -325,13 +351,58 @@ error_t cells_write_node(struct cells_t* cells, size_t index, struct cells_node_
   }
 
 #undef CASE_WRITE_TAG
+
+  return ERROR_INVALID_PARAM;
 }
 
 error_t cells_node_free(struct cells_t* cells, size_t index, size_t node_size) {
-  for (size_t i = index; i < index + node_size; ++i) {
-    cells->data[i] = 0;
+  if (!cells) { return ERROR_INVALID_PARAM; }
+  if (node_size == 0) { return ERROR_SUCCESS; }
+  if (index >= cells->capacity || node_size > cells->capacity - index) {
+    return ERROR_OUT_OF_BOUNDS;
+  }
+
+  size_t end = index + node_size;
+  struct cells_free_chunk_t* prev = NULL;
+  struct cells_free_chunk_t* free_chunk = cells->free_chunks_head;
+  while (free_chunk && free_chunk->index < index) {
+    prev = free_chunk;
+    free_chunk = free_chunk->next;
+  }
+
+  if (prev) {
+    size_t prev_end = prev->index + prev->size;
+    if (prev_end > index) { return ERROR_INVALID_PARAM; }
+  }
+  if (free_chunk && end > free_chunk->index) { return ERROR_INVALID_PARAM; }
+
+  bool merge_prev = prev && (prev->index + prev->size == index);
+  bool merge_next = free_chunk && (end == free_chunk->index);
+  if (merge_prev && merge_next) {
+    prev->size += node_size + free_chunk->size;
+    prev->next = free_chunk->next;
+    free(free_chunk);
+  } else if (merge_prev) {
+    prev->size += node_size;
+  } else if (merge_next) {
+    free_chunk->index = index;
+    free_chunk->size += node_size;
+  } else {
+    struct cells_free_chunk_t* new_chunk = calloc(1, sizeof(struct cells_free_chunk_t));
+    if (!new_chunk) { return ERROR_GENERIC; }
+    new_chunk->index = index;
+    new_chunk->size = node_size;
+    new_chunk->next = free_chunk;
+    if (prev) {
+      prev->next = new_chunk;
+    } else {
+      cells->free_chunks_head = new_chunk;
+    }
+  }
+
+  memset(cells->data + index, 0, node_size);
+  for (size_t i = index; i < end; ++i) {
     _bitmap_set_bit(cells->occupied_bitmap, i, 0);
   }
-  cells->next_free_index = index % (cells->capacity / 2);
   return ERROR_SUCCESS;
 }
