@@ -1,6 +1,7 @@
 #include "cells_api.h"
 #include "cells_impl.h"
 #include "typedefs.h"
+#include "vendor/stb_ds.h"
 #include <assert.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -252,37 +253,175 @@ struct cells_node_t cells_get_node(
   return node;
 }
 
+static bool fits_in_ref2(i64 value) {
+  return value <= 0x1fff && value >= -0x1fff;
+}
+
+static bool fits_in_ref8(i64 value) {
+  return value <= 0x1fffffffffffffff && value >= -0x1fffffffffffffff;
+}
+
+typedef struct free_chunk_pair_t {
+  struct cells_free_chunk_t* prev;
+  struct cells_free_chunk_t* chunk;
+} free_chunk_pair_t;
+
 error_t cells_alloc_chunk(struct cells_t* cells, size_t chunk_size, size_t* index_out) {
   if (!cells || !index_out) { return ERROR_INVALID_PARAM; }
   if (chunk_size == 0) {
     *index_out = 0;
     return ERROR_SUCCESS;
   }
-  struct cells_free_chunk_t* prev = NULL;
-  struct cells_free_chunk_t* free_chunk = cells->free_chunks_head;
-  while (free_chunk) {
-    if (free_chunk->size >= chunk_size) {
-      *index_out = free_chunk->index;
-      free_chunk->index += chunk_size;
-      free_chunk->size -= chunk_size;
-      if (free_chunk->size == 0) {
-        if (prev) {
-          prev->next = free_chunk->next;
+  free_chunk_pair_t pair = {0};
+  pair.chunk = cells->free_chunks_head;
+  while (pair.chunk) {
+    if (pair.chunk->size >= chunk_size) {
+      *index_out = pair.chunk->index;
+      pair.chunk->index += chunk_size;
+      pair.chunk->size -= chunk_size;
+      if (pair.chunk->size == 0) {
+        if (pair.prev) {
+          pair.prev->next = pair.chunk->next;
         } else {
-          cells->free_chunks_head = free_chunk->next;
+          cells->free_chunks_head = pair.chunk->next;
         }
-        free(free_chunk);
+        free(pair.chunk);
       }
       for (size_t j = *index_out; j < *index_out + chunk_size; j++) {
         _bitmap_set_bit(cells->occupied_bitmap, j, 1);
       }
       return ERROR_SUCCESS;
     }
-    prev = free_chunk;
-    free_chunk = free_chunk->next;
+    pair.prev = pair.chunk;
+    pair.chunk = pair.chunk->next;
   }
 
   return ERROR_GENERIC;
+}
+
+error_t cells_alloc_chunk_with_refs(
+    struct cells_t* cells,
+    size_t chunk_size,
+    struct opt_size_t referenced_lhs,
+    struct opt_size_t referenced_rhs,
+    size_t* index_out) {
+  if (!cells || !index_out) { return ERROR_INVALID_PARAM; }
+  if (chunk_size == 0) {
+    *index_out = 0;
+    return ERROR_SUCCESS;
+  }
+  if (!referenced_lhs.has_value) { return ERROR_INVALID_PARAM; }
+  // to try (with addition to chunk_size):
+  // 2bytes(lhs2)
+  // 4bytes(lhs2, rhs2)
+  // 8bytes(lhs8)
+  // 10bytes(lhs2, rhs8 or lhs8, rhs2)
+  // 16bytes(lhs8, rhs8)
+  const size_t configs_len = 6;
+  struct pair_size_t_size_t configs[configs_len];
+  configs[0] = (struct pair_size_t_size_t){sizeof(i16), 0};
+  configs[1] = (struct pair_size_t_size_t){sizeof(i16), sizeof(i16)};
+  configs[2] = (struct pair_size_t_size_t){sizeof(i64), 0};
+  configs[3] = (struct pair_size_t_size_t){sizeof(i16), sizeof(i64)};
+  configs[4] = (struct pair_size_t_size_t){sizeof(i64), sizeof(i16)};
+  configs[5] = (struct pair_size_t_size_t){sizeof(i64), sizeof(i64)};
+  free_chunk_pair_t* free_chunks = NULL;
+  size_t selected_config = 0;
+  size_t selected_chunk = 0;
+  for (selected_config = 0; selected_config < configs_len; ++selected_config) {
+    size_t need_size =
+        chunk_size + configs[selected_config].first + configs[selected_config].second;
+    free_chunk_pair_t pair = {0};
+    pair.chunk = cells->free_chunks_head;
+    while (pair.chunk) {
+      if (pair.chunk->size >= need_size) { stbds_arrput(free_chunks, pair); }
+      pair.prev = pair.chunk;
+      pair.chunk = pair.chunk->next;
+    }
+    if (stbds_arrlenu(free_chunks) == 0) { continue; }
+    bool found_config = false;
+    for (selected_chunk = 0; selected_chunk < stbds_arrlenu(free_chunks); ++selected_chunk) {
+      struct cells_free_chunk_t* free_chunk = free_chunks[selected_chunk].chunk;
+      size_t supposed_index = free_chunk->index;
+      i64 ref_lhs = (i64)referenced_lhs.value - ((i64)supposed_index + chunk_size);
+      i64 ref_rhs = 0;
+      if (referenced_rhs.has_value) {
+        ref_rhs = (i64)referenced_rhs.value
+                  - ((i64)supposed_index + chunk_size + configs[selected_config].first);
+      }
+      switch (selected_config) {
+        case 0:
+          if (fits_in_ref2(ref_lhs) && !referenced_rhs.has_value) {
+            found_config = true;
+            break;
+          }
+          continue;
+        case 1:
+          if (fits_in_ref2(ref_lhs) && fits_in_ref2(ref_rhs)) {
+            found_config = true;
+            break;
+          }
+          continue;
+        case 2:
+          if (fits_in_ref8(ref_lhs) && !referenced_rhs.has_value) {
+            found_config = true;
+            break;
+          }
+          continue;
+        case 3:
+          if (fits_in_ref2(ref_lhs) && fits_in_ref8(ref_rhs)) {
+            found_config = true;
+            break;
+          }
+          continue;
+        case 4:
+          if (fits_in_ref8(ref_lhs) && fits_in_ref2(ref_rhs)) {
+            found_config = true;
+            break;
+          }
+          continue;
+        case 5:
+          if (fits_in_ref8(ref_lhs) && fits_in_ref8(ref_rhs)) {
+            found_config = true;
+            break;
+          }
+          continue;
+      }
+      if (found_config) { break; }
+    }
+    if (found_config) { break; }
+    stbds_arrsetlen(free_chunks, 0);
+  }
+  error_t err = ERROR_SUCCESS;
+  // can't find free chunk that would be able to store biggest size for references and be
+  // able to reference referenced nodes
+  if (selected_config >= configs_len) {
+    err = ERROR_GENERIC;
+    goto defer;
+  }
+  if (selected_chunk >= stbds_arrlenu(free_chunks)) {
+    err = ERROR_GENERIC;
+    goto defer;
+  }
+  size_t need_size = chunk_size + configs[selected_config].first + configs[selected_config].second;
+  free_chunk_pair_t pair = free_chunks[selected_chunk];
+  *index_out = pair.chunk->index;
+  pair.chunk->index += need_size;
+  pair.chunk->size -= need_size;
+  if (pair.chunk->size == 0) {
+    if (pair.prev) {
+      pair.prev->next = pair.chunk->next;
+    } else {
+      cells->free_chunks_head = pair.chunk->next;
+    }
+    free(pair.chunk);
+  }
+  for (size_t j = *index_out; j < *index_out + need_size; j++) {
+    _bitmap_set_bit(cells->occupied_bitmap, j, 1);
+  }
+defer:
+  stbds_arrfree(free_chunks);
+  return err;
 }
 
 error_t cells_write_node(struct cells_t* cells, size_t index, struct cells_node_t node) {
@@ -290,7 +429,7 @@ error_t cells_write_node(struct cells_t* cells, size_t index, struct cells_node_
     case CELLS_NODE_TYPE_REF2: {
       u16 offset = 0;
       if (index + sizeof(offset) > cells->capacity) { return ERROR_OUT_OF_BOUNDS; }
-      if (node.as.ref > 0x1fff || node.as.ref < -0x1fff) { return ERROR_INVALID_PARAM; }
+      if (!fits_in_ref2(node.as.ref)) { return ERROR_INVALID_PARAM; }
       offset = (u16)(0x00 << 14) | (u16)(node.as.ref & 0x3fff);
       write_u16_be(cells->data + index, offset);
       return ERROR_SUCCESS;
@@ -298,9 +437,7 @@ error_t cells_write_node(struct cells_t* cells, size_t index, struct cells_node_
     case CELLS_NODE_TYPE_REF8: {
       u64 offset = 0;
       if (index + sizeof(offset) > cells->capacity) { return ERROR_OUT_OF_BOUNDS; }
-      if (node.as.ref > 0x1fffffffffffffff || node.as.ref < -0x1fffffffffffffff) {
-        return ERROR_INVALID_PARAM;
-      }
+      if (!fits_in_ref8(node.as.ref)) { return ERROR_INVALID_PARAM; }
       offset = (u64)(0x01LU << 62) | (u64)(node.as.ref & 0x3fffffffffffffffLU);
       write_u64_be(cells->data + index, offset);
       return ERROR_SUCCESS;

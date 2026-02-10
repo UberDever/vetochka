@@ -76,14 +76,24 @@ struct cells_node_t cells_get_node(
  */
 error_t cells_alloc_chunk(struct cells_t* cells, size_t chunk_size, size_t* index_out);
 
-/*
+/**
  * Tries to allocate a chunk of memory for specified referenced node at index.
- * Tries different refs of different sizes, until one of them will be able to
- * reference resulting chunk.
+ * Tries different refs of different sizes, until the resulted chunk will be able to store
+ * references of sufficient sizes.
+ * @param chunk_size must include size of the node, without size for the references, so algorighm
+ * will calclulate those for you.
+ * @param referenced_lhs and referenced_rhs are the indices of the nodes you need to reference;
+ * it is expected that either lhs or (lhs, rhs) will be set.
+ * @param index_out will be the start of the allocated chunk, shifts for the references
+ * must be calclulated by the caller based on the returned index and node size.
+ * @return ERROR_SUCCESS on success, error code on failure.
  */
-// error_t cells_alloc_referenced_chunk(struct cells_t* cells, size_t total_size,
-//                                      size_t referenced_index,
-//                                      size_t* index_out, struct cells_node_t* ref_out);
+error_t cells_alloc_chunk_with_refs(
+    struct cells_t* cells,
+    size_t chunk_size,
+    struct opt_size_t referenced_lhs,
+    struct opt_size_t referenced_rhs,
+    size_t* index_out);
 
 /**
  * Writes node inplace at provided index.

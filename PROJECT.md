@@ -156,7 +156,7 @@ for any term `t` that is known statically, I have its corresponding location
 - value0, value1, value2 (variable): 0x86, 0x87, 0x88, followed by len (uleb128) and the payload as bytes
 - opcode0, opcode1, opcode2: basically, three versions of the same opcode as a single byte;
     the payload should go as a children
-- ⬜ on gc: need to use free list in the cells
+- ✅ on gc: need to use free list in the cells
 
 ### 10.02.2026
 - I've decided to use special `call` opcode to be able to call to native functions;
