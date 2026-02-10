@@ -112,6 +112,9 @@ struct cells_node_meta_t cells_get_node_meta(struct cells_t* cells, size_t index
   CASE_TAG(SEQ0, 1);
   CASE_TAG(SEQ1, 1);
   CASE_TAG(SEQ2, 1);
+  CASE_TAG(CALL0, 1);
+  CASE_TAG(CALL1, 1);
+  CASE_TAG(CALL2, 1);
 
 #undef CASE_TAG
 
@@ -208,7 +211,10 @@ struct cells_node_t cells_get_node(
     }
     case CELLS_NODE_TYPE_SEQ0:
     case CELLS_NODE_TYPE_SEQ1:
-    case CELLS_NODE_TYPE_SEQ2: {
+    case CELLS_NODE_TYPE_SEQ2:
+    case CELLS_NODE_TYPE_CALL0:
+    case CELLS_NODE_TYPE_CALL1:
+    case CELLS_NODE_TYPE_CALL2: {
       node.meta = meta;
       return node;
     }
@@ -309,6 +315,9 @@ error_t cells_write_node(struct cells_t* cells, size_t index, struct cells_node_
       CASE_WRITE_TAG(SEQ0)
       CASE_WRITE_TAG(SEQ1)
       CASE_WRITE_TAG(SEQ2)
+      CASE_WRITE_TAG(CALL0)
+      CASE_WRITE_TAG(CALL1)
+      CASE_WRITE_TAG(CALL2)
 
     case CELLS_NODE_TYPE_INVALID:
       // TODO: report here, stacktrace + node data

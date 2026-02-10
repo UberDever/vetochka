@@ -87,6 +87,9 @@ static void print_node_desc(
     case CELLS_NODE_TYPE_SEQ0: print(ctx, "seq0"); break;
     case CELLS_NODE_TYPE_SEQ1: print(ctx, "seq1"); break;
     case CELLS_NODE_TYPE_SEQ2: print(ctx, "seq2"); break;
+    case CELLS_NODE_TYPE_CALL0: print(ctx, "call0"); break;
+    case CELLS_NODE_TYPE_CALL1: print(ctx, "call1"); break;
+    case CELLS_NODE_TYPE_CALL2: print(ctx, "call2"); break;
     case CELLS_NODE_TYPE_INVALID: print(ctx, "INVALID"); break;
   }
   print(ctx, "%s", COLOR_RESET);

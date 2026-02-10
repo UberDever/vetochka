@@ -157,3 +157,7 @@ for any term `t` that is known statically, I have its corresponding location
 - opcode0, opcode1, opcode2: basically, three versions of the same opcode as a single byte;
     the payload should go as a children
 - ⬜ on gc: need to use free list in the cells
+
+### 10.02.2026
+- I've decided to use special `call` opcode to be able to call to native functions;
+    therefore, any value now is not callable (but assembleble, rules 0a and 0b still work)
