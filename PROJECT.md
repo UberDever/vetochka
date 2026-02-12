@@ -161,3 +161,69 @@ for any term `t` that is known statically, I have its corresponding location
 ### 10.02.2026
 - I've decided to use special `call` opcode to be able to call to native functions;
     therefore, any value now is not callable (but assembleble, rules 0a and 0b still work)
+
+
+### 12.02.2026
+- inspired by wisp, I'm pondering on the syntax of vetochka1
+     (text form of vetochka0, as vetochka0 is purely a bytecode, implemented in C dsl)
+- an application is just things together in the list, right associative `(a b c) == (a (b c))`
+- so, there are no lists with `()`: this is an application; To encode a list: `^ a : ^ b : ^ c nil == (^ a (^ b (^ c nil)))`
+- example for wisp
+```
+(a ((b c))
+    d (e f)
+    g
+)
+```
+as
+```lisp
+a : : b c
+  . d : e f
+  . g
+; or
+a
+  :
+    b c
+  . d
+  e f
+  . g
+```
+- parens are still allowed from time to time for simplification, i.e.
+```
+a : (b c)
+  . d (e f)
+  . g
+```
+---
+- strings are hard... currently, I'm discussing the syntactical standpoint:
+- they can be single line or multiline 
+- they can contain characters that are needed to be escaped 
+- if they are multiline we sometimes want to preserve whitespace, sometimes not 
+- string is a series of meaningful bytes (often just utf-8), but what about other seqences of bytes?
+- we sometimes want them to be null-terminated, how do we show this syntactically?
+- interpolation...
+- after **MANY** thoughs about strings, we do the simple stuff
+- only one lexical form for strings as a sequence of *human-readable* bytes;
+    single issue what we are solving here => where does the string end?
+- everything else must be done by compile time functions; This means that 
+    *in order to support this, we need comptime*, but this is doable, especially in triage-calculus;
+    examples: `cstr, trim, detend, bytes, hex, fmt` and others
+- single lexical form is `s{}` or `s{{{}}}` where the latter has k>=3 curlies
+- matching of curlies is greedy, so `s{{{{}}}}` is always an empty string,
+    not a `{}` with three-level curlies
+- beggining `s` is inseparable from `{}`, so curlies could still be used
+- no escapes in the string literals are allowed
+---
+- ⬜ numbers are follow, ints and floats and bunch. I'd expected this to be a problem, but currently
+    we are only interested in the string of digits for 64bit ints; so I need to
+    make them as extensible as strings
+- intrinsics, being the opcodes `lambda, seq` and others can be encoded verbatim
+```
+:
+    lambda : ^ (params) : ^ (closed-overs) : ^ (mutables) nil
+        seq 
+            print s{Hello, world!}
+            print s{From vetochka!}
+    nil
+```
+- this is quirky and I like it
