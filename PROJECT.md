@@ -227,3 +227,9 @@ a : (b c)
     nil
 ```
 - this is quirky and I like it
+
+### 13.02.2026
+- WISP: https://srfi.schemers.org/srfi-119/srfi-119.html
+- Curly-infix expressions: https://srfi.schemers.org/srfi-105/srfi-105.html
+- I'd took all curly-infix, except for *mixed* expression, where they introduce `$nfx` to
+    be able to parse infix in reader macro; Currently, I don't see any reason to include this
