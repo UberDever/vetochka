@@ -207,8 +207,9 @@ a : (b c)
     single issue what we are solving here => where does the string end?
 - everything else must be done by compile time functions; This means that 
     *in order to support this, we need comptime*, but this is doable, especially in triage-calculus;
-    examples: `cstr, trim, detend, bytes, hex, fmt` and others
-- single lexical form is `s{}` or `s{{{}}}` where the latter has k>=3 curlies
+    examples: `cstr, trim, dedent, bytes, hex, fmt` and others
+- single lexical form is `s{}` with any number of curlies, so any prefix of `{...{` would
+match ending `}...}`
 - matching of curlies is greedy, so `s{{{{}}}}` is always an empty string,
     not a `{}` with three-level curlies
 - beggining `s` is inseparable from `{}`, so curlies could still be used
@@ -233,3 +234,34 @@ a : (b c)
 - Curly-infix expressions: https://srfi.schemers.org/srfi-105/srfi-105.html
 - I'd took all curly-infix, except for *mixed* expression, where they introduce `$nfx` to
     be able to parse infix in reader macro; Currently, I don't see any reason to include this
+
+### 15.02.2026
+- currently, final one on syntax
+- first thing first: interpreter must include a module `bytecode` that
+    will accept bytecode in textual format; I've called this format vetochka0
+    but this is no longer necessary -- we will unite the syntax under one vetochka
+- therefore, vetochka syntax (once and for all) will include (informally):
+- lisp. Usual `(f a b c)` that practically means left-associative application
+    `(((f a) b) c)`
+- WISP: see srfi-119 above
+- Curly-infix expressions: see srfi-105 above
+- Literals in the form `<prefix>{contents}`, see my thoughts on the strings above;
+    My current design: there are builtin literals like `s`, `i64`, floats and maybe something else; These are used to encode `value` nodes *directly*. The rest like `bytes` can be done using comptime functions. BUT! this is terra incognita for now,
+    hence I will just provide the syntax convenience: any literal of the form `<prefix>{contents}` that is not builtin will be desugared to `(^ s{prefix} s{contents})`; every literal adheres to string parsing rule, meaning `i64{-1234}` is effectively `builtin.parse! s{-1234}`, so `i64{{{-1234}}}` is also valid
+- Identifiers are just strings. currently, I don't see any restrictions on identifiers, except for these two:
+    + they must not clash with other identifier-like symbols
+    + they can't contain whitespace or control symbols like `(`, `{` and maybe `[`
+- References are the way to reference terms or other single-level references (to achieve mutability);
+    They are bound (declared) by the syntax: `rN::...r2::r1:(a b c)`, where `rN` to `r2`
+    is an arbitrary amount of *references to reference* (`r1` in this case) and `r1` is
+    a reference for the term `(a b c)`; Note that the term and reference `r1` reside in `cells` so we effectively bind references to *code*, but since code is data, this is fine; References are used by the syntax: `(:r1: a b)`, the same for double-references; References primarily used to reference distant stuff/reuse code or achieve mutability with conjunction with `.set`
+- Opcodes are identifiers like `.set`, `.lambda` and a bunch. Correspond to opcodes directly
+- Comments are `;{}` and `;;`; Former adheres to string parsing rules and is used to comment out
+    a grouped block, latter is just to the end of the line
+- Thats it. Maybe I'll need something in the future, but I don't think this will actually happen
+- The thing is: this syntax is builtin. Meaning, all extension of the language will be
+    done using this syntax. Currently, I think this is sufficien enough, to encode anything non-trivial in somewhat concise and pleasant to look at manner
+- There is a subset of this syntax that I will call "canonical", strictly in a sense that
+    it will be used as minimal syntax to represent stuff. It will contain literals desugared, won't contain comments and all applications will be explicit. This is needed for bytecode dumping and persistance
+- ⬜ For future: implement this lexer+parser in the interpreter (module `bytecode`)
+- ⬜ For future: implement bytecode dumping
