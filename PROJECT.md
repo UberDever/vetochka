@@ -244,7 +244,7 @@ match ending `}...}`
 - lisp. Usual `(f a b c)` that practically means left-associative application
     `(((f a) b) c)`
 - WISP: see srfi-119 above
-- Curly-infix expressions: see srfi-105 above
+- ❌ Curly-infix expressions: see srfi-105 above
 - Literals in the form `<prefix>{contents}`, see my thoughts on the strings above;
     My current design: there are builtin literals like `s`, `i64`, floats and maybe something else; These are used to encode `value` nodes *directly*. The rest like `bytes` can be done using comptime functions. BUT! this is terra incognita for now,
     hence I will just provide the syntax convenience: any literal of the form `<prefix>{contents}` that is not builtin will be desugared to `(^ s{prefix} s{contents})`; every literal adheres to string parsing rule, meaning `i64{-1234}` is effectively `builtin.parse! s{-1234}`, so `i64{{{-1234}}}` is also valid
@@ -265,3 +265,57 @@ match ending `}...}`
     it will be used as minimal syntax to represent stuff. It will contain literals desugared, won't contain comments and all applications will be explicit. This is needed for bytecode dumping and persistance
 - ⬜ For future: implement this lexer+parser in the interpreter (module `bytecode`)
 - ⬜ For future: implement bytecode dumping
+
+### 16.02.2026
+- After reading https://srfi.schemers.org/srfi-266/ I've realized that curly-infix is very specific
+    thing to add to the base language, especially since we have reflection builtin;
+    So, its better to utilize it like so `expr s[1 + 2 + 3 + 4]`. Whats that? A list syntax?!?!?
+- So, yeah, it is certain that I'll need some sugar for lists since writing `(^ a (^ b (^ c ^)))` or `: ^ a : ^ b : ^ c ^` is very cumbersome and lame. Since I don't want to be bothered with the details right now, let's say that `s[]` is a sugar for this kind of lists.
+- Therefore, the `{}` and `[]` is free for something more important, maybe just alias it to `()` to be able to "hint meaning"? Idk, sounds interesting, but maybe it's a bad idea
+- With analogy to strings: lists `s[]` can be used to express more sophisticated datastructures, like map `hashmap s[ s[s{foo1} s{bar}] s[s{foo2} s{baz}] s[s{foo3} s{qux}}]]`
+- ⬜ Or maybe it is better to remove `s` prefix entirely? Then, you'll have something like
+    `hashmap [ [{foo} {bar}] [{foo2} {baz}] [{foo3} {qux}] ]`. Looks more readable. Then,
+    `{}` strings are **always** valid utf-8 bytes and `[]` lists are **always** nil-terminated
+    proper lists. Ints like `i64` then can be encoded by designated opcodes like `.i64` that
+    will take a string and parse it to real `value` node.
+- Since we'll have designated build step anyway (in some way or another), these 
+    opcodes can be calculated beforehand. 
+- an example
+```lisp
+;; any opcode can have a luxury to accept any syntax, this is a very powerful idea
+;; unit = ^
+;; all closed ones must be provided by intrinsics, I think
+;; .lambda body is desugared in the sequence of `.seq` since it is a list
+;; TODO: idk how to do functions with multiple arguments
+;; TODO: imperative for is awkward
+.lambda [
+  closed= [<= and or expr for concat length hashmap-set hashmap-get hashmap-keys print] 
+  params= [is-letter to-lower count-words]
+] 
+  : .set is-letter ;; .lambda param is implicit
+      : .lambda [c] : expr [[{a} <= c and c <= {z}] or [{A} <= c and c <= {Z}]]
+    .set to-lower .lambda [c]
+      : .if : expr {A} <= c and c <= {Z}
+          expr c - {A} + {a}
+          c
+    .set count-words .lambda [closed= [is-letter to-lower] params= [text] locals= [counts current]]
+      : .set counts : hashmap []
+        .set current : {}
+        for [c text]
+          : .if (is-letter c)
+              .set current : concat [current (to-lower c)]
+              : .if (> (length current) 0)
+                  .seq hashmap-set [counts (current (+ 1 (hashmap-get [counts current])))]
+                    .set current {}
+        .if : (expr (length current) > 0)
+          .seq hashmap-set [counts (current (+ 1 (hashmap-get [counts current])))]
+          unit
+        counts
+      .lambda [locals= [text counts] closed=[count-words]]
+        : .set text {Hello world hello test world}
+          .set counts (count-words text)
+          for [key (hashmap-keys [counts])]
+            print (concat key (concat {: } (hashmap-get counts key)))
+        unit
+  unit
+```
