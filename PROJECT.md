@@ -319,3 +319,6 @@ match ending `}...}`
         unit
   unit
 ```
+- ⬜ not a syntax one. I need to use adjacency for apply. So, no `REDUCER_APPLY_TOKEN`.
+    Therefore, reducer stack contains indices which should be evaluated next, not `f arg` implicit pairs. Therefore, **every** application must be implemented as two nearby nodes in cells, and any two nodes near each other are subject to application.
+    This is done because when I was pondering on lambdas, I've realized that I have two options: apply by adjacency, or somehow structure reducer stack in a way to call a lambda that was defined way before the code I'm currently executing. This is unplausible.
