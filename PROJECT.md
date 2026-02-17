@@ -322,3 +322,10 @@ match ending `}...}`
 - ⬜ not a syntax one. I need to use adjacency for apply. So, no `REDUCER_APPLY_TOKEN`.
     Therefore, reducer stack contains indices which should be evaluated next, not `f arg` implicit pairs. Therefore, **every** application must be implemented as two nearby nodes in cells, and any two nodes near each other are subject to application.
     This is done because when I was pondering on lambdas, I've realized that I have two options: apply by adjacency, or somehow structure reducer stack in a way to call a lambda that was defined way before the code I'm currently executing. This is unplausible.
+
+### 17.02.2026
+- ⬜ There is no free cake. Meaning, I need to make sense of triage calculus first and **then** introduce new semantics,
+    which means that its time to stop dreaming. All my ideas are good stuff, but they will be reevaluated under the knowledge of the calculus itself.
+- I will implement the calculus part of the reducer and write tests that I've described in the old version. Then, I'll methodically, one by one, will introduce encodings for the things I need **and** maybe encode them as opcodes. This is sane, after all to use opcodes is to make interpretation faster, not to cheat.
+- Syntax holds, mutability (conceptually) also holds. Sequencing, lambda and a bunch must be reimplemented in the triage calculus itself. Architecture is solid and encoding is decent. Some adjustments as new literals can be added. Bytecode handling also is decent.
+- That said, I'll step away from the project again. Need to implement stuff finally, wrap it up and do my real job
