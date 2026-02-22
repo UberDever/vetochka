@@ -329,3 +329,14 @@ match ending `}...}`
 - I will implement the calculus part of the reducer and write tests that I've described in the old version. Then, I'll methodically, one by one, will introduce encodings for the things I need **and** maybe encode them as opcodes. This is sane, after all to use opcodes is to make interpretation faster, not to cheat.
 - Syntax holds, mutability (conceptually) also holds. Sequencing, lambda and a bunch must be reimplemented in the triage calculus itself. Architecture is solid and encoding is decent. Some adjustments as new literals can be added. Bytecode handling also is decent.
 - That said, I'll step away from the project again. Need to implement stuff finally, wrap it up and do my real job
+
+### 22.02.2026
+- So, conclusions for now
+- after I've consulted chatgpt on the ways to keep the calculus, we came up with the new meta
+- basically, keep tree calculus as is. then, introduce all the neat stuff: optimizations, side-effects, mutability, sequencing via opcodes. but opcodes themselves would be tree terms! specifically, tree values.
+- this way we get full intensionality and keep all natives, just that for tree calculus the natives are just opaque deltas
+- general encoding I've came up with for "opcode" term is this: `^ [tag-magic opcode stuff...]`. this is a stem because we want to be able to call this opcode somehow. general shape for an argument is simply a list `[arg1 arg2...]`. this way this term behaves as generic tree term, and when it becomes a fork, it is readdy to be called
+- general evaluation strategy is now the following: given a term, reduce it using the reducer to a value; then, reduce it value using a VM and do a reduction in big-step semantics; iterate this loop so that in the end we encounter "halt" opcode and then we do stop
+- sequencing is done by continuation style; lambdas can be done via combinators, with sepcific opcodes
+- this whole thing is very promising and further research could help to achieve great expressivity + somewhat decent perf
+- so, with this i could stall this project. efforts were very fruitful, as they helped me to understand the nature of calculus deeply and its big semantic capabilities
