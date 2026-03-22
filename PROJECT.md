@@ -264,7 +264,7 @@ match ending `}...}`
 - There is a subset of this syntax that I will call "canonical", strictly in a sense that
     it will be used as minimal syntax to represent stuff. It will contain literals desugared, won't contain comments and all applications will be explicit. This is needed for bytecode dumping and persistance
 - ⬜ For future: implement this lexer+parser in the interpreter (module `bytecode`)
-- ⬜ For future: implement bytecode dumping
+- ✅ For future: implement bytecode dumping
 
 ### 16.02.2026
 - After reading https://srfi.schemers.org/srfi-266/ I've realized that curly-infix is very specific
@@ -319,9 +319,11 @@ match ending `}...}`
         unit
   unit
 ```
-- ⬜ not a syntax one. I need to use adjacency for apply. So, no `REDUCER_APPLY_TOKEN`.
+- ❌ not a syntax one. I need to use adjacency for apply. So, no `REDUCER_APPLY_TOKEN`.
     Therefore, reducer stack contains indices which should be evaluated next, not `f arg` implicit pairs. Therefore, **every** application must be implemented as two nearby nodes in cells, and any two nodes near each other are subject to application.
     This is done because when I was pondering on lambdas, I've realized that I have two options: apply by adjacency, or somehow structure reducer stack in a way to call a lambda that was defined way before the code I'm currently executing. This is unplausible.
+    + This won't work as I don't know how to encode multistep rules 2 and 3c since their results could be sparsed
+    + Reducer doesn't know anything about lambdas and such, this is another level -> problem solved
 
 ### 17.02.2026
 - ⬜ There is no free cake. Meaning, I need to make sense of triage calculus first and **then** introduce new semantics,
@@ -340,3 +342,40 @@ match ending `}...}`
 - sequencing is done by continuation style; lambdas can be done via combinators, with sepcific opcodes
 - this whole thing is very promising and further research could help to achieve great expressivity + somewhat decent perf
 - so, with this i could stall this project. efforts were very fruitful, as they helped me to understand the nature of calculus deeply and its big semantic capabilities
+- Triage calculus rules:
+    + `^` is a delta symbol, i.e. a binary combinator that can be also standalone
+    + Important note: an apply symbol `$` is made explicit here for clarification. However, in the theory and implementation it is sufficient to
+        apply nodes based on their positions only. That is, given a certain position, two consecutive nodes could be considered applied to each other if they don't form a triage calculus value (leaf, stem, fork) already, in which case the application is redundant and we can stop the computation
+    + 0a. `^ $ x -> ^ x`; 
+    + 0b. `^ x $ y -> ^ x y`
+    + 1. `^ ^ x $ y -> x`
+    + 2. `^ (^ x) y $ z -> (x z) (y z)`
+    + 3a. `^ (^ w x) y $ ^ -> w`
+    + 3b. `^ (^ w x) y $ (^ u) -> x u`
+    + 3c. `^ (^ w x) y $ (^ u v) -> y u v` 
+
+### 18.03.2026
+- (#llm on tagging)
+```
+Requirements for the tagging mechanism are established:
+
+Distinguishability — opcode term contains a magic native integer node at a fixed, known position; VM checks this position to confirm opcode identity
+Reducibility — opcode term is always a fully-reduced triage value; reducer is blind to it
+Saturation — VM dispatches only on fully saturated opcodes (fork applied to all args); If opcode is unsaturated, it is treated as 
+a generic tree and returned verbatim
+Payload carriage — opcode identity and arguments are carried as children within the fork structure
+Composability — opcode term is a valid triage term, passable/storable like any other value
+Shape-based inspectability — tag's tree shape (leaf/stem/fork) is sufficient for calculus-level branching via rules 3a–3c; no integer extraction needed from calculus
+Fixed magic position — position of magic within the opcode tree is a fixed convention (to be designed); VM checks it in O(1) without tree walking
+Validity — opcode could be invalid when it is saturated and its *internal invariants* are not met. These could include (but not limited to)
+    args count mismatch, args type mismatch, invalid internal structure; In such cases VM raises an error
+
+Unsaturated opcode: delta1 delta2 value(magic_N) delta2 payload delta0
+
+Saturated opcode: delta2 delta2 value(magic_N) delta2 payload delta0 args
+
+magic_N is a unique native integer per opcode, serves as opcode identity and sentinel.
+Unsaturated opcode (stem) is a valid triage value, returned verbatim by VM.
+User extensibility via call opcode carrying a native function pointer in payload.
+Shape-based inspectability: opcode stem routes to rule 3b when used as z in rule 3, enabling calculus-level branching by shape alone.
+```

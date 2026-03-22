@@ -4,6 +4,7 @@ const std = @import("std");
 const c = @cImport({
     @cInclude("cells_api.h");
     @cInclude("cells_debug.h");
+    @cInclude("reducer_api.h");
     @cInclude("stdio.h");
 });
 const log = std.log.scoped(.reducer);
@@ -109,4 +110,90 @@ test "debug view demo" {
 
     // std.debug.print("\n--- Debug View Demo ---\n", .{});
     // c.cells_print_debug_view(cells, debug_print, null);
+}
+
+test "eval smoke" {
+    std.testing.log_level = .debug;
+
+    var cells: ?*c.struct_cells_t = null;
+    try cTry(c.cells_create(&cells, 64));
+    defer c.cells_destroy(&cells);
+
+    var reducer: ?*c.struct_reducer_t = null;
+    try cTry(c.reducer_create(&reducer, cells));
+    defer c.reducer_free(&reducer);
+
+    defer {
+        const err = c.reducer_get_error(reducer);
+        if (err != null) {
+            std.debug.print("{s}", .{err});
+        }
+    }
+
+    {
+        // rule 0.a
+        c.reducer_push_to_stack(reducer, c.REDUCER_APPLY_TOKEN);
+
+        const delta0 = c.cells_new_delta0();
+        var index_out: usize = 0;
+        try cTry(c.cells_alloc_chunk(cells, delta0.meta.size, &index_out));
+        try cTry(c.cells_write_node(cells, index_out, delta0));
+        c.reducer_push_to_stack(reducer, index_out);
+
+        try cTry(c.cells_alloc_chunk(cells, delta0.meta.size, &index_out));
+        try cTry(c.cells_write_node(cells, index_out, delta0));
+        c.reducer_push_to_stack(reducer, index_out);
+
+        const res = c.reducer_step(reducer);
+        try cTry(res);
+        try std.testing.expectEqual(c.REDUCER_DONE, res);
+        try std.testing.expectEqual(true, c.reducer_has_result(reducer));
+
+        const result = c.reducer_get_result(reducer);
+        var root_node = c.cells_node_t{};
+        var result1 = result;
+        try cTry(c.cells_dereference_node(cells, &result1, &root_node));
+        try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA1, root_node.meta.type);
+        var left_node = c.cells_node_t{};
+        var result2 = result;
+        try cTry(c.cells_get_left_node(cells, &result2, &left_node));
+        try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA0, left_node.meta.type);
+    }
+    {
+        // rule 0.b
+        c.reducer_push_to_stack(reducer, c.REDUCER_APPLY_TOKEN);
+
+        const delta1 = c.cells_new_delta1();
+        const delta0 = c.cells_new_delta0();
+        var index_out: usize = 0;
+        try cTry(c.cells_alloc_chunk(cells, delta1.meta.size + delta0.meta.size, &index_out));
+        try cTry(c.cells_write_node(cells, index_out, delta1));
+        try cTry(c.cells_write_node(cells, index_out + delta1.meta.size, delta0));
+        c.reducer_push_to_stack(reducer, index_out);
+
+        try cTry(c.cells_alloc_chunk(cells, delta0.meta.size, &index_out));
+        try cTry(c.cells_write_node(cells, index_out, delta0));
+        c.reducer_push_to_stack(reducer, index_out);
+
+        const res = c.reducer_step(reducer);
+        try cTry(res);
+        try std.testing.expectEqual(c.REDUCER_DONE, res);
+        try std.testing.expectEqual(true, c.reducer_has_result(reducer));
+
+        const result = c.reducer_get_result(reducer);
+        var root_node = c.cells_node_t{};
+        var result1 = result;
+        try cTry(c.cells_dereference_node(cells, &result1, &root_node));
+        try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA2, root_node.meta.type);
+        var left_node = c.cells_node_t{};
+        var result2 = result;
+        try cTry(c.cells_get_left_node(cells, &result2, &left_node));
+        try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA0, left_node.meta.type);
+        var right_node = c.cells_node_t{};
+        var result3 = result;
+        try cTry(c.cells_get_right_node(cells, &result3, &right_node));
+        try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA0, right_node.meta.type);
+
+        c.cells_print_debug_view(cells, debug_print, null);
+    }
 }

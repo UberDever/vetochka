@@ -27,9 +27,6 @@ static const char* get_node_color(enum CELLS_NODE_TYPE type) {
     case CELLS_NODE_TYPE_VALUEV0:
     case CELLS_NODE_TYPE_VALUEV1:
     case CELLS_NODE_TYPE_VALUEV2: return COLOR_MAGENTA;
-    case CELLS_NODE_TYPE_SEQ0:
-    case CELLS_NODE_TYPE_SEQ1:
-    case CELLS_NODE_TYPE_SEQ2: return COLOR_BLUE;
     case CELLS_NODE_TYPE_INVALID: return COLOR_RED;
     default: return COLOR_RED;
   }
@@ -47,7 +44,9 @@ static void print_node_desc(
 
   switch (meta.type) {
     case CELLS_NODE_TYPE_REF2:
-    case CELLS_NODE_TYPE_REF8: print(ctx, "ref%zu{%" PRId64 "}", meta.size, node.as.ref); break;
+    case CELLS_NODE_TYPE_REF8:
+      print(ctx, "ref%zu{%" PRId64 "}", meta.size, node.as.ref + index);
+      break;
     case CELLS_NODE_TYPE_DELTA0: print(ctx, "delta0"); break;
     case CELLS_NODE_TYPE_DELTA1: print(ctx, "delta1"); break;
     case CELLS_NODE_TYPE_DELTA2: print(ctx, "delta2"); break;
@@ -84,12 +83,6 @@ static void print_node_desc(
       print(ctx, "}");
       break;
     }
-    case CELLS_NODE_TYPE_SEQ0: print(ctx, "seq0"); break;
-    case CELLS_NODE_TYPE_SEQ1: print(ctx, "seq1"); break;
-    case CELLS_NODE_TYPE_SEQ2: print(ctx, "seq2"); break;
-    case CELLS_NODE_TYPE_CALL0: print(ctx, "call0"); break;
-    case CELLS_NODE_TYPE_CALL1: print(ctx, "call1"); break;
-    case CELLS_NODE_TYPE_CALL2: print(ctx, "call2"); break;
     case CELLS_NODE_TYPE_INVALID: print(ctx, "INVALID"); break;
   }
   print(ctx, "%s", COLOR_RESET);

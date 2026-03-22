@@ -137,13 +137,6 @@ struct cells_node_meta_t cells_get_node_meta(struct cells_t* cells, size_t index
     goto check_occupied;
   }
 
-  CASE_TAG(SEQ0, 1);
-  CASE_TAG(SEQ1, 1);
-  CASE_TAG(SEQ2, 1);
-  CASE_TAG(CALL0, 1);
-  CASE_TAG(CALL1, 1);
-  CASE_TAG(CALL2, 1);
-
 #undef CASE_TAG
 
 check_occupied:
@@ -237,28 +230,11 @@ struct cells_node_t cells_get_node(
       node.meta = meta;
       return node;
     }
-    case CELLS_NODE_TYPE_SEQ0:
-    case CELLS_NODE_TYPE_SEQ1:
-    case CELLS_NODE_TYPE_SEQ2:
-    case CELLS_NODE_TYPE_CALL0:
-    case CELLS_NODE_TYPE_CALL1:
-    case CELLS_NODE_TYPE_CALL2: {
-      node.meta = meta;
-      return node;
-    }
     case CELLS_NODE_TYPE_INVALID:
       // TODO: report here, stacktrace + node data
       return node;
   }
   return node;
-}
-
-static bool fits_in_ref2(i64 value) {
-  return value <= 0x1fff && value >= -0x1fff;
-}
-
-static bool fits_in_ref8(i64 value) {
-  return value <= 0x1fffffffffffffff && value >= -0x1fffffffffffffff;
 }
 
 typedef struct free_chunk_pair_t {
@@ -351,37 +327,37 @@ error_t cells_alloc_chunk_with_refs(
       }
       switch (selected_config) {
         case 0:
-          if (fits_in_ref2(ref_lhs) && !referenced_rhs.has_value) {
+          if (cells_fits_in_ref2(ref_lhs) && !referenced_rhs.has_value) {
             found_config = true;
             break;
           }
           continue;
         case 1:
-          if (fits_in_ref2(ref_lhs) && fits_in_ref2(ref_rhs)) {
+          if (cells_fits_in_ref2(ref_lhs) && cells_fits_in_ref2(ref_rhs)) {
             found_config = true;
             break;
           }
           continue;
         case 2:
-          if (fits_in_ref8(ref_lhs) && !referenced_rhs.has_value) {
+          if (cells_fits_in_ref8(ref_lhs) && !referenced_rhs.has_value) {
             found_config = true;
             break;
           }
           continue;
         case 3:
-          if (fits_in_ref2(ref_lhs) && fits_in_ref8(ref_rhs)) {
+          if (cells_fits_in_ref2(ref_lhs) && cells_fits_in_ref8(ref_rhs)) {
             found_config = true;
             break;
           }
           continue;
         case 4:
-          if (fits_in_ref8(ref_lhs) && fits_in_ref2(ref_rhs)) {
+          if (cells_fits_in_ref8(ref_lhs) && cells_fits_in_ref2(ref_rhs)) {
             found_config = true;
             break;
           }
           continue;
         case 5:
-          if (fits_in_ref8(ref_lhs) && fits_in_ref8(ref_rhs)) {
+          if (cells_fits_in_ref8(ref_lhs) && cells_fits_in_ref8(ref_rhs)) {
             found_config = true;
             break;
           }
@@ -429,7 +405,7 @@ error_t cells_write_node(struct cells_t* cells, size_t index, struct cells_node_
     case CELLS_NODE_TYPE_REF2: {
       u16 offset = 0;
       if (index + sizeof(offset) > cells->capacity) { return ERROR_OUT_OF_BOUNDS; }
-      if (!fits_in_ref2(node.as.ref)) { return ERROR_INVALID_PARAM; }
+      if (!cells_fits_in_ref2(node.as.ref)) { return ERROR_INVALID_PARAM; }
       offset = (u16)(0x00 << 14) | (u16)(node.as.ref & 0x3fff);
       write_u16_be(cells->data + index, offset);
       return ERROR_SUCCESS;
@@ -437,7 +413,7 @@ error_t cells_write_node(struct cells_t* cells, size_t index, struct cells_node_
     case CELLS_NODE_TYPE_REF8: {
       u64 offset = 0;
       if (index + sizeof(offset) > cells->capacity) { return ERROR_OUT_OF_BOUNDS; }
-      if (!fits_in_ref8(node.as.ref)) { return ERROR_INVALID_PARAM; }
+      if (!cells_fits_in_ref8(node.as.ref)) { return ERROR_INVALID_PARAM; }
       offset = (u64)(0x01LU << 62) | (u64)(node.as.ref & 0x3fffffffffffffffLU);
       write_u64_be(cells->data + index, offset);
       return ERROR_SUCCESS;
@@ -474,13 +450,6 @@ error_t cells_write_node(struct cells_t* cells, size_t index, struct cells_node_
       memcpy(cells->data + index + 1 + uleb_len, node.as.nativev.data, node.as.nativev.len);
       return ERROR_SUCCESS;
     }
-
-      CASE_WRITE_TAG(SEQ0)
-      CASE_WRITE_TAG(SEQ1)
-      CASE_WRITE_TAG(SEQ2)
-      CASE_WRITE_TAG(CALL0)
-      CASE_WRITE_TAG(CALL1)
-      CASE_WRITE_TAG(CALL2)
 
     case CELLS_NODE_TYPE_INVALID:
       // TODO: report here, stacktrace + node data

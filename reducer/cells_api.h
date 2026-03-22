@@ -17,12 +17,6 @@ enum CELLS_NODE_TYPE : u8 {
   CELLS_NODE_TYPE_VALUEV0,
   CELLS_NODE_TYPE_VALUEV1,
   CELLS_NODE_TYPE_VALUEV2,
-  CELLS_NODE_TYPE_SEQ0,
-  CELLS_NODE_TYPE_SEQ1,
-  CELLS_NODE_TYPE_SEQ2,
-  CELLS_NODE_TYPE_CALL0,
-  CELLS_NODE_TYPE_CALL1,
-  CELLS_NODE_TYPE_CALL2,
 
   CELLS_NODE_TYPE_REF2,
   CELLS_NODE_TYPE_REF8,
@@ -47,12 +41,12 @@ struct cells_node_t {
  * Alloc and initialize a cells_t structure with the given capacity.
  * @return ERROR_SUCCESS on success, or error code on failure.
  */
-error_t cells_create(struct cells_t** cells, size_t capacity);
+error_t cells_create(struct cells_t **cells, size_t capacity);
 
 /**
  * Deinit and free the cells structure.
  */
-void cells_destroy(struct cells_t** cells);
+void cells_destroy(struct cells_t **cells);
 
 /**
  * Get meta of the node at the specified index in the cells structure.
@@ -60,40 +54,41 @@ void cells_destroy(struct cells_t** cells);
  * careful doing it frequently.
  * @return cells_node_meta_t on success, or an invalid node on failure.
  */
-struct cells_node_meta_t cells_get_node_meta(struct cells_t* cells, size_t index);
+struct cells_node_meta_t cells_get_node_meta(struct cells_t *cells,
+                                             size_t index);
 
 /**
  * Get the value at the specified index in the cells structure.
  * @return cells_node_t on success, or an invalid node on failure.
  */
-struct cells_node_t cells_get_node(
-    struct cells_t* cells, size_t index, struct cells_node_meta_t meta);
+struct cells_node_t cells_get_node(struct cells_t *cells, size_t index,
+                                   struct cells_node_meta_t meta);
 
 /**
  * Allocate a chunk of memory with the specified size and get its index.
  * Marks the cells as occupied.
  * @return ERROR_SUCCESS on success, error code on failure.
  */
-error_t cells_alloc_chunk(struct cells_t* cells, size_t chunk_size, size_t* index_out);
+error_t cells_alloc_chunk(struct cells_t *cells, size_t chunk_size,
+                          size_t *index_out);
 
 /**
  * Tries to allocate a chunk of memory for specified referenced node at index.
- * Tries different refs of different sizes, until the resulted chunk will be able to store
- * references of sufficient sizes.
- * @param chunk_size must include size of the node, without size for the references, so algorighm
- * will calclulate those for you.
- * @param referenced_lhs and referenced_rhs are the indices of the nodes you need to reference;
- * it is expected that either lhs or (lhs, rhs) will be set.
- * @param index_out will be the start of the allocated chunk, shifts for the references
- * must be calclulated by the caller based on the returned index and node size.
+ * Tries different refs of different sizes, until the resulted chunk will be
+ * able to store references of sufficient sizes.
+ * @param chunk_size must include size of the node, without size for the
+ * references, so algorighm will calclulate those for you.
+ * @param referenced_lhs and referenced_rhs are the indices of the nodes you
+ * need to reference; it is expected that either lhs or (lhs, rhs) will be set.
+ * @param index_out will be the start of the allocated chunk, shifts for the
+ * references must be calclulated by the caller based on the returned index and
+ * node size.
  * @return ERROR_SUCCESS on success, error code on failure.
  */
-error_t cells_alloc_chunk_with_refs(
-    struct cells_t* cells,
-    size_t chunk_size,
-    struct opt_size_t referenced_lhs,
-    struct opt_size_t referenced_rhs,
-    size_t* index_out);
+error_t cells_alloc_chunk_with_refs(struct cells_t *cells, size_t chunk_size,
+                                    struct opt_size_t referenced_lhs,
+                                    struct opt_size_t referenced_rhs,
+                                    size_t *index_out);
 
 /**
  * Writes node inplace at provided index.
@@ -102,13 +97,14 @@ error_t cells_alloc_chunk_with_refs(
  * would result in memory override or even out of bounds UB.
  * @return ERROR_SUCCESS on success, error code on failure.
  */
-error_t cells_write_node(struct cells_t* cells, size_t index, struct cells_node_t node);
+error_t cells_write_node(struct cells_t *cells, size_t index,
+                         struct cells_node_t node);
 
 /**
  * Mark the chunk of memory at the specified index of node size as free.
  * @return ERROR_SUCCESS on success, or error code on failure.
  */
-error_t cells_node_free(struct cells_t* cells, size_t index, size_t node_size);
+error_t cells_node_free(struct cells_t *cells, size_t index, size_t node_size);
 
 // NOTE: deliberately not using CELLS_NODE_TYPE here because
 // there will be less places to make a mistake
@@ -125,6 +121,18 @@ struct cells_node_t cells_new_value1v(span_byte_t payload);
 struct cells_node_t cells_new_value2v(span_byte_t payload);
 bool cells_is_ref(struct cells_node_meta_t meta);
 bool cells_is_value(struct cells_node_meta_t meta);
-bool cells_is_opcode(struct cells_node_meta_t meta);
+
+bool cells_fits_in_ref2(i64 value);
+bool cells_fits_in_ref8(i64 value);
+
+// NOTE: this allows ref to ref, and doesn't handle cycles.
+// cycle currently considered as malformed bytecode, so hanging is abnormal
+// behavior. changes index to point at the dereferenced node
+error_t cells_dereference_node(struct cells_t *cells, size_t *index,
+                               struct cells_node_t *out_node);
+error_t cells_get_left_node(struct cells_t *cells, size_t *parent_index,
+                            struct cells_node_t *out_node);
+error_t cells_get_right_node(struct cells_t *cells, size_t *parent_index,
+                             struct cells_node_t *out_node);
 
 #endif // __REDUCER_CELLS_API_H__

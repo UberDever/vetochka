@@ -7,6 +7,7 @@
 #include "vendor/stb_ds.h"
 #include <assert.h>
 #include <stdarg.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -37,57 +38,27 @@ error_t reducer_create(struct reducer_t** reducer, struct cells_t* cells) {
 
 void reducer_free(struct reducer_t** reducer) {
   stbds_arrfree((*reducer)->stack);
-  stbds_arrfree((*reducer)->stash);
-  stbds_arrfree((*reducer)->error);
+  stbds_arrfree((*reducer)->_stash);
+  stbds_arrfree((*reducer)->_error);
   free(*reducer);
 }
 
 void reducer_reset(struct reducer_t* reducer) {
-  reducer->cells = NULL;
   stbds_arrsetlen(reducer->stack, 0);
   reducer->result = 0;
-  stbds_arrsetlen(reducer->stash, 0);
-  stbds_arrsetlen(reducer->error, 0);
-}
-
-// NOTE: this allows ref to ref, and doesn't handle cycles
-// cycle currently considered as malformed bytecode, so hanging is abnormal behavior
-static cells_node_t dereference_node(struct reducer_t* reducer, size_t index) {
-  while (1) {
-    cells_node_meta_t meta = cells_get_node_meta(reducer->cells, index);
-    if (meta.type == CELLS_NODE_TYPE_INVALID) { return (cells_node_t){0}; }
-    cells_node_t node = cells_get_node(reducer->cells, index, meta);
-    if (node.meta.type == CELLS_NODE_TYPE_INVALID) { return (cells_node_t){0}; }
-    if (meta.type == CELLS_NODE_TYPE_REF1 || meta.type == CELLS_NODE_TYPE_REF2
-        || meta.type == CELLS_NODE_TYPE_REF4 || meta.type == CELLS_NODE_TYPE_REF8) {
-      index += node.as.ref;
-      continue;
-    }
-    return node;
-  }
-}
-
-// TODO: need to set errors in the reducer state here
-static cells_node_t get_left_node(struct reducer_t* reducer, size_t parent_index) {
-  size_t index = parent_index + 1;
-  return dereference_node(reducer, index);
-}
-
-static cells_node_t get_right_node(struct reducer_t* reducer, size_t parent_index) {
-  cells_node_meta_t meta = cells_get_node_meta(reducer->cells, parent_index + 1);
-  if (meta.type == CELLS_NODE_TYPE_INVALID) { return (cells_node_t){0}; }
-  if (!(meta.type == CELLS_NODE_TYPE_REF1 || meta.type == CELLS_NODE_TYPE_REF2
-        || meta.type == CELLS_NODE_TYPE_REF4 || meta.type == CELLS_NODE_TYPE_REF8)) {
-    return (cells_node_t){0};
-  }
-
-  size_t index = parent_index + 2;
-  return dereference_node(reducer, index);
+  reducer->has_result = false;
+  stbds_arrsetlen(reducer->_stash, 0);
+  stbds_arrsetlen(reducer->_error, 0);
 }
 
 error_t reducer_step(struct reducer_t* reducer) {
+  error_t err = ERROR_SUCCESS;
   if (stbds_arrlenu(reducer->stack) == 0) { return REDUCER_DONE; }
 
+  if (stbds_arrlenu(reducer->stack) < 2) {
+    stbds_arr_printf(&reducer->_error, "[ERROR] Reducer stack underflow\n");
+    return ERROR_GENERIC;
+  }
   bool found_apply = false;
   while (stbds_arrlenu(reducer->stack) > 0) {
     size_t i = stbds_arrpop(reducer->stack);
@@ -95,57 +66,149 @@ error_t reducer_step(struct reducer_t* reducer) {
       found_apply = true;
       break;
     }
-    stbds_arrput(reducer->stash, i);
+    stbds_arrput(reducer->_stash, i);
   }
 
-  if (!found_apply) { return REDUCER_DONE; }
+  if (!found_apply) {
+    if (stbds_arrlenu(reducer->_stash) != 1) {
+      stbds_arr_printf(
+          &reducer->_error,
+          "[ERROR] Expected single result item after reduction, found %zu\n",
+          stbds_arrlenu(reducer->_stash));
+      return ERROR_GENERIC;
+    }
+    reducer->result = stbds_arrpop(reducer->_stash);
+    reducer->has_result = true;
+    return REDUCER_DONE;
+  }
 
-  if (stbds_arrlenu(reducer->stash) < 2) {
-    stbds_arr_printf(&reducer->error, "[ERROR] Not enough arguments for apply\n");
+  if (stbds_arrlenu(reducer->_stash) != 2) {
+    stbds_arr_printf(
+        &reducer->_error,
+        "[ERROR] Reducer stash should contain two trees to apply, found %zu\n",
+        stbds_arrlenu(reducer->_stash));
     return ERROR_GENERIC;
   }
 
-  size_t func_i = stbds_arrpop(reducer->stash);
-  cells_node_t func = dereference_node(reducer, func_i);
-  if (reducer->error != NULL) { return ERROR_GENERIC; }
-  // size_t arg_i = stbds_arrpop(reducer->stash);
-  // cells_node_t arg = dereference_node(reducer, arg_i);
-  if (reducer->error != NULL) { return ERROR_GENERIC; }
+  size_t redex_i = stbds_arrpop(reducer->_stash);
+  size_t arg_i = stbds_arrpop(reducer->_stash);
 
-  if (cells_is_opcode(func.meta)) { assert(0 && "TODO"); }
+  cells_node_t redex;
+  err = cells_dereference_node(reducer->cells, &redex_i, &redex);
+  if (err != ERROR_SUCCESS) {
+    stbds_arr_printf(&reducer->_error, "[ERROR] Cannot get redex node %s %d\n", __FILE__, __LINE__);
+    return ERROR_INTERNAL;
+  }
+  // cells_node_t arg = dereference_node(reducer, &arg_i);
+  if (reducer->_error != NULL) {
+    stbds_arr_printf(&reducer->_error, "[ERROR] Cannot get arg node %s %d\n", __FILE__, __LINE__);
+    return ERROR_GENERIC;
+  }
 
-  switch (func.meta.type) {
+  switch (redex.meta.type) {
     // rule 0.a
-    case CELLS_NODE_TYPE_TREE0: {
-      // cells_node_t tree1 = cells_new_tree1();
-      // cells_node_t ref = cells_new_ref1(0);
-      // size_t total_size = tree1.meta.size + ref.meta.size;
-      // size_t new_index = 0;
-
-      break;
+    case CELLS_NODE_TYPE_DELTA0: {
+      cells_node_t delta1 = cells_new_delta1();
+      size_t total_size = delta1.meta.size;
+      size_t result_index = 0;
+      err = cells_alloc_chunk_with_refs(
+          reducer->cells,
+          total_size,
+          (struct opt_size_t){.has_value = true, .value = arg_i},
+          (struct opt_size_t){0},
+          &result_index);
+      if (err != ERROR_SUCCESS) {
+        stbds_arr_printf(&reducer->_error, "[ERROR] %s %d\n", __FILE__, __LINE__);
+        return ERROR_INTERNAL;
+      }
+      size_t index_out = result_index + delta1.meta.size;
+      i64 arg_shift = arg_i - index_out;
+      cells_node_t arg_ref;
+      if (cells_fits_in_ref2(arg_shift)) {
+        arg_ref = cells_new_ref2(arg_shift);
+      } else {
+        assert(cells_fits_in_ref8(arg_shift));
+        arg_ref = cells_new_ref8(arg_shift);
+      }
+      cells_write_node(reducer->cells, result_index, delta1);
+      cells_write_node(reducer->cells, index_out, arg_ref);
+      reducer->result = result_index;
+      reducer->has_result = true;
+      return REDUCER_DONE;
     }
     // rule 0.b
-    case CELLS_NODE_TYPE_TREE1:
+    case CELLS_NODE_TYPE_DELTA1: {
+      cells_node_t delta2 = cells_new_delta2();
+      size_t delta1_left_i = redex_i;
+      cells_node_t delta1_left;
+      err = cells_get_left_node(reducer->cells, &delta1_left_i, &delta1_left);
+      if (err != ERROR_SUCCESS) {
+        stbds_arr_printf(&reducer->_error, "[ERROR] %s %d\n", __FILE__, __LINE__);
+        return err;
+      }
+      size_t total_size = delta2.meta.size;
+      size_t result_index = 0;
+      err = cells_alloc_chunk_with_refs(
+          reducer->cells,
+          total_size,
+          (struct opt_size_t){.has_value = true, .value = delta1_left_i},
+          (struct opt_size_t){.has_value = true, .value = arg_i},
+          &result_index);
+      if (err != ERROR_SUCCESS) {
+        stbds_arr_printf(&reducer->_error, "[ERROR] %s %d\n", __FILE__, __LINE__);
+        return ERROR_INTERNAL;
+      }
+      cells_write_node(reducer->cells, result_index, delta2);
+
+      size_t index_out = result_index;
+      index_out += delta2.meta.size;
+      i64 delta1_shift = delta1_left_i - index_out;
+      cells_node_t delta1_ref;
+      if (cells_fits_in_ref2(delta1_shift)) {
+        delta1_ref = cells_new_ref2(delta1_shift);
+      } else {
+        assert(cells_fits_in_ref8(delta1_shift));
+        delta1_ref = cells_new_ref8(delta1_shift);
+      }
+      cells_write_node(reducer->cells, index_out, delta1_ref);
+
+      index_out += delta1_ref.meta.size;
+      i64 arg_shift = arg_i - index_out;
+      cells_node_t arg_ref;
+      if (cells_fits_in_ref2(arg_shift)) {
+        arg_ref = cells_new_ref2(arg_shift);
+      } else {
+        assert(cells_fits_in_ref8(arg_shift));
+        arg_ref = cells_new_ref8(arg_shift);
+      }
+      cells_write_node(reducer->cells, index_out, arg_ref);
+      reducer->result = result_index;
+      reducer->has_result = true;
+      return REDUCER_DONE;
+    }
     // rule 1,2,3
-    case CELLS_NODE_TYPE_TREE2:
+    case CELLS_NODE_TYPE_DELTA2:
     default:
-      stbds_arr_printf(&reducer->error, "[ERROR] The node at %zu is not appliable", func_i);
+      stbds_arr_printf(&reducer->_error, "[ERROR] The node at %zu is not applicable", redex_i);
       return ERROR_GENERIC;
   }
 
-  (void)get_left_node;
-  (void)get_right_node;
   return ERROR_SUCCESS;
 }
 
 const char* reducer_get_error(struct reducer_t* reducer) {
-  return reducer->error;
+  return reducer->_error;
 }
 
 void reducer_push_to_stack(struct reducer_t* reducer, size_t index) {
   stbds_arrpush(reducer->stack, index);
 }
 
+bool reducer_has_result(struct reducer_t* reducer) {
+  return reducer->has_result;
+}
+
 size_t reducer_get_result(struct reducer_t* reducer) {
+  assert(reducer->has_result);
   return reducer->result;
 }
