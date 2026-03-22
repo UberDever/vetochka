@@ -55,10 +55,6 @@ error_t reducer_step(struct reducer_t* reducer) {
   error_t err = ERROR_SUCCESS;
   if (stbds_arrlenu(reducer->stack) == 0) { return REDUCER_DONE; }
 
-  if (stbds_arrlenu(reducer->stack) < 2) {
-    stbds_arr_printf(&reducer->_error, "[ERROR] Reducer stack underflow\n");
-    return ERROR_GENERIC;
-  }
   bool found_apply = false;
   while (stbds_arrlenu(reducer->stack) > 0) {
     size_t i = stbds_arrpop(reducer->stack);
@@ -82,10 +78,10 @@ error_t reducer_step(struct reducer_t* reducer) {
     return REDUCER_DONE;
   }
 
-  if (stbds_arrlenu(reducer->_stash) != 2) {
+  if (stbds_arrlenu(reducer->_stash) > 2) {
     stbds_arr_printf(
         &reducer->_error,
-        "[ERROR] Reducer stash should contain two trees to apply, found %zu\n",
+        "[ERROR] Reducer stash should contain at least two trees to apply, found %zu\n",
         stbds_arrlenu(reducer->_stash));
     return ERROR_GENERIC;
   }
@@ -98,11 +94,6 @@ error_t reducer_step(struct reducer_t* reducer) {
   if (err != ERROR_SUCCESS) {
     stbds_arr_printf(&reducer->_error, "[ERROR] Cannot get redex node %s %d\n", __FILE__, __LINE__);
     return ERROR_INTERNAL;
-  }
-  // cells_node_t arg = dereference_node(reducer, &arg_i);
-  if (reducer->_error != NULL) {
-    stbds_arr_printf(&reducer->_error, "[ERROR] Cannot get arg node %s %d\n", __FILE__, __LINE__);
-    return ERROR_GENERIC;
   }
 
   switch (redex.meta.type) {
@@ -187,7 +178,63 @@ error_t reducer_step(struct reducer_t* reducer) {
       return REDUCER_DONE;
     }
     // rule 1,2,3
-    case CELLS_NODE_TYPE_DELTA2:
+    case CELLS_NODE_TYPE_DELTA2: {
+      cells_node_t redex_left;
+      size_t redex_left_i = redex_i;
+      my_debug("redex_left_i: %zu", redex_left_i);
+      err = cells_get_left_node(reducer->cells, &redex_left_i, &redex_left);
+      if (err != ERROR_SUCCESS) {
+        stbds_arr_printf(&reducer->_error, "[ERROR] %s %d\n", __FILE__, __LINE__);
+        return err;
+      }
+      cells_node_t redex_right;
+      size_t redex_right_i = redex_i;
+      err = cells_get_right_node(reducer->cells, &redex_right_i, &redex_right);
+      if (err != ERROR_SUCCESS) {
+        stbds_arr_printf(&reducer->_error, "[ERROR] %s %d\n", __FILE__, __LINE__);
+        return err;
+      }
+
+      switch (redex_left.meta.type) {
+        case CELLS_NODE_TYPE_DELTA0: {
+          // rule 1
+          reducer_push_to_stack(reducer, redex_left_i);
+          return ERROR_SUCCESS;
+        }
+        case CELLS_NODE_TYPE_DELTA1: {
+          // rule 2
+          cells_node_t x;
+          size_t x_i = redex_left_i;
+          err = cells_get_left_node(reducer->cells, &x_i, &x);
+          if (err != ERROR_SUCCESS) {
+            stbds_arr_printf(&reducer->_error, "[ERROR] %s %d\n", __FILE__, __LINE__);
+            return err;
+          }
+
+          size_t y_i = redex_right_i;
+
+          cells_node_t z;
+          size_t z_i = redex_i;
+          err = cells_dereference_node(reducer->cells, &z_i, &z);
+          if (err != ERROR_SUCCESS) {
+            stbds_arr_printf(&reducer->_error, "[ERROR] %s %d\n", __FILE__, __LINE__);
+            return err;
+          }
+
+          reducer_push_to_stack(reducer, REDUCER_APPLY_TOKEN);
+          reducer_push_to_stack(reducer, REDUCER_APPLY_TOKEN);
+          reducer_push_to_stack(reducer, x_i);
+          reducer_push_to_stack(reducer, z_i);
+          reducer_push_to_stack(reducer, REDUCER_APPLY_TOKEN);
+          reducer_push_to_stack(reducer, y_i);
+          reducer_push_to_stack(reducer, z_i);
+          return ERROR_SUCCESS;
+        }
+        default:
+          stbds_arr_printf(&reducer->_error, "[ERROR] The node at %zu is not applicable", redex_i);
+          return ERROR_GENERIC;
+      }
+    }
     default:
       stbds_arr_printf(&reducer->_error, "[ERROR] The node at %zu is not applicable", redex_i);
       return ERROR_GENERIC;
