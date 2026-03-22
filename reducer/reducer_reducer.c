@@ -78,7 +78,7 @@ error_t reducer_step(struct reducer_t* reducer) {
     return REDUCER_DONE;
   }
 
-  if (stbds_arrlenu(reducer->_stash) > 2) {
+  if (stbds_arrlenu(reducer->_stash) < 2) {
     stbds_arr_printf(
         &reducer->_error,
         "[ERROR] Reducer stash should contain at least two trees to apply, found %zu\n",
@@ -181,7 +181,6 @@ error_t reducer_step(struct reducer_t* reducer) {
     case CELLS_NODE_TYPE_DELTA2: {
       cells_node_t redex_left;
       size_t redex_left_i = redex_i;
-      my_debug("redex_left_i: %zu", redex_left_i);
       err = cells_get_left_node(reducer->cells, &redex_left_i, &redex_left);
       if (err != ERROR_SUCCESS) {
         stbds_arr_printf(&reducer->_error, "[ERROR] %s %d\n", __FILE__, __LINE__);
@@ -198,7 +197,7 @@ error_t reducer_step(struct reducer_t* reducer) {
       switch (redex_left.meta.type) {
         case CELLS_NODE_TYPE_DELTA0: {
           // rule 1
-          reducer_push_to_stack(reducer, redex_left_i);
+          reducer_push_to_stack(reducer, redex_right_i);
           return ERROR_SUCCESS;
         }
         case CELLS_NODE_TYPE_DELTA1: {
@@ -214,7 +213,7 @@ error_t reducer_step(struct reducer_t* reducer) {
           size_t y_i = redex_right_i;
 
           cells_node_t z;
-          size_t z_i = redex_i;
+          size_t z_i = arg_i;
           err = cells_dereference_node(reducer->cells, &z_i, &z);
           if (err != ERROR_SUCCESS) {
             stbds_arr_printf(&reducer->_error, "[ERROR] %s %d\n", __FILE__, __LINE__);

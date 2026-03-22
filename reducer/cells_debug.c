@@ -1,6 +1,7 @@
 #include "cells_debug.h"
 #include "cells_api.h"
 #include "cells_impl.h"
+#include "typedefs.h"
 #include <inttypes.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -41,15 +42,15 @@ static void print_node_desc(
   struct cells_node_t node = cells_get_node(cells, index, meta);
   const char* color = get_node_color(meta.type);
   print(ctx, "%s", color);
-
+  print(ctx, "[%zu]", index);
   switch (meta.type) {
     case CELLS_NODE_TYPE_REF2:
     case CELLS_NODE_TYPE_REF8:
-      print(ctx, "ref%zu{%" PRId64 "}", meta.size, node.as.ref + index);
+      print(ctx, "*%zu{%" PRId64 "}", meta.size, node.as.ref + index);
       break;
-    case CELLS_NODE_TYPE_DELTA0: print(ctx, "delta0"); break;
-    case CELLS_NODE_TYPE_DELTA1: print(ctx, "delta1"); break;
-    case CELLS_NODE_TYPE_DELTA2: print(ctx, "delta2"); break;
+    case CELLS_NODE_TYPE_DELTA0: print(ctx, "Δ0"); break;
+    case CELLS_NODE_TYPE_DELTA1: print(ctx, "Δ1"); break;
+    case CELLS_NODE_TYPE_DELTA2: print(ctx, "Δ2"); break;
     case CELLS_NODE_TYPE_VALUEF0:
     case CELLS_NODE_TYPE_VALUEF1:
     case CELLS_NODE_TYPE_VALUEF2: {
@@ -59,7 +60,7 @@ static void print_node_desc(
       } else if (meta.type == CELLS_NODE_TYPE_VALUEF2) {
         n = 2;
       }
-      print(ctx, "value%df{%" PRId64 "}", n, node.as.nativef);
+      print(ctx, "v%df{%" PRId64 "}", n, node.as.nativef);
       break;
     }
     case CELLS_NODE_TYPE_VALUEV0:
@@ -71,7 +72,7 @@ static void print_node_desc(
       } else if (meta.type == CELLS_NODE_TYPE_VALUEV2) {
         n = 2;
       }
-      print(ctx, "value%dv{len=%" PRIu64, n, node.as.nativev.len);
+      print(ctx, "v%dv{len=%" PRIu64, n, node.as.nativev.len);
       if (node.as.nativev.len > 0) {
         print(ctx, ", data=0x");
         size_t print_len = node.as.nativev.len > 4 ? 4 : node.as.nativev.len;
@@ -97,6 +98,12 @@ void cells_print_debug_view(struct cells_t* cells, cells_print_fn print, void* c
   // We use a dummy type for free space to distinguish from INVALID
   const enum CELLS_NODE_TYPE TYPE_FREE = (enum CELLS_NODE_TYPE) - 1;
   current_meta.type = TYPE_FREE;
+
+  print(ctx, "MAHNODES  ");
+  for (size_t i = 0; i < BYTES_PER_ROW; ++i) {
+    print(ctx, "%02zu ", i);
+  }
+  print(ctx, " |\n");
 
   for (size_t row_start = 0; row_start < capacity; row_start += BYTES_PER_ROW) {
     // 1. Print Offset

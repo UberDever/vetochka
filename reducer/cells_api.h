@@ -37,6 +37,11 @@ struct cells_node_t {
   } as;
 };
 
+struct opt_cells_node_t {
+  bool has_value;
+  struct cells_node_t value;
+};
+
 /**
  * Alloc and initialize a cells_t structure with the given capacity.
  * @return ERROR_SUCCESS on success, or error code on failure.
@@ -134,5 +139,19 @@ error_t cells_get_left_node(struct cells_t *cells, size_t *parent_index,
                             struct cells_node_t *out_node);
 error_t cells_get_right_node(struct cells_t *cells, size_t *parent_index,
                              struct cells_node_t *out_node);
+
+struct cells_tree_builder_t;
+
+error_t cells_tree_builder_create(struct cells_tree_builder_t **builder);
+void cells_tree_builder_destroy(struct cells_tree_builder_t **builder);
+void cells_tree_builder_reset(struct cells_tree_builder_t *builder);
+size_t cells_new_node0(struct cells_tree_builder_t *builder,
+                       struct cells_node_t payload);
+size_t cells_new_node1(struct cells_tree_builder_t *builder,
+                       struct cells_node_t payload, size_t left);
+size_t cells_new_node2(struct cells_tree_builder_t *builder,
+                       struct cells_node_t payload, size_t left, size_t right);
+error_t cells_tree_builder_build(struct cells_tree_builder_t *builder,
+                                 struct cells_t *cells, size_t *index_out);
 
 #endif // __REDUCER_CELLS_API_H__

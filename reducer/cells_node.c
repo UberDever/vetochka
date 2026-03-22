@@ -133,7 +133,6 @@ error_t cells_get_left_node(cells_t* cells, size_t* parent_index, cells_node_t* 
 }
 
 error_t cells_get_right_node(cells_t* cells, size_t* parent_index, cells_node_t* out_node) {
-  my_debug("index: %zu", *parent_index);
   cells_node_meta_t parent_meta = cells_get_node_meta(cells, *parent_index);
   cells_node_meta_t meta = cells_get_node_meta(cells, *parent_index + parent_meta.size);
   if (meta.type == CELLS_NODE_TYPE_INVALID) { return ERROR_GENERIC; }
@@ -142,7 +141,6 @@ error_t cells_get_right_node(cells_t* cells, size_t* parent_index, cells_node_t*
   }
 
   size_t index = *parent_index + parent_meta.size + meta.size;
-  my_debug("index: %zu", index);
 
   error_t err = cells_dereference_node(cells, &index, out_node);
   if (err != ERROR_SUCCESS) { return err; }
