@@ -11,19 +11,19 @@
 error_t cells_create(struct cells_t** cells, size_t capacity) {
   if (!cells) { return ERROR_INVALID_PARAM; }
   *cells = calloc(1, sizeof(struct cells_t));
-  if (!(*cells)) { return ERROR_GENERIC; }
+  if (!(*cells)) { return ERROR_NOMEM; }
   (*cells)->data = calloc(1, capacity);
   if (!(*cells)->data) {
     free(*cells);
     *cells = NULL;
-    return ERROR_GENERIC;
+    return ERROR_NOMEM;
   }
   (*cells)->occupied_bitmap = _bitmap_alloc(capacity);
   if (!(*cells)->occupied_bitmap) {
     free((*cells)->data);
     free(*cells);
     *cells = NULL;
-    return ERROR_GENERIC;
+    return ERROR_NOMEM;
   }
   (*cells)->free_chunks_head = calloc(1, sizeof(struct cells_free_chunk_t));
   if (!(*cells)->free_chunks_head) {
@@ -31,7 +31,7 @@ error_t cells_create(struct cells_t** cells, size_t capacity) {
     free((*cells)->data);
     free(*cells);
     *cells = NULL;
-    return ERROR_GENERIC;
+    return ERROR_NOMEM;
   }
   (*cells)->free_chunks_head->index = 0;
   (*cells)->free_chunks_head->size = capacity;
@@ -273,7 +273,7 @@ error_t cells_alloc_chunk(struct cells_t* cells, size_t chunk_size, size_t* inde
     pair.chunk = pair.chunk->next;
   }
 
-  return ERROR_GENERIC;
+  return ERROR_NOMEM;
 }
 
 error_t cells_alloc_chunk_with_refs(
@@ -373,11 +373,11 @@ error_t cells_alloc_chunk_with_refs(
   // can't find free chunk that would be able to store biggest size for references and be
   // able to reference referenced nodes
   if (selected_config >= configs_len) {
-    err = ERROR_GENERIC;
+    err = ERROR_NOMEM;
     goto defer;
   }
   if (selected_chunk >= stbds_arrlenu(free_chunks)) {
-    err = ERROR_GENERIC;
+    err = ERROR_NOMEM;
     goto defer;
   }
   size_t need_size = chunk_size + configs[selected_config].first + configs[selected_config].second;
@@ -496,7 +496,7 @@ error_t cells_node_free(struct cells_t* cells, size_t index, size_t node_size) {
     free_chunk->size += node_size;
   } else {
     struct cells_free_chunk_t* new_chunk = calloc(1, sizeof(struct cells_free_chunk_t));
-    if (!new_chunk) { return ERROR_GENERIC; }
+    if (!new_chunk) { return ERROR_NOMEM; }
     new_chunk->index = index;
     new_chunk->size = node_size;
     new_chunk->next = free_chunk;

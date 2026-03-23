@@ -45,7 +45,8 @@ typedef i32 error_t;
 #define ERROR_INVALID_PARAM -2
 #define ERROR_OUT_OF_BOUNDS -3
 #define ERROR_OVERFLOW -4
-#define ERROR_INTERNAL -5
+#define ERROR_NOMEM -5
+#define ERROR_INTERNAL -6
 
 #define my_debug(fmt, ...)                                                     \
   fprintf(stderr, "[DEBUG] %s %d " fmt "\n", __FILE_NAME__, __LINE__,          \

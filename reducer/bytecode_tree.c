@@ -20,7 +20,7 @@ typedef struct cells_node_t cells_node_t;
 
 error_t bytecode_tree_builder_create(struct bytecode_tree_builder_t** builder) {
   *builder = calloc(1, sizeof(struct bytecode_tree_builder_t));
-  if (!*builder) { return ERROR_GENERIC; }
+  if (!*builder) { return ERROR_NOMEM; }
   return ERROR_SUCCESS;
 }
 
