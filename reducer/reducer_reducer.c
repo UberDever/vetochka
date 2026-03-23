@@ -1,10 +1,12 @@
 
 
+#include "bytecode_api.h"
 #include "cells_api.h"
 #include "reducer_api.h"
 #include "reducer_impl.h"
 #include "typedefs.h"
 #include "vendor/stb_ds.h"
+
 #include <assert.h>
 #include <stdarg.h>
 #include <stddef.h>
@@ -90,7 +92,7 @@ error_t reducer_step(struct reducer_t* reducer) {
   size_t arg_i = stbds_arrpop(reducer->_stash);
 
   cells_node_t redex;
-  err = cells_dereference_node(reducer->cells, &redex_i, &redex);
+  err = bytecode_dereference_node(reducer->cells, &redex_i, &redex);
   if (err != ERROR_SUCCESS) {
     stbds_arr_printf(&reducer->_error, "[ERROR] Cannot get redex node %s %d\n", __FILE__, __LINE__);
     return ERROR_INTERNAL;
@@ -99,7 +101,7 @@ error_t reducer_step(struct reducer_t* reducer) {
   switch (redex.meta.type) {
     // rule 0.a
     case CELLS_NODE_TYPE_DELTA0: {
-      cells_node_t delta1 = cells_new_delta1();
+      cells_node_t delta1 = bytecode_new_delta1();
       size_t total_size = delta1.meta.size;
       size_t result_index = 0;
       err = cells_alloc_chunk_with_refs(
@@ -115,11 +117,11 @@ error_t reducer_step(struct reducer_t* reducer) {
       size_t index_out = result_index + delta1.meta.size;
       i64 arg_shift = arg_i - index_out;
       cells_node_t arg_ref;
-      if (cells_fits_in_ref2(arg_shift)) {
-        arg_ref = cells_new_ref2(arg_shift);
+      if (bytecode_fits_in_ref2(arg_shift)) {
+        arg_ref = bytecode_new_ref2(arg_shift);
       } else {
-        assert(cells_fits_in_ref8(arg_shift));
-        arg_ref = cells_new_ref8(arg_shift);
+        assert(bytecode_fits_in_ref8(arg_shift));
+        arg_ref = bytecode_new_ref8(arg_shift);
       }
       cells_write_node(reducer->cells, result_index, delta1);
       cells_write_node(reducer->cells, index_out, arg_ref);
@@ -129,10 +131,10 @@ error_t reducer_step(struct reducer_t* reducer) {
     }
     // rule 0.b
     case CELLS_NODE_TYPE_DELTA1: {
-      cells_node_t delta2 = cells_new_delta2();
+      cells_node_t delta2 = bytecode_new_delta2();
       size_t delta1_left_i = redex_i;
       cells_node_t delta1_left;
-      err = cells_get_left_node(reducer->cells, &delta1_left_i, &delta1_left);
+      err = bytecode_get_left_node(reducer->cells, &delta1_left_i, &delta1_left);
       if (err != ERROR_SUCCESS) {
         stbds_arr_printf(&reducer->_error, "[ERROR] %s %d\n", __FILE__, __LINE__);
         return err;
@@ -155,22 +157,22 @@ error_t reducer_step(struct reducer_t* reducer) {
       index_out += delta2.meta.size;
       i64 delta1_shift = delta1_left_i - index_out;
       cells_node_t delta1_ref;
-      if (cells_fits_in_ref2(delta1_shift)) {
-        delta1_ref = cells_new_ref2(delta1_shift);
+      if (bytecode_fits_in_ref2(delta1_shift)) {
+        delta1_ref = bytecode_new_ref2(delta1_shift);
       } else {
-        assert(cells_fits_in_ref8(delta1_shift));
-        delta1_ref = cells_new_ref8(delta1_shift);
+        assert(bytecode_fits_in_ref8(delta1_shift));
+        delta1_ref = bytecode_new_ref8(delta1_shift);
       }
       cells_write_node(reducer->cells, index_out, delta1_ref);
 
       index_out += delta1_ref.meta.size;
       i64 arg_shift = arg_i - index_out;
       cells_node_t arg_ref;
-      if (cells_fits_in_ref2(arg_shift)) {
-        arg_ref = cells_new_ref2(arg_shift);
+      if (bytecode_fits_in_ref2(arg_shift)) {
+        arg_ref = bytecode_new_ref2(arg_shift);
       } else {
-        assert(cells_fits_in_ref8(arg_shift));
-        arg_ref = cells_new_ref8(arg_shift);
+        assert(bytecode_fits_in_ref8(arg_shift));
+        arg_ref = bytecode_new_ref8(arg_shift);
       }
       cells_write_node(reducer->cells, index_out, arg_ref);
       reducer->result = result_index;
@@ -181,14 +183,14 @@ error_t reducer_step(struct reducer_t* reducer) {
     case CELLS_NODE_TYPE_DELTA2: {
       cells_node_t redex_left;
       size_t redex_left_i = redex_i;
-      err = cells_get_left_node(reducer->cells, &redex_left_i, &redex_left);
+      err = bytecode_get_left_node(reducer->cells, &redex_left_i, &redex_left);
       if (err != ERROR_SUCCESS) {
         stbds_arr_printf(&reducer->_error, "[ERROR] %s %d\n", __FILE__, __LINE__);
         return err;
       }
       cells_node_t redex_right;
       size_t redex_right_i = redex_i;
-      err = cells_get_right_node(reducer->cells, &redex_right_i, &redex_right);
+      err = bytecode_get_right_node(reducer->cells, &redex_right_i, &redex_right);
       if (err != ERROR_SUCCESS) {
         stbds_arr_printf(&reducer->_error, "[ERROR] %s %d\n", __FILE__, __LINE__);
         return err;
@@ -204,7 +206,7 @@ error_t reducer_step(struct reducer_t* reducer) {
           // rule 2
           cells_node_t x;
           size_t x_i = redex_left_i;
-          err = cells_get_left_node(reducer->cells, &x_i, &x);
+          err = bytecode_get_left_node(reducer->cells, &x_i, &x);
           if (err != ERROR_SUCCESS) {
             stbds_arr_printf(&reducer->_error, "[ERROR] %s %d\n", __FILE__, __LINE__);
             return err;
@@ -214,7 +216,7 @@ error_t reducer_step(struct reducer_t* reducer) {
 
           cells_node_t z;
           size_t z_i = arg_i;
-          err = cells_dereference_node(reducer->cells, &z_i, &z);
+          err = bytecode_dereference_node(reducer->cells, &z_i, &z);
           if (err != ERROR_SUCCESS) {
             stbds_arr_printf(&reducer->_error, "[ERROR] %s %d\n", __FILE__, __LINE__);
             return err;

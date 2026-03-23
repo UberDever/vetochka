@@ -37,8 +37,8 @@ pub fn build(b: *std.Build) !void {
         b.pathJoin(&.{ c_core_dir, "vendor_stbds.c" }),
         b.pathJoin(&.{ c_core_dir, "cells_cells.c" }),
         b.pathJoin(&.{ c_core_dir, "cells_debug.c" }),
-        b.pathJoin(&.{ c_core_dir, "cells_node.c" }),
-        b.pathJoin(&.{ c_core_dir, "cells_tree.c" }),
+        b.pathJoin(&.{ c_core_dir, "bytecode_node.c" }),
+        b.pathJoin(&.{ c_core_dir, "bytecode_tree.c" }),
         b.pathJoin(&.{ c_core_dir, "reducer_reducer.c" }),
     };
 

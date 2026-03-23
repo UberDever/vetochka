@@ -27,6 +27,9 @@ struct cells_node_meta_t {
   size_t size;
 };
 
+bool cells_is_ref(struct cells_node_meta_t meta);
+bool cells_is_value(struct cells_node_meta_t meta);
+
 struct cells_node_t {
   struct cells_node_meta_t meta;
 
@@ -111,47 +114,14 @@ error_t cells_write_node(struct cells_t *cells, size_t index,
  */
 error_t cells_node_free(struct cells_t *cells, size_t index, size_t node_size);
 
-// NOTE: deliberately not using CELLS_NODE_TYPE here because
-// there will be less places to make a mistake
-struct cells_node_t cells_new_ref2(i16 offset);
-struct cells_node_t cells_new_ref8(i64 offset);
-struct cells_node_t cells_new_delta0();
-struct cells_node_t cells_new_delta1();
-struct cells_node_t cells_new_delta2();
-struct cells_node_t cells_new_value0f(i64 value);
-struct cells_node_t cells_new_value1f(i64 value);
-struct cells_node_t cells_new_value2f(i64 value);
-struct cells_node_t cells_new_value0v(span_byte_t payload);
-struct cells_node_t cells_new_value1v(span_byte_t payload);
-struct cells_node_t cells_new_value2v(span_byte_t payload);
-bool cells_is_ref(struct cells_node_meta_t meta);
-bool cells_is_value(struct cells_node_meta_t meta);
+typedef void (*cells_print_fn)(void *ctx, const char *fmt, ...);
 
-bool cells_fits_in_ref2(i64 value);
-bool cells_fits_in_ref8(i64 value);
-
-// NOTE: this allows ref to ref, and doesn't handle cycles.
-// cycle currently considered as malformed bytecode, so hanging is abnormal
-// behavior. changes index to point at the dereferenced node
-error_t cells_dereference_node(struct cells_t *cells, size_t *index,
-                               struct cells_node_t *out_node);
-error_t cells_get_left_node(struct cells_t *cells, size_t *parent_index,
-                            struct cells_node_t *out_node);
-error_t cells_get_right_node(struct cells_t *cells, size_t *parent_index,
-                             struct cells_node_t *out_node);
-
-struct cells_tree_builder_t;
-
-error_t cells_tree_builder_create(struct cells_tree_builder_t **builder);
-void cells_tree_builder_destroy(struct cells_tree_builder_t **builder);
-void cells_tree_builder_reset(struct cells_tree_builder_t *builder);
-size_t cells_new_node0(struct cells_tree_builder_t *builder,
-                       struct cells_node_t payload);
-size_t cells_new_node1(struct cells_tree_builder_t *builder,
-                       struct cells_node_t payload, size_t left);
-size_t cells_new_node2(struct cells_tree_builder_t *builder,
-                       struct cells_node_t payload, size_t left, size_t right);
-error_t cells_tree_builder_build(struct cells_tree_builder_t *builder,
-                                 struct cells_t *cells, size_t *index_out);
+/**
+ * Print a hex-view like visualization of the cells structure using the provided
+ * print function. Left column: Hex dump of bytes, colored by node type. Right
+ * column: Human-readable representation of nodes.
+ */
+void cells_print_debug_view(struct cells_t *cells, cells_print_fn print,
+                            void *ctx);
 
 #endif // __REDUCER_CELLS_API_H__

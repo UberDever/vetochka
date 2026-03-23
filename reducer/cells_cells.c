@@ -1,3 +1,4 @@
+#include "bytecode_api.h"
 #include "cells_api.h"
 #include "cells_impl.h"
 #include "typedefs.h"
@@ -327,37 +328,37 @@ error_t cells_alloc_chunk_with_refs(
       }
       switch (selected_config) {
         case 0:
-          if (cells_fits_in_ref2(ref_lhs) && !referenced_rhs.has_value) {
+          if (bytecode_fits_in_ref2(ref_lhs) && !referenced_rhs.has_value) {
             found_config = true;
             break;
           }
           continue;
         case 1:
-          if (cells_fits_in_ref2(ref_lhs) && cells_fits_in_ref2(ref_rhs)) {
+          if (bytecode_fits_in_ref2(ref_lhs) && bytecode_fits_in_ref2(ref_rhs)) {
             found_config = true;
             break;
           }
           continue;
         case 2:
-          if (cells_fits_in_ref8(ref_lhs) && !referenced_rhs.has_value) {
+          if (bytecode_fits_in_ref8(ref_lhs) && !referenced_rhs.has_value) {
             found_config = true;
             break;
           }
           continue;
         case 3:
-          if (cells_fits_in_ref2(ref_lhs) && cells_fits_in_ref8(ref_rhs)) {
+          if (bytecode_fits_in_ref2(ref_lhs) && bytecode_fits_in_ref8(ref_rhs)) {
             found_config = true;
             break;
           }
           continue;
         case 4:
-          if (cells_fits_in_ref8(ref_lhs) && cells_fits_in_ref2(ref_rhs)) {
+          if (bytecode_fits_in_ref8(ref_lhs) && bytecode_fits_in_ref2(ref_rhs)) {
             found_config = true;
             break;
           }
           continue;
         case 5:
-          if (cells_fits_in_ref8(ref_lhs) && cells_fits_in_ref8(ref_rhs)) {
+          if (bytecode_fits_in_ref8(ref_lhs) && bytecode_fits_in_ref8(ref_rhs)) {
             found_config = true;
             break;
           }
@@ -405,7 +406,7 @@ error_t cells_write_node(struct cells_t* cells, size_t index, struct cells_node_
     case CELLS_NODE_TYPE_REF2: {
       u16 offset = 0;
       if (index + sizeof(offset) > cells->capacity) { return ERROR_OUT_OF_BOUNDS; }
-      if (!cells_fits_in_ref2(node.as.ref)) { return ERROR_INVALID_PARAM; }
+      if (!bytecode_fits_in_ref2(node.as.ref)) { return ERROR_INVALID_PARAM; }
       offset = (u16)(0x00 << 14) | (u16)(node.as.ref & 0x3fff);
       write_u16_be(cells->data + index, offset);
       return ERROR_SUCCESS;
@@ -413,7 +414,7 @@ error_t cells_write_node(struct cells_t* cells, size_t index, struct cells_node_
     case CELLS_NODE_TYPE_REF8: {
       u64 offset = 0;
       if (index + sizeof(offset) > cells->capacity) { return ERROR_OUT_OF_BOUNDS; }
-      if (!cells_fits_in_ref8(node.as.ref)) { return ERROR_INVALID_PARAM; }
+      if (!bytecode_fits_in_ref8(node.as.ref)) { return ERROR_INVALID_PARAM; }
       offset = (u64)(0x01LU << 62) | (u64)(node.as.ref & 0x3fffffffffffffffLU);
       write_u64_be(cells->data + index, offset);
       return ERROR_SUCCESS;
