@@ -6,24 +6,26 @@
 
 struct cells_t;
 
-enum CELLS_NODE_TYPE : u8 {
-  CELLS_NODE_TYPE_INVALID = 0,
-  CELLS_NODE_TYPE_DELTA0,
-  CELLS_NODE_TYPE_DELTA1,
-  CELLS_NODE_TYPE_DELTA2,
-  CELLS_NODE_TYPE_VALUEF0,
-  CELLS_NODE_TYPE_VALUEF1,
-  CELLS_NODE_TYPE_VALUEF2,
-  CELLS_NODE_TYPE_VALUEV0,
-  CELLS_NODE_TYPE_VALUEV1,
-  CELLS_NODE_TYPE_VALUEV2,
-
-  CELLS_NODE_TYPE_REF2,
-  CELLS_NODE_TYPE_REF8,
+struct CELLS_NODE_TYPE {
+  u8 value;
 };
 
+#define CELLS_NODE_TYPE_INVALID 0U
+#define CELLS_NODE_TYPE_DELTA0 1U
+#define CELLS_NODE_TYPE_DELTA1 2U
+#define CELLS_NODE_TYPE_DELTA2 3U
+#define CELLS_NODE_TYPE_VALUEF0 4U
+#define CELLS_NODE_TYPE_VALUEF1 5U
+#define CELLS_NODE_TYPE_VALUEF2 6U
+#define CELLS_NODE_TYPE_VALUEV0 7U
+#define CELLS_NODE_TYPE_VALUEV1 8U
+#define CELLS_NODE_TYPE_VALUEV2 9U
+
+#define CELLS_NODE_TYPE_REF2 0xF0U
+#define CELLS_NODE_TYPE_REF8 0xF1U
+
 struct cells_node_meta_t {
-  enum CELLS_NODE_TYPE type;
+  struct CELLS_NODE_TYPE type;
   size_t size;
 };
 
@@ -117,6 +119,21 @@ error_t cells_node_free(struct cells_t *cells, size_t index, size_t node_size);
 // ---------------------------------------------------------------------------
 // Node constructors
 // ---------------------------------------------------------------------------
+
+#define ON_NODE_ARITY0                                                         \
+  case CELLS_NODE_TYPE_VALUEF0:                                                \
+  case CELLS_NODE_TYPE_VALUEV0:                                                \
+  case CELLS_NODE_TYPE_DELTA0:
+
+#define ON_NODE_ARITY1                                                         \
+  case CELLS_NODE_TYPE_VALUEF1:                                                \
+  case CELLS_NODE_TYPE_VALUEV1:                                                \
+  case CELLS_NODE_TYPE_DELTA1:
+
+#define ON_NODE_ARITY2                                                         \
+  case CELLS_NODE_TYPE_VALUEF2:                                                \
+  case CELLS_NODE_TYPE_VALUEV2:                                                \
+  case CELLS_NODE_TYPE_DELTA2:
 
 struct cells_node_t cells_new_ref2(i16 offset);
 struct cells_node_t cells_new_ref8(i64 offset);

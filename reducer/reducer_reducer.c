@@ -111,7 +111,7 @@ error_t reducer_step(struct reducer_t* reducer) {
   err = cells_dereference_node(reducer->cells, &redex_i, &redex);
   ERR_CHECK_MASKED("", ERROR_INTERNAL);
 
-  switch (redex.meta.type) {
+  switch (redex.meta.type.value) {
     // rule 0.a
     ON_NODE_ARITY0 {
       cells_node_t delta1 = cells_new_delta1();
@@ -192,7 +192,7 @@ error_t reducer_step(struct reducer_t* reducer) {
       err = cells_get_right_node(reducer->cells, &redex_right_i, &redex_right);
       ERR_CHECK("");
 
-      switch (redex_left.meta.type) {
+      switch (redex_left.meta.type.value) {
         ON_NODE_ARITY0 {
           // rule 1
           reducer_push_to_stack(reducer, redex_right_i);
@@ -240,7 +240,7 @@ error_t reducer_step(struct reducer_t* reducer) {
           err = cells_dereference_node(reducer->cells, &z_i, &z);
           ERR_CHECK("");
 
-          switch (z.meta.type) {
+          switch (z.meta.type.value) {
             ON_NODE_ARITY0 {
               // rule 3a
               reducer_push_to_stack(reducer, w_i);

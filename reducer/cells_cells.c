@@ -53,10 +53,10 @@ void cells_destroy(struct cells_t** cells) {
   *cells = NULL;
 }
 
-static inline byte tag_from_type(enum CELLS_NODE_TYPE type) {
-  assert(type != CELLS_NODE_TYPE_INVALID);
+static inline byte tag_from_type(struct CELLS_NODE_TYPE type) {
+  assert(type.value != CELLS_NODE_TYPE_INVALID);
   // we just encode all nodes as tag + payload, so mapping from type to tag is straightforward
-  return 0x80 - 1 + (byte)type;
+  return 0x80 - 1 + (byte)type.value;
 }
 
 static inline u16 read_u16_be(const byte* p) {
@@ -89,19 +89,19 @@ struct cells_node_meta_t cells_get_node_meta(struct cells_t* cells, size_t index
   byte b = cells->data[index];
 
   if ((b >> 6) == 0x00) {
-    meta.type = CELLS_NODE_TYPE_REF2;
+    meta.type.value = CELLS_NODE_TYPE_REF2;
     meta.size = sizeof(i16);
     goto check_occupied;
   }
   if ((b >> 6) == 0x01) {
-    meta.type = CELLS_NODE_TYPE_REF8;
+    meta.type.value = CELLS_NODE_TYPE_REF8;
     meta.size = sizeof(i64);
     goto check_occupied;
   }
 
 #define CASE_TAG(t, sz)                                                                            \
-  if (b == tag_from_type(CELLS_NODE_TYPE_##t)) {                                                   \
-    meta.type = CELLS_NODE_TYPE_##t;                                                               \
+  if (b == tag_from_type((struct CELLS_NODE_TYPE){.value = CELLS_NODE_TYPE_##t})) {                \
+    meta.type.value = CELLS_NODE_TYPE_##t;                                                         \
     meta.size = (sz);                                                                              \
     goto check_occupied;                                                                           \
   }
@@ -114,17 +114,17 @@ struct cells_node_meta_t cells_get_node_meta(struct cells_t* cells, size_t index
   CASE_TAG(VALUEF2, 9);
 
   bool is_valuev = false;
-  if (b == tag_from_type(CELLS_NODE_TYPE_VALUEV0)) {
+  if (b == tag_from_type((struct CELLS_NODE_TYPE){.value = CELLS_NODE_TYPE_VALUEV0})) {
     is_valuev = true;
-    meta.type = CELLS_NODE_TYPE_VALUEV0;
+    meta.type.value = CELLS_NODE_TYPE_VALUEV0;
   }
-  if (b == tag_from_type(CELLS_NODE_TYPE_VALUEV1)) {
+  if (b == tag_from_type((struct CELLS_NODE_TYPE){.value = CELLS_NODE_TYPE_VALUEV1})) {
     is_valuev = true;
-    meta.type = CELLS_NODE_TYPE_VALUEV1;
+    meta.type.value = CELLS_NODE_TYPE_VALUEV1;
   }
-  if (b == tag_from_type(CELLS_NODE_TYPE_VALUEV2)) {
+  if (b == tag_from_type((struct CELLS_NODE_TYPE){.value = CELLS_NODE_TYPE_VALUEV2})) {
     is_valuev = true;
-    meta.type = CELLS_NODE_TYPE_VALUEV2;
+    meta.type.value = CELLS_NODE_TYPE_VALUEV2;
   }
   if (is_valuev) {
     if (index + 1 > cells->capacity) { return meta; }
@@ -142,7 +142,7 @@ struct cells_node_meta_t cells_get_node_meta(struct cells_t* cells, size_t index
 check_occupied:
   for (size_t i = index; i < index + meta.size; i++) {
     if (!_bitmap_get_bit(cells->occupied_bitmap, i)) {
-      meta.type = CELLS_NODE_TYPE_INVALID;
+      meta.type.value = CELLS_NODE_TYPE_INVALID;
       meta.size = 0;
       return meta;
     }
@@ -156,7 +156,7 @@ struct cells_node_t cells_get_node(
   struct cells_node_t node = {0};
   if (index > cells->capacity) { return node; }
 
-  switch (meta.type) {
+  switch (meta.type.value) {
     case CELLS_NODE_TYPE_REF2: {
       i16 offset = 0;
       if ((cells->data[index] >> 6) != 0x00) { return node; }
@@ -189,15 +189,24 @@ struct cells_node_t cells_get_node(
       return node;
     }
     case CELLS_NODE_TYPE_VALUEF0: {
-      if (tag_from_type(CELLS_NODE_TYPE_VALUEF0) != cells->data[index]) { return node; }
+      if (tag_from_type((struct CELLS_NODE_TYPE){.value = CELLS_NODE_TYPE_VALUEF0})
+          != cells->data[index]) {
+        return node;
+      }
       goto handle_valuef;
     }
     case CELLS_NODE_TYPE_VALUEF1: {
-      if (tag_from_type(CELLS_NODE_TYPE_VALUEF1) != cells->data[index]) { return node; }
+      if (tag_from_type((struct CELLS_NODE_TYPE){.value = CELLS_NODE_TYPE_VALUEF1})
+          != cells->data[index]) {
+        return node;
+      }
       goto handle_valuef;
     }
     case CELLS_NODE_TYPE_VALUEF2: {
-      if (tag_from_type(CELLS_NODE_TYPE_VALUEF2) != cells->data[index]) { return node; }
+      if (tag_from_type((struct CELLS_NODE_TYPE){.value = CELLS_NODE_TYPE_VALUEF2})
+          != cells->data[index]) {
+        return node;
+      }
       i64 value = 0;
     handle_valuef:
       if (index + sizeof(value) + 1 > cells->capacity) { return node; }
@@ -207,15 +216,24 @@ struct cells_node_t cells_get_node(
       return node;
     }
     case CELLS_NODE_TYPE_VALUEV0: {
-      if (tag_from_type(CELLS_NODE_TYPE_VALUEV0) != cells->data[index]) { return node; }
+      if (tag_from_type((struct CELLS_NODE_TYPE){.value = CELLS_NODE_TYPE_VALUEV0})
+          != cells->data[index]) {
+        return node;
+      }
       goto handle_valuev;
     }
     case CELLS_NODE_TYPE_VALUEV1: {
-      if (tag_from_type(CELLS_NODE_TYPE_VALUEV1) != cells->data[index]) { return node; }
+      if (tag_from_type((struct CELLS_NODE_TYPE){.value = CELLS_NODE_TYPE_VALUEV1})
+          != cells->data[index]) {
+        return node;
+      }
       goto handle_valuev;
     }
     case CELLS_NODE_TYPE_VALUEV2: {
-      if (tag_from_type(CELLS_NODE_TYPE_VALUEV2) != cells->data[index]) { return node; }
+      if (tag_from_type((struct CELLS_NODE_TYPE){.value = CELLS_NODE_TYPE_VALUEV2})
+          != cells->data[index]) {
+        return node;
+      }
       struct span_byte_t payload = {0};
       size_t uleb_len = 0;
       size_t uleb_val = 0;
@@ -401,7 +419,7 @@ defer:
 }
 
 error_t cells_write_node(struct cells_t* cells, size_t index, struct cells_node_t node) {
-  switch (node.meta.type) {
+  switch (node.meta.type.value) {
     case CELLS_NODE_TYPE_REF2: {
       u16 offset = 0;
       if (index + sizeof(offset) > cells->capacity) { return ERROR_OUT_OF_BOUNDS; }
@@ -422,7 +440,7 @@ error_t cells_write_node(struct cells_t* cells, size_t index, struct cells_node_
 #define CASE_WRITE_TAG(t)                                                                          \
   case CELLS_NODE_TYPE_##t: {                                                                      \
     if (index + 1 > cells->capacity) { return ERROR_OUT_OF_BOUNDS; }                               \
-    cells->data[index] = tag_from_type(CELLS_NODE_TYPE_##t);                                       \
+    cells->data[index] = tag_from_type((struct CELLS_NODE_TYPE){.value = CELLS_NODE_TYPE_##t});    \
     return ERROR_SUCCESS;                                                                          \
   }
 

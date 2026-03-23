@@ -55,29 +55,29 @@ test "smoke memory" {
     try cTry(c.cells_write_node(cells, rhs_index, rhs_n0f));
 
     const tree_meta = c.cells_get_node_meta(cells, tree_index);
-    try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA0, tree_meta.type);
+    try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA0, tree_meta.type.value);
     const lhs_meta = c.cells_get_node_meta(cells, lhs_index);
-    try std.testing.expectEqual(c.CELLS_NODE_TYPE_REF2, lhs_meta.type);
+    try std.testing.expectEqual(c.CELLS_NODE_TYPE_REF2, lhs_meta.type.value);
     const rhs_meta = c.cells_get_node_meta(cells, rhs_index);
-    try std.testing.expectEqual(c.CELLS_NODE_TYPE_VALUEF0, rhs_meta.type);
+    try std.testing.expectEqual(c.CELLS_NODE_TYPE_VALUEF0, rhs_meta.type.value);
 
     const tree_node_out = c.cells_get_node(cells, tree_index, tree_meta);
-    try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA0, tree_node_out.meta.type);
+    try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA0, tree_node_out.meta.type.value);
     const lhs_node_out = c.cells_get_node(cells, lhs_index, lhs_meta);
-    try std.testing.expectEqual(c.CELLS_NODE_TYPE_REF2, lhs_node_out.meta.type);
+    try std.testing.expectEqual(c.CELLS_NODE_TYPE_REF2, lhs_node_out.meta.type.value);
     const rhs_node_out = c.cells_get_node(cells, rhs_index, rhs_meta);
-    try std.testing.expectEqual(c.CELLS_NODE_TYPE_VALUEF0, rhs_node_out.meta.type);
+    try std.testing.expectEqual(c.CELLS_NODE_TYPE_VALUEF0, rhs_node_out.meta.type.value);
 
     try cTry(c.cells_node_free(cells, tree_index, tree_meta.size));
     try cTry(c.cells_node_free(cells, lhs_index, lhs_meta.size));
     try cTry(c.cells_node_free(cells, rhs_index, rhs_meta.size));
 
     const tree_meta1 = c.cells_get_node_meta(cells, tree_index);
-    try std.testing.expectEqual(c.CELLS_NODE_TYPE_INVALID, tree_meta1.type);
+    try std.testing.expectEqual(c.CELLS_NODE_TYPE_INVALID, tree_meta1.type.value);
     const lhs_meta1 = c.cells_get_node_meta(cells, lhs_index);
-    try std.testing.expectEqual(c.CELLS_NODE_TYPE_INVALID, lhs_meta1.type);
+    try std.testing.expectEqual(c.CELLS_NODE_TYPE_INVALID, lhs_meta1.type.value);
     const rhs_meta1 = c.cells_get_node_meta(cells, rhs_index);
-    try std.testing.expectEqual(c.CELLS_NODE_TYPE_INVALID, rhs_meta1.type);
+    try std.testing.expectEqual(c.CELLS_NODE_TYPE_INVALID, rhs_meta1.type.value);
 }
 
 test "debug view demo" {
@@ -92,7 +92,7 @@ test "debug view demo" {
     var idx1: usize = 0;
     try cTry(c.cells_alloc_chunk(cells, n1.meta.size, &idx1));
     try cTry(c.cells_write_node(cells, idx1, n1));
-    try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA2, c.cells_get_node_meta(cells, idx1).type);
+    try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA2, c.cells_get_node_meta(cells, idx1).type.value);
 
     var payload_data = [_]u8{ 0xDE, 0xAD, 0xBE, 0xEF, 0xCA, 0xFE, 0xBA, 0xBE };
     const payload = c.span_byte_t{ .data = &payload_data, .len = payload_data.len };
@@ -100,13 +100,13 @@ test "debug view demo" {
     var idx3: usize = 0;
     try cTry(c.cells_alloc_chunk(cells, n3.meta.size, &idx3));
     try cTry(c.cells_write_node(cells, idx3, n3));
-    try std.testing.expectEqual(c.CELLS_NODE_TYPE_VALUEV0, c.cells_get_node_meta(cells, idx3).type);
+    try std.testing.expectEqual(c.CELLS_NODE_TYPE_VALUEV0, c.cells_get_node_meta(cells, idx3).type.value);
 
     const n2 = c.cells_new_ref2(1024);
     var idx2: usize = 0;
     try cTry(c.cells_alloc_chunk(cells, n2.meta.size, &idx2));
     try cTry(c.cells_write_node(cells, idx2, n2));
-    try std.testing.expectEqual(c.CELLS_NODE_TYPE_REF2, c.cells_get_node_meta(cells, idx2).type);
+    try std.testing.expectEqual(c.CELLS_NODE_TYPE_REF2, c.cells_get_node_meta(cells, idx2).type.value);
 
     // std.debug.print("\n--- Debug View Demo ---\n", .{});
     // c.cells_print_debug_view(cells, debug_print, null);
@@ -155,11 +155,11 @@ test "eval smoke" {
         var root_node = c.cells_node_t{};
         var result1 = result;
         try cTry(c.cells_dereference_node(cells, &result1, &root_node));
-        try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA1, root_node.meta.type);
+        try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA1, root_node.meta.type.value);
         var left_node = c.cells_node_t{};
         var result2 = result;
         try cTry(c.cells_get_left_node(cells, &result2, &left_node));
-        try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA0, left_node.meta.type);
+        try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA0, left_node.meta.type.value);
     }
     {
         // rule 0.b
@@ -188,15 +188,15 @@ test "eval smoke" {
         var root_node = c.cells_node_t{};
         var result1 = result;
         try cTry(c.cells_dereference_node(cells, &result1, &root_node));
-        try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA2, root_node.meta.type);
+        try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA2, root_node.meta.type.value);
         var left_node = c.cells_node_t{};
         var result2 = result;
         try cTry(c.cells_get_left_node(cells, &result2, &left_node));
-        try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA0, left_node.meta.type);
+        try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA0, left_node.meta.type.value);
         var right_node = c.cells_node_t{};
         var result3 = result;
         try cTry(c.cells_get_right_node(cells, &result3, &right_node));
-        try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA0, right_node.meta.type);
+        try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA0, right_node.meta.type.value);
     }
     {
         // rule 1
@@ -242,15 +242,15 @@ test "eval smoke" {
         var root_node = c.cells_node_t{};
         var result1 = result;
         try cTry(c.cells_dereference_node(cells, &result1, &root_node));
-        try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA2, root_node.meta.type);
+        try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA2, root_node.meta.type.value);
         var left_node = c.cells_node_t{};
         var result2 = result;
         try cTry(c.cells_get_left_node(cells, &result2, &left_node));
-        try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA0, left_node.meta.type);
+        try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA0, left_node.meta.type.value);
         var right_node = c.cells_node_t{};
         var result3 = result;
         try cTry(c.cells_get_right_node(cells, &result3, &right_node));
-        try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA0, right_node.meta.type);
+        try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA0, right_node.meta.type.value);
     }
     {
         // rule 2
@@ -289,19 +289,19 @@ test "eval smoke" {
         var root_node = c.cells_node_t{};
         var result1 = result;
         try cTry(c.cells_dereference_node(cells, &result1, &root_node));
-        try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA2, root_node.meta.type);
+        try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA2, root_node.meta.type.value);
         var left_node = c.cells_node_t{};
         var result2 = result;
         try cTry(c.cells_get_left_node(cells, &result2, &left_node));
-        try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA0, left_node.meta.type);
+        try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA0, left_node.meta.type.value);
         var right_node = c.cells_node_t{};
         var result3 = result;
         try cTry(c.cells_get_right_node(cells, &result3, &right_node));
-        try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA1, right_node.meta.type);
+        try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA1, right_node.meta.type.value);
         var right_left_node = c.cells_node_t{};
         var result4 = result3;
         try cTry(c.cells_get_left_node(cells, &result4, &right_left_node));
-        try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA0, right_left_node.meta.type);
+        try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA0, right_left_node.meta.type.value);
     }
     {
         // rule 3a
@@ -341,7 +341,7 @@ test "eval smoke" {
         var root_node = c.cells_node_t{};
         var result1 = result;
         try cTry(c.cells_dereference_node(cells, &result1, &root_node));
-        try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA0, root_node.meta.type);
+        try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA0, root_node.meta.type.value);
     }
     {
         // rule 3b
@@ -385,11 +385,11 @@ test "eval smoke" {
         var root_node = c.cells_node_t{};
         var result1 = result;
         try cTry(c.cells_dereference_node(cells, &result1, &root_node));
-        try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA1, root_node.meta.type);
+        try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA1, root_node.meta.type.value);
         var left_node = c.cells_node_t{};
         var result2 = result;
         try cTry(c.cells_get_left_node(cells, &result2, &left_node));
-        try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA0, left_node.meta.type);
+        try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA0, left_node.meta.type.value);
     }
     {
         // rule 3c
@@ -434,15 +434,15 @@ test "eval smoke" {
         var root_node = c.cells_node_t{};
         var result1 = result;
         try cTry(c.cells_dereference_node(cells, &result1, &root_node));
-        try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA2, root_node.meta.type);
+        try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA2, root_node.meta.type.value);
         var left_node = c.cells_node_t{};
         var result2 = result;
         try cTry(c.cells_get_left_node(cells, &result2, &left_node));
-        try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA0, left_node.meta.type);
+        try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA0, left_node.meta.type.value);
         var right_node = c.cells_node_t{};
         var result3 = result;
         try cTry(c.cells_get_right_node(cells, &result3, &right_node));
-        try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA0, right_node.meta.type);
+        try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA0, right_node.meta.type.value);
     }
     {
         // not, true, false
@@ -503,11 +503,11 @@ test "eval smoke" {
             var root_node = c.cells_node_t{};
             var result1 = result;
             try cTry(c.cells_dereference_node(cells, &result1, &root_node));
-            try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA1, root_node.meta.type);
+            try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA1, root_node.meta.type.value);
             var left_node = c.cells_node_t{};
             var result2 = result;
             try cTry(c.cells_get_left_node(cells, &result2, &left_node));
-            try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA0, left_node.meta.type);
+            try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA0, left_node.meta.type.value);
         }
         {
             // not true => false
@@ -524,7 +524,7 @@ test "eval smoke" {
             var root_node = c.cells_node_t{};
             var result1 = result;
             try cTry(c.cells_dereference_node(cells, &result1, &root_node));
-            try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA0, root_node.meta.type);
+            try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA0, root_node.meta.type.value);
         }
     }
 }

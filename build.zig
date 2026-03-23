@@ -50,6 +50,7 @@ pub fn build(b: *std.Build) !void {
         "-Wall",
         "-Wextra",
         "-Werror",
+        "-pedantic-errors",
     });
     if (sanitize) {
         try flags.appendSlice(b.allocator, &.{ "-g", "-fno-omit-frame-pointer", "-fsanitize=address", "-shared-libasan" });

@@ -14,8 +14,8 @@
 #define COLOR_CYAN    "\033[36m"
 #define COLOR_GREY    "\033[90m"
 
-static const char* get_node_color(enum CELLS_NODE_TYPE type) {
-  switch (type) {
+static const char* get_node_color(struct CELLS_NODE_TYPE type) {
+  switch (type.value) {
     case CELLS_NODE_TYPE_REF2:
     case CELLS_NODE_TYPE_REF8: return COLOR_CYAN;
     case CELLS_NODE_TYPE_DELTA0:
@@ -42,7 +42,7 @@ static void print_node_desc(
   const char* color = get_node_color(meta.type);
   print(ctx, "%s", color);
   print(ctx, "[%zu]", index);
-  switch (meta.type) {
+  switch (meta.type.value) {
     case CELLS_NODE_TYPE_REF2:
     case CELLS_NODE_TYPE_REF8:
       print(ctx, "*%zu{%" PRId64 "}", meta.size, node.as.ref + index);
@@ -54,9 +54,9 @@ static void print_node_desc(
     case CELLS_NODE_TYPE_VALUEF1:
     case CELLS_NODE_TYPE_VALUEF2: {
       int n = 0;
-      if (meta.type == CELLS_NODE_TYPE_VALUEF1) {
+      if (meta.type.value == CELLS_NODE_TYPE_VALUEF1) {
         n = 1;
-      } else if (meta.type == CELLS_NODE_TYPE_VALUEF2) {
+      } else if (meta.type.value == CELLS_NODE_TYPE_VALUEF2) {
         n = 2;
       }
       print(ctx, "v%df{%" PRId64 "}", n, node.as.nativef);
@@ -66,9 +66,9 @@ static void print_node_desc(
     case CELLS_NODE_TYPE_VALUEV1:
     case CELLS_NODE_TYPE_VALUEV2: {
       int n = 0;
-      if (meta.type == CELLS_NODE_TYPE_VALUEV1) {
+      if (meta.type.value == CELLS_NODE_TYPE_VALUEV1) {
         n = 1;
-      } else if (meta.type == CELLS_NODE_TYPE_VALUEV2) {
+      } else if (meta.type.value == CELLS_NODE_TYPE_VALUEV2) {
         n = 2;
       }
       print(ctx, "v%dv{len=%" PRIu64, n, node.as.nativev.len);
@@ -95,7 +95,7 @@ void cells_print_debug_view(struct cells_t* cells, cells_print_fn print, void* c
   size_t current_node_end = 0;
   struct cells_node_meta_t current_meta = {0};
   // We use a dummy type for free space to distinguish from INVALID
-  const enum CELLS_NODE_TYPE TYPE_FREE = (enum CELLS_NODE_TYPE) - 1;
+  const struct CELLS_NODE_TYPE TYPE_FREE = {.value = (u8)-1};
   current_meta.type = TYPE_FREE;
 
   print(ctx, "MAHNODES  ");
@@ -125,13 +125,13 @@ void cells_print_debug_view(struct cells_t* cells, cells_print_fn print, void* c
         if (_bitmap_get_bit(cells->occupied_bitmap, idx)) {
           // New node starts here
           current_meta = cells_get_node_meta(cells, idx);
-          if (current_meta.type != CELLS_NODE_TYPE_INVALID) {
+          if (current_meta.type.value != CELLS_NODE_TYPE_INVALID) {
             current_node_end = idx + current_meta.size;
             nodes_starting_in_row[nodes_count++] = idx;
           } else {
             // Invalid node (occupied but parse failed or invalid type)
             current_node_end = idx + 1; // Treat as 1 byte
-            current_meta.type = CELLS_NODE_TYPE_INVALID;
+            current_meta.type.value = CELLS_NODE_TYPE_INVALID;
             nodes_starting_in_row[nodes_count++] = idx;
           }
         } else {
@@ -143,7 +143,7 @@ void cells_print_debug_view(struct cells_t* cells, cells_print_fn print, void* c
 
       // Determine color
       const char* color = COLOR_GREY;
-      if (current_meta.type != TYPE_FREE) { color = get_node_color(current_meta.type); }
+      if (current_meta.type.value != TYPE_FREE.value) { color = get_node_color(current_meta.type); }
 
       print(ctx, "%s%02x%s ", color, cells->data[idx], COLOR_RESET);
     }
@@ -155,9 +155,10 @@ void cells_print_debug_view(struct cells_t* cells, cells_print_fn print, void* c
       size_t idx = nodes_starting_in_row[i];
       struct cells_node_meta_t meta = cells_get_node_meta(cells, idx);
       // If it was invalid during scan, it might be invalid here too.
-      if (meta.type == CELLS_NODE_TYPE_INVALID && _bitmap_get_bit(cells->occupied_bitmap, idx)) {
+      if (meta.type.value == CELLS_NODE_TYPE_INVALID
+          && _bitmap_get_bit(cells->occupied_bitmap, idx)) {
         // It was occupied but invalid
-        meta.type = CELLS_NODE_TYPE_INVALID;
+        meta.type.value = CELLS_NODE_TYPE_INVALID;
         meta.size = 1;
       }
 
