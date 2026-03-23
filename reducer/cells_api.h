@@ -114,6 +114,35 @@ error_t cells_write_node(struct cells_t *cells, size_t index,
  */
 error_t cells_node_free(struct cells_t *cells, size_t index, size_t node_size);
 
+// ---------------------------------------------------------------------------
+// Node constructors
+// ---------------------------------------------------------------------------
+
+struct cells_node_t cells_new_ref2(i16 offset);
+struct cells_node_t cells_new_ref8(i64 offset);
+struct cells_node_t cells_new_delta0(void);
+struct cells_node_t cells_new_delta1(void);
+struct cells_node_t cells_new_delta2(void);
+struct cells_node_t cells_new_value0f(i64 value);
+struct cells_node_t cells_new_value1f(i64 value);
+struct cells_node_t cells_new_value2f(i64 value);
+struct cells_node_t cells_new_value0v(span_byte_t payload);
+struct cells_node_t cells_new_value1v(span_byte_t payload);
+struct cells_node_t cells_new_value2v(span_byte_t payload);
+
+bool cells_fits_in_ref2(i64 value);
+bool cells_fits_in_ref8(i64 value);
+
+// NOTE: this allows ref to ref, and doesn't handle cycles.
+// cycle currently considered as malformed bytecode, so hanging is abnormal
+// behavior. changes index to point at the dereferenced node
+error_t cells_dereference_node(struct cells_t *cells, size_t *index,
+                               struct cells_node_t *out_node);
+error_t cells_get_left_node(struct cells_t *cells, size_t *parent_index,
+                            struct cells_node_t *out_node);
+error_t cells_get_right_node(struct cells_t *cells, size_t *parent_index,
+                             struct cells_node_t *out_node);
+
 typedef void (*cells_print_fn)(void *ctx, const char *fmt, ...);
 
 /**

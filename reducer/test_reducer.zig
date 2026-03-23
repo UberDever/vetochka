@@ -40,9 +40,9 @@ test "smoke memory" {
     try cTry(c.cells_create(&cells, 64));
     defer c.cells_destroy(&cells);
 
-    const tree_node = c.bytecode_new_delta0();
-    const lhs_ref = c.bytecode_new_ref2(8191);
-    const rhs_n0f = c.bytecode_new_value0f(-3516);
+    const tree_node = c.cells_new_delta0();
+    const lhs_ref = c.cells_new_ref2(8191);
+    const rhs_n0f = c.cells_new_value0f(-3516);
 
     var tree_index: usize = 0;
     try cTry(c.cells_alloc_chunk(cells, tree_node.meta.size, &tree_index));
@@ -88,7 +88,7 @@ test "debug view demo" {
     defer c.cells_destroy(&cells);
 
     // Create a mix of nodes
-    const n1 = c.bytecode_new_delta2();
+    const n1 = c.cells_new_delta2();
     var idx1: usize = 0;
     try cTry(c.cells_alloc_chunk(cells, n1.meta.size, &idx1));
     try cTry(c.cells_write_node(cells, idx1, n1));
@@ -96,13 +96,13 @@ test "debug view demo" {
 
     var payload_data = [_]u8{ 0xDE, 0xAD, 0xBE, 0xEF, 0xCA, 0xFE, 0xBA, 0xBE };
     const payload = c.span_byte_t{ .data = &payload_data, .len = payload_data.len };
-    const n3 = c.bytecode_new_value0v(payload);
+    const n3 = c.cells_new_value0v(payload);
     var idx3: usize = 0;
     try cTry(c.cells_alloc_chunk(cells, n3.meta.size, &idx3));
     try cTry(c.cells_write_node(cells, idx3, n3));
     try std.testing.expectEqual(c.CELLS_NODE_TYPE_VALUEV0, c.cells_get_node_meta(cells, idx3).type);
 
-    const n2 = c.bytecode_new_ref2(1024);
+    const n2 = c.cells_new_ref2(1024);
     var idx2: usize = 0;
     try cTry(c.cells_alloc_chunk(cells, n2.meta.size, &idx2));
     try cTry(c.cells_write_node(cells, idx2, n2));
@@ -134,7 +134,7 @@ test "eval smoke" {
         // rule 0.a
         c.reducer_push_to_stack(reducer, c.REDUCER_APPLY_TOKEN);
 
-        const delta0 = c.bytecode_new_delta0();
+        const delta0 = c.cells_new_delta0();
         var index_out: usize = 0;
         try cTry(c.cells_alloc_chunk(cells, delta0.meta.size, &index_out));
         try cTry(c.cells_write_node(cells, index_out, delta0));
@@ -154,19 +154,19 @@ test "eval smoke" {
         const result = c.reducer_get_result(reducer);
         var root_node = c.cells_node_t{};
         var result1 = result;
-        try cTry(c.bytecode_dereference_node(cells, &result1, &root_node));
+        try cTry(c.cells_dereference_node(cells, &result1, &root_node));
         try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA1, root_node.meta.type);
         var left_node = c.cells_node_t{};
         var result2 = result;
-        try cTry(c.bytecode_get_left_node(cells, &result2, &left_node));
+        try cTry(c.cells_get_left_node(cells, &result2, &left_node));
         try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA0, left_node.meta.type);
     }
     {
         // rule 0.b
         c.reducer_push_to_stack(reducer, c.REDUCER_APPLY_TOKEN);
 
-        const delta1 = c.bytecode_new_delta1();
-        const delta0 = c.bytecode_new_delta0();
+        const delta1 = c.cells_new_delta1();
+        const delta0 = c.cells_new_delta0();
         var index_out: usize = 0;
         try cTry(c.cells_alloc_chunk(cells, delta1.meta.size + delta0.meta.size, &index_out));
         try cTry(c.cells_write_node(cells, index_out, delta1));
@@ -187,15 +187,15 @@ test "eval smoke" {
         const result = c.reducer_get_result(reducer);
         var root_node = c.cells_node_t{};
         var result1 = result;
-        try cTry(c.bytecode_dereference_node(cells, &result1, &root_node));
+        try cTry(c.cells_dereference_node(cells, &result1, &root_node));
         try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA2, root_node.meta.type);
         var left_node = c.cells_node_t{};
         var result2 = result;
-        try cTry(c.bytecode_get_left_node(cells, &result2, &left_node));
+        try cTry(c.cells_get_left_node(cells, &result2, &left_node));
         try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA0, left_node.meta.type);
         var right_node = c.cells_node_t{};
         var result3 = result;
-        try cTry(c.bytecode_get_right_node(cells, &result3, &right_node));
+        try cTry(c.cells_get_right_node(cells, &result3, &right_node));
         try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA0, right_node.meta.type);
     }
     {
@@ -205,13 +205,13 @@ test "eval smoke" {
         defer c.bytecode_tree_builder_destroy(&b);
         _ = c.bytecode_new_node2(
             b,
-            c.bytecode_new_delta2(),
-            c.bytecode_new_node0(b, c.bytecode_new_delta0()),
+            c.cells_new_delta2(),
+            c.bytecode_new_node0(b, c.cells_new_delta0()),
             c.bytecode_new_node2(
                 b,
-                c.bytecode_new_delta2(),
-                c.bytecode_new_node0(b, c.bytecode_new_delta0()),
-                c.bytecode_new_node0(b, c.bytecode_new_delta0()),
+                c.cells_new_delta2(),
+                c.bytecode_new_node0(b, c.cells_new_delta0()),
+                c.bytecode_new_node0(b, c.cells_new_delta0()),
             ),
         );
         var root_redex: usize = undefined;
@@ -220,9 +220,9 @@ test "eval smoke" {
         c.bytecode_tree_builder_reset(b);
         _ = c.bytecode_new_node2(
             b,
-            c.bytecode_new_delta2(),
-            c.bytecode_new_node0(b, c.bytecode_new_delta0()),
-            c.bytecode_new_node0(b, c.bytecode_new_delta0()),
+            c.cells_new_delta2(),
+            c.bytecode_new_node0(b, c.cells_new_delta0()),
+            c.bytecode_new_node0(b, c.cells_new_delta0()),
         );
         var root_arg: usize = undefined;
         try cTry(c.bytecode_tree_builder_build(b, cells, &root_arg));
@@ -241,15 +241,15 @@ test "eval smoke" {
         const result = c.reducer_get_result(reducer);
         var root_node = c.cells_node_t{};
         var result1 = result;
-        try cTry(c.bytecode_dereference_node(cells, &result1, &root_node));
+        try cTry(c.cells_dereference_node(cells, &result1, &root_node));
         try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA2, root_node.meta.type);
         var left_node = c.cells_node_t{};
         var result2 = result;
-        try cTry(c.bytecode_get_left_node(cells, &result2, &left_node));
+        try cTry(c.cells_get_left_node(cells, &result2, &left_node));
         try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA0, left_node.meta.type);
         var right_node = c.cells_node_t{};
         var result3 = result;
-        try cTry(c.bytecode_get_right_node(cells, &result3, &right_node));
+        try cTry(c.cells_get_right_node(cells, &result3, &right_node));
         try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA0, right_node.meta.type);
     }
     {
@@ -259,19 +259,19 @@ test "eval smoke" {
         defer c.bytecode_tree_builder_destroy(&b);
         _ = c.bytecode_new_node2(
             b,
-            c.bytecode_new_delta2(),
+            c.cells_new_delta2(),
             c.bytecode_new_node1(
                 b,
-                c.bytecode_new_delta1(),
-                c.bytecode_new_node0(b, c.bytecode_new_delta0()),
+                c.cells_new_delta1(),
+                c.bytecode_new_node0(b, c.cells_new_delta0()),
             ),
-            c.bytecode_new_node0(b, c.bytecode_new_delta0()),
+            c.bytecode_new_node0(b, c.cells_new_delta0()),
         );
         var root_redex: usize = undefined;
         try cTry(c.bytecode_tree_builder_build(b, cells, &root_redex));
 
         c.bytecode_tree_builder_reset(b);
-        _ = c.bytecode_new_node0(b, c.bytecode_new_delta0());
+        _ = c.bytecode_new_node0(b, c.cells_new_delta0());
         var root_arg: usize = undefined;
         try cTry(c.bytecode_tree_builder_build(b, cells, &root_arg));
 
@@ -288,19 +288,19 @@ test "eval smoke" {
         const result = c.reducer_get_result(reducer);
         var root_node = c.cells_node_t{};
         var result1 = result;
-        try cTry(c.bytecode_dereference_node(cells, &result1, &root_node));
+        try cTry(c.cells_dereference_node(cells, &result1, &root_node));
         try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA2, root_node.meta.type);
         var left_node = c.cells_node_t{};
         var result2 = result;
-        try cTry(c.bytecode_get_left_node(cells, &result2, &left_node));
+        try cTry(c.cells_get_left_node(cells, &result2, &left_node));
         try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA0, left_node.meta.type);
         var right_node = c.cells_node_t{};
         var result3 = result;
-        try cTry(c.bytecode_get_right_node(cells, &result3, &right_node));
+        try cTry(c.cells_get_right_node(cells, &result3, &right_node));
         try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA1, right_node.meta.type);
         var right_left_node = c.cells_node_t{};
         var result4 = result3;
-        try cTry(c.bytecode_get_left_node(cells, &result4, &right_left_node));
+        try cTry(c.cells_get_left_node(cells, &result4, &right_left_node));
         try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA0, right_left_node.meta.type);
     }
     {
@@ -310,20 +310,20 @@ test "eval smoke" {
         defer c.bytecode_tree_builder_destroy(&b);
         _ = c.bytecode_new_node2(
             b,
-            c.bytecode_new_delta2(),
+            c.cells_new_delta2(),
             c.bytecode_new_node2(
                 b,
-                c.bytecode_new_delta2(),
-                c.bytecode_new_node0(b, c.bytecode_new_delta0()),
-                c.bytecode_new_node0(b, c.bytecode_new_delta0()),
+                c.cells_new_delta2(),
+                c.bytecode_new_node0(b, c.cells_new_delta0()),
+                c.bytecode_new_node0(b, c.cells_new_delta0()),
             ),
-            c.bytecode_new_node0(b, c.bytecode_new_delta0()),
+            c.bytecode_new_node0(b, c.cells_new_delta0()),
         );
         var root_redex: usize = undefined;
         try cTry(c.bytecode_tree_builder_build(b, cells, &root_redex));
 
         c.bytecode_tree_builder_reset(b);
-        _ = c.bytecode_new_node0(b, c.bytecode_new_delta0());
+        _ = c.bytecode_new_node0(b, c.cells_new_delta0());
         var root_arg: usize = undefined;
         try cTry(c.bytecode_tree_builder_build(b, cells, &root_arg));
 
@@ -340,7 +340,7 @@ test "eval smoke" {
         const result = c.reducer_get_result(reducer);
         var root_node = c.cells_node_t{};
         var result1 = result;
-        try cTry(c.bytecode_dereference_node(cells, &result1, &root_node));
+        try cTry(c.cells_dereference_node(cells, &result1, &root_node));
         try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA0, root_node.meta.type);
     }
     {
@@ -350,14 +350,14 @@ test "eval smoke" {
         defer c.bytecode_tree_builder_destroy(&b);
         _ = c.bytecode_new_node2(
             b,
-            c.bytecode_new_delta2(),
+            c.cells_new_delta2(),
             c.bytecode_new_node2(
                 b,
-                c.bytecode_new_delta2(),
-                c.bytecode_new_node0(b, c.bytecode_new_delta0()),
-                c.bytecode_new_node0(b, c.bytecode_new_delta0()),
+                c.cells_new_delta2(),
+                c.bytecode_new_node0(b, c.cells_new_delta0()),
+                c.bytecode_new_node0(b, c.cells_new_delta0()),
             ),
-            c.bytecode_new_node0(b, c.bytecode_new_delta0()),
+            c.bytecode_new_node0(b, c.cells_new_delta0()),
         );
         var root_redex: usize = undefined;
         try cTry(c.bytecode_tree_builder_build(b, cells, &root_redex));
@@ -365,8 +365,8 @@ test "eval smoke" {
         c.bytecode_tree_builder_reset(b);
         _ = c.bytecode_new_node1(
             b,
-            c.bytecode_new_delta1(),
-            c.bytecode_new_node0(b, c.bytecode_new_delta0()),
+            c.cells_new_delta1(),
+            c.bytecode_new_node0(b, c.cells_new_delta0()),
         );
         var root_arg: usize = undefined;
         try cTry(c.bytecode_tree_builder_build(b, cells, &root_arg));
@@ -384,11 +384,11 @@ test "eval smoke" {
         const result = c.reducer_get_result(reducer);
         var root_node = c.cells_node_t{};
         var result1 = result;
-        try cTry(c.bytecode_dereference_node(cells, &result1, &root_node));
+        try cTry(c.cells_dereference_node(cells, &result1, &root_node));
         try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA1, root_node.meta.type);
         var left_node = c.cells_node_t{};
         var result2 = result;
-        try cTry(c.bytecode_get_left_node(cells, &result2, &left_node));
+        try cTry(c.cells_get_left_node(cells, &result2, &left_node));
         try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA0, left_node.meta.type);
     }
     {
@@ -398,14 +398,14 @@ test "eval smoke" {
         defer c.bytecode_tree_builder_destroy(&b);
         _ = c.bytecode_new_node2(
             b,
-            c.bytecode_new_delta2(),
+            c.cells_new_delta2(),
             c.bytecode_new_node2(
                 b,
-                c.bytecode_new_delta2(),
-                c.bytecode_new_node0(b, c.bytecode_new_delta0()),
-                c.bytecode_new_node0(b, c.bytecode_new_delta0()),
+                c.cells_new_delta2(),
+                c.bytecode_new_node0(b, c.cells_new_delta0()),
+                c.bytecode_new_node0(b, c.cells_new_delta0()),
             ),
-            c.bytecode_new_node0(b, c.bytecode_new_delta0()),
+            c.bytecode_new_node0(b, c.cells_new_delta0()),
         );
         var root_redex: usize = undefined;
         try cTry(c.bytecode_tree_builder_build(b, cells, &root_redex));
@@ -413,9 +413,9 @@ test "eval smoke" {
         c.bytecode_tree_builder_reset(b);
         _ = c.bytecode_new_node2(
             b,
-            c.bytecode_new_delta2(),
-            c.bytecode_new_node0(b, c.bytecode_new_delta0()),
-            c.bytecode_new_node0(b, c.bytecode_new_delta0()),
+            c.cells_new_delta2(),
+            c.bytecode_new_node0(b, c.cells_new_delta0()),
+            c.bytecode_new_node0(b, c.cells_new_delta0()),
         );
         var root_arg: usize = undefined;
         try cTry(c.bytecode_tree_builder_build(b, cells, &root_arg));
@@ -433,15 +433,15 @@ test "eval smoke" {
         const result = c.reducer_get_result(reducer);
         var root_node = c.cells_node_t{};
         var result1 = result;
-        try cTry(c.bytecode_dereference_node(cells, &result1, &root_node));
+        try cTry(c.cells_dereference_node(cells, &result1, &root_node));
         try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA2, root_node.meta.type);
         var left_node = c.cells_node_t{};
         var result2 = result;
-        try cTry(c.bytecode_get_left_node(cells, &result2, &left_node));
+        try cTry(c.cells_get_left_node(cells, &result2, &left_node));
         try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA0, left_node.meta.type);
         var right_node = c.cells_node_t{};
         var result3 = result;
-        try cTry(c.bytecode_get_right_node(cells, &result3, &right_node));
+        try cTry(c.cells_get_right_node(cells, &result3, &right_node));
         try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA0, right_node.meta.type);
     }
     {
@@ -451,37 +451,37 @@ test "eval smoke" {
         defer c.bytecode_tree_builder_destroy(&b);
         _ = c.bytecode_new_node2(
             b,
-            c.bytecode_new_delta2(),
+            c.cells_new_delta2(),
             c.bytecode_new_node2(
                 b,
-                c.bytecode_new_delta2(),
+                c.cells_new_delta2(),
                 c.bytecode_new_node1(
                     b,
-                    c.bytecode_new_delta1(),
-                    c.bytecode_new_node0(b, c.bytecode_new_delta0()),
+                    c.cells_new_delta1(),
+                    c.bytecode_new_node0(b, c.cells_new_delta0()),
                 ),
                 c.bytecode_new_node2(
                     b,
-                    c.bytecode_new_delta2(),
-                    c.bytecode_new_node0(b, c.bytecode_new_delta0()),
-                    c.bytecode_new_node0(b, c.bytecode_new_delta0()),
+                    c.cells_new_delta2(),
+                    c.bytecode_new_node0(b, c.cells_new_delta0()),
+                    c.bytecode_new_node0(b, c.cells_new_delta0()),
                 ),
             ),
-            c.bytecode_new_node0(b, c.bytecode_new_delta0()),
+            c.bytecode_new_node0(b, c.cells_new_delta0()),
         );
         var not_program_redex: usize = undefined;
         try cTry(c.bytecode_tree_builder_build(b, cells, &not_program_redex));
         c.bytecode_tree_builder_reset(b);
 
-        _ = c.bytecode_new_node0(b, c.bytecode_new_delta0());
+        _ = c.bytecode_new_node0(b, c.cells_new_delta0());
         var false_redex: usize = undefined;
         try cTry(c.bytecode_tree_builder_build(b, cells, &false_redex));
         c.bytecode_tree_builder_reset(b);
 
         _ = c.bytecode_new_node1(
             b,
-            c.bytecode_new_delta1(),
-            c.bytecode_new_node0(b, c.bytecode_new_delta0()),
+            c.cells_new_delta1(),
+            c.bytecode_new_node0(b, c.cells_new_delta0()),
         );
         var true_redex: usize = undefined;
         try cTry(c.bytecode_tree_builder_build(b, cells, &true_redex));
@@ -502,11 +502,11 @@ test "eval smoke" {
             const result = c.reducer_get_result(reducer);
             var root_node = c.cells_node_t{};
             var result1 = result;
-            try cTry(c.bytecode_dereference_node(cells, &result1, &root_node));
+            try cTry(c.cells_dereference_node(cells, &result1, &root_node));
             try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA1, root_node.meta.type);
             var left_node = c.cells_node_t{};
             var result2 = result;
-            try cTry(c.bytecode_get_left_node(cells, &result2, &left_node));
+            try cTry(c.cells_get_left_node(cells, &result2, &left_node));
             try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA0, left_node.meta.type);
         }
         {
@@ -523,7 +523,7 @@ test "eval smoke" {
             const result = c.reducer_get_result(reducer);
             var root_node = c.cells_node_t{};
             var result1 = result;
-            try cTry(c.bytecode_dereference_node(cells, &result1, &root_node));
+            try cTry(c.cells_dereference_node(cells, &result1, &root_node));
             try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA0, root_node.meta.type);
         }
     }

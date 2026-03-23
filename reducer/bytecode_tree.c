@@ -1,5 +1,6 @@
 #include "bytecode_api.h"
 #include "cells_api.h"
+// cells_api.h provides cells_new_ref2/8, cells_fits_in_ref2/8
 #include "typedefs.h"
 #include "vendor/stb_ds.h"
 #include <assert.h>
@@ -71,11 +72,11 @@ error_t do_build(
 
   i64 lhs_ref_i = (i64)left_i - (i64)(*index_out + root.payload.meta.size);
   cells_node_t lhs_ref;
-  if (bytecode_fits_in_ref2(lhs_ref_i)) {
-    lhs_ref = bytecode_new_ref2(lhs_ref_i);
+  if (cells_fits_in_ref2(lhs_ref_i)) {
+    lhs_ref = cells_new_ref2(lhs_ref_i);
   } else {
-    assert(bytecode_fits_in_ref8(lhs_ref_i));
-    lhs_ref = bytecode_new_ref8(lhs_ref_i);
+    assert(cells_fits_in_ref8(lhs_ref_i));
+    lhs_ref = cells_new_ref8(lhs_ref_i);
   }
   err = cells_write_node(cells, *index_out + root.payload.meta.size, lhs_ref);
   if (err != ERROR_SUCCESS) { return err; }
@@ -84,11 +85,11 @@ error_t do_build(
 
   i64 rhs_ref_i = (i64)right_i - (i64)(*index_out + root.payload.meta.size + lhs_ref.meta.size);
   cells_node_t rhs_ref;
-  if (bytecode_fits_in_ref2(rhs_ref_i)) {
-    rhs_ref = bytecode_new_ref2(rhs_ref_i);
+  if (cells_fits_in_ref2(rhs_ref_i)) {
+    rhs_ref = cells_new_ref2(rhs_ref_i);
   } else {
-    assert(bytecode_fits_in_ref8(rhs_ref_i));
-    rhs_ref = bytecode_new_ref8(rhs_ref_i);
+    assert(cells_fits_in_ref8(rhs_ref_i));
+    rhs_ref = cells_new_ref8(rhs_ref_i);
   }
   err = cells_write_node(cells, *index_out + root.payload.meta.size + lhs_ref.meta.size, rhs_ref);
   if (err != ERROR_SUCCESS) { return err; }
