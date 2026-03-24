@@ -379,3 +379,18 @@ Unsaturated opcode (stem) is a valid triage value, returned verbatim by VM.
 User extensibility via call opcode carrying a native function pointer in payload.
 Shape-based inspectability: opcode stem routes to rule 3b when used as z in rule 3, enabling calculus-level branching by shape alone.
 ```
+
+### 24.03.2026
+- (#runtime abi)
+- Parser, VM, user programs -- all use the same ABI format to represent extended part of the core calculus
+- Tagged value is of two forms:
+    + `^ [tag payload...]` known as stem value. It is effectively a function, since it could be applied to another value
+    + `^ [tag payload...] ^` known as fork value, which is just a tagged value
+- If tagged value is a stem value, its arguments expected to be in a list `[arg1 arg2... argN]`
+- Every tag is hard defined in the runtime: e.g. there are `indentifier`, `string`, `opcode.lambda` and others
+- Usecases of this ABI:
+    + Parser uses it to convert text to bytecode, but there are more syntactical categories than bytecode primitives:
+        e.g. identifiers and strings are different, but essentially represented by the same VALUEV[N]. Hence we need tagging
+    + VM uses tagging to recognize opcodes (and maybe other tagged nodes) and perform side-effects
+    + User programs can rely on ABI and build programs/analyze programs in presence of extended language constructs
+- Compatibility is preserved by versioning of runtime/tags, but this is a possibility, not a priority

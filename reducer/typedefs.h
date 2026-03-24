@@ -38,6 +38,11 @@ typedef struct span_byte_t {
   u64 len;
 } span_byte_t;
 
+typedef struct span_cbyte_t {
+  const byte *data;
+  u64 len;
+} span_cbyte_t;
+
 typedef i32 error_t;
 
 #define ERROR_SUCCESS 0

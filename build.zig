@@ -39,6 +39,7 @@ pub fn build(b: *std.Build) !void {
         b.pathJoin(&.{ c_core_dir, "cells_debug.c" }),
         b.pathJoin(&.{ c_core_dir, "cells_node.c" }),
         b.pathJoin(&.{ c_core_dir, "bytecode_tree.c" }),
+        b.pathJoin(&.{ c_core_dir, "bytecode_text.c" }),
         b.pathJoin(&.{ c_core_dir, "reducer_reducer.c" }),
     };
 
@@ -106,9 +107,24 @@ pub fn build(b: *std.Build) !void {
     test_exe.root_module.linkLibrary(lib);
     test_exe.step.dependOn(&lib.step);
 
+    const test_bytecode_exe = b.addTest(.{
+        .name = "test_bytecode",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path(b.pathJoin(&.{ c_core_dir, "test_bytecode.zig" })),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    test_bytecode_exe.root_module.addIncludePath(b.path(c_core_dir));
+    test_bytecode_exe.root_module.link_libc = true;
+    test_bytecode_exe.root_module.linkLibrary(lib);
+    test_bytecode_exe.step.dependOn(&lib.step);
+
     b.installArtifact(lib);
 
     const test_step = b.step("test", "Run all unit tests");
     const run_tests = b.addRunArtifact(test_exe);
     test_step.dependOn(&run_tests.step);
+    const run_bytecode_tests = b.addRunArtifact(test_bytecode_exe);
+    test_step.dependOn(&run_bytecode_tests.step);
 }
