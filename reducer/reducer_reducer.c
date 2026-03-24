@@ -114,8 +114,18 @@ error_t reducer_step(struct reducer_t* reducer) {
   switch (redex.meta.type.value) {
     // rule 0.a
     ON_NODE_ARITY0 {
-      cells_node_t delta1 = cells_new_delta1();
-      size_t total_size = delta1.meta.size;
+      cells_node_t arity1;
+      switch (redex.meta.type.value) {
+        case CELLS_NODE_TYPE_VALUEF0: arity1 = cells_new_value1f(redex.as.nativef); break;
+        case CELLS_NODE_TYPE_VALUEV0:
+          arity1 = cells_new_value1v(
+              redex.as
+                  .nativev); // TODO: this will break on GC since now we have sharing of the payload
+          break;
+        case CELLS_NODE_TYPE_DELTA0: arity1 = cells_new_delta1(); break;
+        default: assert(false);
+      }
+      size_t total_size = arity1.meta.size;
       size_t result_index = 0;
       err = cells_alloc_chunk_with_refs(
           reducer->cells,
@@ -124,7 +134,7 @@ error_t reducer_step(struct reducer_t* reducer) {
           (struct opt_size_t){0},
           &result_index);
       ERR_CHECK_MASKED("", ERROR_INTERNAL);
-      size_t index_out = result_index + delta1.meta.size;
+      size_t index_out = result_index + arity1.meta.size;
       i64 arg_shift = arg_i - index_out;
       cells_node_t arg_ref;
       if (cells_fits_in_ref2(arg_shift)) {
@@ -133,19 +143,25 @@ error_t reducer_step(struct reducer_t* reducer) {
         assert(cells_fits_in_ref8(arg_shift));
         arg_ref = cells_new_ref8(arg_shift);
       }
-      cells_write_node(reducer->cells, result_index, delta1);
+      cells_write_node(reducer->cells, result_index, arity1);
       cells_write_node(reducer->cells, index_out, arg_ref);
       reducer_push_to_stack(reducer, result_index);
       return ERROR_SUCCESS;
     }
     // rule 0.b
     ON_NODE_ARITY1 {
-      cells_node_t delta2 = cells_new_delta2();
+      cells_node_t arity2;
+      switch (redex.meta.type.value) {
+        case CELLS_NODE_TYPE_VALUEF1: arity2 = cells_new_value2f(redex.as.nativef); break;
+        case CELLS_NODE_TYPE_VALUEV1: arity2 = cells_new_value2v(redex.as.nativev); break;
+        case CELLS_NODE_TYPE_DELTA1: arity2 = cells_new_delta2(); break;
+        default: assert(false);
+      }
       size_t delta1_left_i = redex_i;
       cells_node_t delta1_left;
       err = cells_get_left_node(reducer->cells, &delta1_left_i, &delta1_left);
       ERR_CHECK("");
-      size_t total_size = delta2.meta.size;
+      size_t total_size = arity2.meta.size;
       size_t result_index = 0;
       err = cells_alloc_chunk_with_refs(
           reducer->cells,
@@ -154,10 +170,10 @@ error_t reducer_step(struct reducer_t* reducer) {
           (struct opt_size_t){.has_value = true, .value = arg_i},
           &result_index);
       ERR_CHECK_MASKED("", ERROR_INTERNAL);
-      cells_write_node(reducer->cells, result_index, delta2);
+      cells_write_node(reducer->cells, result_index, arity2);
 
       size_t index_out = result_index;
-      index_out += delta2.meta.size;
+      index_out += arity2.meta.size;
       i64 delta1_shift = delta1_left_i - index_out;
       cells_node_t delta1_ref;
       if (cells_fits_in_ref2(delta1_shift)) {
