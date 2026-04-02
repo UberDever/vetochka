@@ -120,7 +120,7 @@ pub fn build(b: *std.Build) !void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
     const sanitize = b.option(bool, "sanitize", "Enable ASan/UBSan-style flags") orelse false;
-    const cc = b.option([]const u8, "cc", "C compiler for ASan discovery") orelse "gcc-11";
+    const cc = b.option([]const u8, "cc", "C compiler for ASan discovery") orelse "gcc";
 
     const c_core_dir = "reducer";
     var s = TestSuite.init(b, c_core_dir, target, optimize);

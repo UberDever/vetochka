@@ -1,16 +1,5 @@
 # LLM Research Notes
 
-## Tagging mechanism requirements (18.03.2026)
-
-1. **Distinguishability** — opcode term contains a `magic` native integer node at a fixed, known position; VM checks this position to confirm opcode identity
-2. **Reducibility** — opcode term is always a fully-reduced triage value; reducer is blind to it
-3. **Saturation** — VM dispatches only on fully saturated opcodes; if unsaturated, the term is treated as a generic tree value and returned verbatim (not an error)
-4. **Payload carriage** — opcode identity and arguments are carried as children within the fork structure
-5. **Composability** — opcode term is a valid triage term, passable/storable like any other value
-6. **Shape-based inspectability** — tag's tree shape (leaf/stem/fork) is sufficient for calculus-level branching via rules 3a–3c; no integer extraction needed from calculus
-7. **Fixed magic position** — position of `magic` within the opcode tree is a fixed convention; VM checks it in O(1) without tree walking
-8. **Validity** — a saturated opcode can still be invalid if internal invariants are not met (arg count/type mismatch, invalid internal structure); VM raises an error in that case
-
 ## Opcode tree shape
 
 ```
