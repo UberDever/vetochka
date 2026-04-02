@@ -1,0 +1,54 @@
+name: Zig tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        step:
+          - test-reducer
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Zig
+        uses: mlugg/setup-zig@v2
+        with:
+          version: 0.15.1
+
+      - name: Run tests
+        run: zig build ${{ matrix.step }} --summary all
+
+  test-sanitized:
+    name: test-sanitized
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        step:
+          - test-reducer
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Zig
+        uses: mlugg/setup-zig@v2
+        with:
+          version: 0.15.1
+
+      - name: Install GCC ASan runtime
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-11
+
+      - name: Run tests
+        run: zig build ${{ matrix.step }} -Dsanitize=true --summary all
