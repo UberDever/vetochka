@@ -782,7 +782,7 @@ expr marker1: <block> marker2: <block> ... markerN: block end
 - No precedence. No mixed infix.
 - annotations: `@[basically, any(expression)] expr`
 - example
-```elixir
+```vetochka
 module [collections.vec] do:
     import(std.mem);
     import(std.assert);
