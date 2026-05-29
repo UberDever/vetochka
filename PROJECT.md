@@ -678,4 +678,202 @@ Shape-based inspectability: opcode stem routes to rule 3b when used as z in rule
 - Compatibility is preserved by versioning of runtime/tags, but this is a possibility, not a priority
 
 ### 02.04.2026
-- ⬜ Compose a proper language grammar document, with EBNF and stuff
+- ⬜ Compose a proper language grammar document, with EBNF and stuff.
+    Also need to think about applicability: maybe *get inspired* by the grammar and don't
+    strictly follow lisp grammar at all?
+
+### 06.04.2026
+- ⬜ Since I want opcodes to represent the same computation as triage calculus AND at the same
+    time I want efficiency => I probably won't get both.
+- My decision: build a VM that will be as efficient as possible with clear semantics, yet
+    still keeping triage calculus's advantages: all three rules and homoiconicity at its maximum
+- One of the approaches that can be entertained: build a VM with efficient semantics which 
+    basically would have a number of opcodes and these opcodes would be just tree nodes
+    and, hence, buildable by the calculus; This direction is basically what I was 
+    following for these months
+- And being following this path, I encountered the categorical split: VM is its own thing with big-step semantics
+- Hence, VM can have state:
+    * Continuation stack: to be able to "step" VM and continue the evaluation of
+        current opcode if it requires the evaluation of the child opcode
+    * Function frame stack or Environment: to introduce `.lambda` opcode and be able
+        to reference "bound" variables
+    * Maybe, other kinds of state could be explored, it all depends on the VM design
+- ✅ Try to shift perspective from reducer to VM and evaluate this language's runtime
+    as a VM that has tree-shaped opcodes => how would this VM be designed?
+- Bound variables could be accessed by other opcode like `.var "stuff"` that would
+    use VM state directly => this implies that VM can be built as a real VM with registers
+    / variable stack / environment. The possibilities are large
+
+### 28.05.2026
+- long time no see
+- About perspective shift: I've got new framing
+- we're building new frontend for C with meta capabilities, thanks to triage calculus
+- clanker wording: A reflective, staged, C-emitting language for disciplined small/medium systems programming, where project code can inspect and generate declarations, types, and implementation fragments before they lower to ordinary C and the classic C ABI
+- So, this is a proper language, with proper runtime, but:
+    + no *extensive* semantic analysis step
+    + surface-level tailored to imperative style syntax
+    + no semantics in the language itself that would leak into generated C,
+        all semantics is used to do code generation
+    + extensible-ish syntax to be able to encode not only C (this is mostly for the sake of experimentation)
+    + keep C values: control, exlicitness, simplicity, porousness and make the language analysis-oriented
+- The main framing is: we don't want to strip C down, provide new features that don't boil down to simple syntax rewrites,
+    extend runtime, create "our little bouble to happily live in", invent our own stdlib, etc...
+- we may provide new module system, new macro system, more expressive type system (without too much magic and being only library-side),
+    convenient syntax for some cases, constant evaluation (with guarantees and corner cases), dsl support
+- Basically, we don't invent zig. We're still writing C and C only. No magic, only metalanguage.
+- this means that wisp syntax above isn't so applicable :((( ; I would try to incorporate algol-syntax, inspired by elixir
+- Informally, hardcoded are:
+```
+@
+()
+[]
+{}
+.
+marker:
+end
+,
+;
+prefix operator shape
+infix operator shape
+```
+- language is statement oriented, parser only knows the shapes, no keywords beside `end` and `<stuff>:`
+- main statement form: 
+```elixir
+expr marker1:
+    stmt1;
+    stmt2;
+    ...
+...
+markerN:
+    stmt1;
+    stmt2;
+    ...
+end
+```
+- delimiters:
+```
+function calls: ,
+lists:          ,
+do blocks:      ;
+
+all are trailing-optional
+Semicolon omission can exist as formatter/parser convenience, but canonical syntax has ;.
+
+(expr)          grouping only
+
+f(a, b)         immediate function call
+x (y)           FORBIDDEN
+x [y]           -- call with list payload
+x {y}           -- call with string payload
+
+[expr, expr]    list
+x[list]         immediate bracket index
+
+{utf8}          UTF-8 string literal
+x{utf8}         immediate string-key index / curly index
+
+x.y             selector
+
+They probably could be interweaved:
+expr ~marker1 <expr>, ... ~markerN <expr>
+expr marker1: <block> marker2: <block> ... markerN: block end 
+```
+- Parser recognizes infix shape, not operator meaning.
+- No precedence. No mixed infix.
+- annotations: `@[basically, any(expression)] expr`
+- example
+```elixir
+module [collections.vec] do:
+    import(std.mem);
+    import(std.assert);
+
+    ;; stuff
+    struct [Vec, [T]] do:
+        field(data, ptr(T));
+        field(len, usize);
+        field(cap, usize);
+        field(alloc, ptr(Allocator));
+    end;
+
+    @[an annotation]
+    fn [vec_init, [alloc :: ptr(Allocator)]] ret: Vec do:
+        return(make(Vec, [
+            data = null,
+            len = 0,
+            cap = 0,
+            alloc = alloc,
+        ]));
+    end;
+
+    fn [vec_free, [v :: ptr(Vec(T))]] do:
+        if [v.data != null] do:
+            free(v.alloc, v.data);
+        end;
+
+        v.data = null;
+        v.len = 0;
+        v.cap = 0;
+    end;
+
+    fn [vec_reserve, [v :: ptr(Vec(T)), wanted :: usize]] ret: bool do:
+        if [wanted <= v.cap] do:
+            return(true);
+        let ~val doubled = v.cap * 2,
+            ~val new_cap = max(wanted, max(doubled, 8));
+
+        with [new_data = alloc_array(v.alloc, T, new_cap)] do:
+            if [v.data != null] do:
+                copy(new_data, v.data, v.len);
+                free(v.alloc, v.data);
+            end;
+
+            v.data = new_data;
+            v.cap = new_cap;
+
+            return(true);
+        else:
+            return(false);
+        end;
+    end;
+
+    fn [vec_push, [v :: ptr(Vec(T)), value :: T]] ret: bool do:
+        if [v.len == v.cap] do:
+            if [not(vec_reserve(v, v.len + 1))] do:
+                return(false);
+            else:
+                v.data[v.len] = value;
+                v.len = v.len + 1;
+                return(true);
+            end;
+        else:
+            v.data[v.len] = value;
+            v.len = v.len + 1;
+            return(true);
+        end;
+    end;
+
+    fn [vec_get, [v :: ptr(Vec(T)), index :: usize]] ret: ptr(T) do:
+        assert(index < v.len);
+        v.data[index];
+    end;
+
+    fn [emit_vec_api, [T, Name]] ret: artifact do:
+        emit_header [
+            c_name = Name,
+            decls = [
+                fn_decl [concat(Name, {init}), [], Name],
+                fn_decl [concat(Name, {free}), [ptr(Name)], void],
+                fn_decl [concat(Name, {push}), [ptr(Name), T], bool],
+                fn_decl [concat(Name, {get}), [ptr(Name), usize], ptr(T)],
+            ],
+        ];
+
+        emit_source [
+            c_name = Name,
+            body = c {generated vector implementation goes here},
+        ];
+
+    end;
+end
+
+```
