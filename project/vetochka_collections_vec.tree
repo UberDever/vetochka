@@ -1,6 +1,3 @@
-# Vetochka Collections Vec Example
-
-```vetochka
 module [collections.vec] do:
     import(std.mem);
     import(std.assert);
@@ -93,4 +90,3 @@ module [collections.vec] do:
 
     end;
 end
-```

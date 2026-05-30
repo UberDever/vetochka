@@ -29,7 +29,7 @@ t_identifier ::= [a-zA-Z_][a-zA-Z0-9_]*
 
 (*excluding ":"*)
 t_operator       ::= operator_char+
-operator_char    ::= "=" | "+" | "-" | "*" | "/" | "%" | "<" | ">" | "!" | "&" | "|" | "^" | ":"
+operator_char    ::= "=" | "+" | "-" | "*" | "/" | "%" | "<" | ">" | "!" | "&" | "|" | ":"
 
 ```
 
