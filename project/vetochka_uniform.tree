@@ -2,8 +2,8 @@
 
 def module: Example do:
 def fn: moving_average args: [values :: List[f64], window :: i64] ret: List[f64] do:
-    def ~var result = List[f64]()
-    for range: [i = u64(0), values.length()] do:
+    def ~var result = List[f64](^)
+    for range: [i = u64(0), values.length(^)] do:
         def let:
             from = max(0, i - window + 1);
             slice = values[range(from, i+1)];
@@ -11,11 +11,12 @@ def fn: moving_average args: [values :: List[f64], window :: i64] ret: List[f64]
         for each: [x, slice] do:
             sum += x;
         end;
-        result.append(sum / slice.length());
+        result.append(sum / slice.length(^));
     end;
     return(result);
 end;
 print(moving_average([1, 2, 3, 4, 5], 3));
+print(^(^, ^)(^)); ;; by rule 1 => ^
 end;
 
 
@@ -78,13 +79,13 @@ end;
 def fn: process_batch args: [db :: database_t, events :: List[event_t]] ret: report_t do:
     def var:
         total_score = f32(0);
-        updated_users = set_t[user_id_t]();
+        updated_users = set_t[user_id_t](^);
     end;
     with [transaction(db)] do:
         for each: [event, events] do:
             def let: 
                 old_stats = db.users.get(event.user_id)
-                          .or(user_stats_t());
+                          .or(user_stats_t(^));
                 new_stats = update_stats(old_stats, event);
             end;
             db.users.put(event.user_id, new_stats);
@@ -94,20 +95,20 @@ def fn: process_batch args: [db :: database_t, events :: List[event_t]] ret: rep
         end;
     end;
     return(report_t call:
-        event_count = events.length();
-        user_count = updated_users.length();
+        event_count = events.length(^);
+        user_count = updated_users.length(^);
         total_score = total_score;
-        average_score = if (events.length() > 0) ~do total_score / events.length() ~else f32(0);
+        average_score = if (events.length(^) > 0) ~do total_score / events.length(^) ~else f32(0);
     end);
 end;
 
 @route({POST}, {/api/events})
 def fn: do:
     def let:
-        body = request.json();
+        body = request.json(^);
         events = parse_events(body);
     end;
-    if (events.length() > 10000) do:
+    if (events.length(^) > 10000) do:
         return(response.status(413).json(any_t call:
             error = {Too many events};
         end));

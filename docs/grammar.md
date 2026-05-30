@@ -40,6 +40,12 @@ source ::= expression
 
 expression ::= infix_expression
 
+(*
+    mixed infix is rejected by the parser, i.e.
+    x + y + z   => fine
+    x + y * z   => error, do explicit
+    x + (y * z) => fine
+*)
 infix_expression ::=
     prefix_expression (t_operator prefix_expression)*
 
@@ -51,8 +57,8 @@ postfix_expression ::=
 
 postfix ::=
     "." t_identifier
-  | "(" argument_list? ")"
-  | "[" argument_list? "]"
+  | "(" comma_list ")"
+  | "[" comma_list? "]"
   | t_string_literal
   | block_suffix
   | named_expr_suffix
@@ -69,7 +75,7 @@ named_expr_suffix ::=
 primary ::=
     t_literal
   | t_identifier
-  | "[" argument_list? "]"
+  | "[" comma_list? "]"
   | "(" expression ")"
 
 prefix_operator ::= "!" | "-" | "~" | "*" | "&"
@@ -77,6 +83,32 @@ prefix_operator ::= "!" | "-" | "~" | "*" | "&"
 block_list ::=
     expression (";" expression)* ";"?
 
-argument_list ::=
+comma_list ::=
     expression ("," expression)* ","?
+```
+
+The main advantage of this grammar is that it allows for relatively readable common
+imperative code while being fully homoiconic and unbound in terms of keywords. The only keyword
+is `end` and only other reserved syntax objects are operators and literals, the rest is
+just structure, as triage-calculus bequeathed.
+
+Following "rules" describe the main idea of a parser rewrite: in the end, tree must contain
+only literals, identifiers+operators, lists (encoded via `^`) and applications. It
+must also contain tagged expressions/values/other stuff to provide enough information
+after desugaring, i.e. infix/prefix tag or groupping tag, since all parsing is left-associative and we lose distinction between intentional/unintentional grouping.
+
+```elixir
+t_literal => t_literal
+t_identifier => t_identifier
+"[" comma_list? "]" => [comma_list...]
+"(" expression ")" => [:group, expression]
+block_list => [expression1, ..., expressionN]
+primary "." t_identifier => ($($ "." primary) t_identifier)
+primary "(" comma_list? ")" => ($...($($ primary comma_list[0]) comma_list[1])...)
+primary "[" comma_list? "]" => ($ primary [comma_list...])
+primary t_string_literal => ($ primary t_string_literal)
+primary block_suffix => ($ primary [[t_identifier1, block_list1], ..., [t_identifierN, block_listN]])
+primary named_expr_suffix => ($ primary [[t_identifier1, expression1], ..., [t_identifierN, expressionN]])
+prefix_operator postfix_expression => ($ [:prefix, prefix_operator] postfix_expression)
+prefix_expression t_operator prefix_expression => ($($ [:infix, t_operator] prefix_expression) prefix_expression)
 ```

@@ -500,12 +500,12 @@ Shape-based inspectability: opcode stem routes to rule 3b when used as z in rule
 - Compatibility is preserved by versioning of runtime/tags, but this is a possibility, not a priority
 
 ### 02.04.2026
-- ⬜ Compose a proper language grammar document, with EBNF and stuff.
+- ✅ Compose a proper language grammar document, with EBNF and stuff.
     Also need to think about applicability: maybe *get inspired* by the grammar and don't
     strictly follow lisp grammar at all?
 
 ### 06.04.2026
-- ⬜ Since I want opcodes to represent the same computation as triage calculus AND at the same
+- ✅ Since I want opcodes to represent the same computation as triage calculus AND at the same
     time I want efficiency => I probably won't get both.
 - My decision: build a VM that will be as efficient as possible with clear semantics, yet
     still keeping triage calculus's advantages: all three rules and homoiconicity at its maximum
@@ -606,3 +606,11 @@ expr marker1: <block> marker2: <block> ... markerN: block end
 - example
 See [`project/vetochka_collections_vec_example.md`](project/vetochka_collections_vec_example.md);
 Also [`project/vetochka_uniform.tree`](project/vetochka_uniform.tree)
+
+### 30.05.2026
+- we can do saturation: since we have `f(x,y,z) == f(x)(y)(z)`, we need to
+somehow support curring for this notation to be sane. But this is a "marker" reason,
+but the main one: currying is very useful
+- so, how to do it: we should store an application counter in the function object
+    and do actual computation as it reaches N; this way we can do "stateful" opcodes
+    and fully curried functions easily
