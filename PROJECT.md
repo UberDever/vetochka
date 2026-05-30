@@ -29,19 +29,7 @@ This would be a project development log to concisely write the current state of 
 - Declared as `scope [name: string | none] do ... end`
 - Named scopes are `modules` and unnamed ones are alternative form of `let-bindings`
 - Inside: series of sugared bindings of the form
-    ```elixir
-    scope do
-        a = 10
-        b = 20
-        ^
-    end
-    # equivalent to
-    scope do
-        let a = 10 in
-        let b = 20 in
-        ^ # `^` is a false value
-    end
-    ```
+    See [`project/scope_syntax_example.md`](project/scope_syntax_example.md)
 - Ending expression of the scope is final value of the expression. If no
     expression is provided, false/nullish idk value is returned (maybe 
     do an analysis before? not for interpreter...)
@@ -101,40 +89,9 @@ This would be a project development log to concisely write the current state of 
     considered to be a linear sequence of declarations in the file.~~
     Nesting of modules does nothing to their names, instead, it just brings outer definitions to the scope of
     the inner module
-    ```elixir
-    # Modules can be nested
-    scope {A} do
-        a = ...
-        scope {B} do
-            b = a
-        end
-    end
-
-    # Since named scopes are considered modules, they are always exported with
-    # every each of their declarations being available
-    # If you need to 'hide' implementation of a module, you can do this
-    scope do
-        get_impl = ...
-        # Here, KV is exported anyway since it is named, even if it is nested inside anon scope
-        scope {KV} do
-            get = get_impl ...
-            set = ... get_impl ...
-        end
-    end
-    ```
+    See [`project/module_nesting_example.md`](project/module_nesting_example.md)
 - All modules can be used as follows:
-    ```elixir
-    use {stuff} do
-        ...
-    end
-
-    # modules can be referenced anywhere (in the same file multiply in any place)
-    use {other} do
-        use {some/thing} do
-            ...
-        end
-    end
-    ```
+    See [`project/module_use_example.md`](project/module_use_example.md)
 - `use` construct can enclose any expression, and since `scope` is an expression on itself, `use`
     can appear on top level with unrestricted embedding depth.
 - `use` brings in top-level declarations (i.e. let bindings) into the scope of the expression
@@ -144,51 +101,11 @@ This would be a project development log to concisely write the current state of 
     `use {some/path.tree} in func foo bar` rather than `path.func foo bar`.
     But this really simplifies module system.
     If you have a name clash you can alias the clashing things yourself.
-    ```elixir
-    scope {KV} do
-        get = ...
-    end
-    scope {State} do
-        get = ...
-    end
-    scope {User} do
-        kv_get = use {KV} in get
-        state_get = use {State} in get
-        ...
-    end
-    ```
+    See [`project/module_name_clash_example.md`](project/module_name_clash_example.md)
 - The `module` can be described as a syntax sugar. It acts as a "statement" that doesn't return
     anything. This makes language less consistent, but much pleasant to work with.
-    ```elixir
-    scope do
-        module {KV} do
-            get = ...
-        end
-        use {KV} in get
-    end
-    # Translates to
-    scope do
-        _ = scope {KV} do
-            get = ...
-            ^
-        end
-        use {KV} in get
-    end
-    ```
+    See [`project/module_syntax_sugar_example.md`](project/module_syntax_sugar_example.md)
 - If module is defined at top-level, implicit clause is created
-    ```elixir
-    module {A} do end
-    module {B} do end
-    module {C} do end
-    use {Bool} in true
-    # Translates to
-    scope do
-    _ = scope {A} do ^ end
-    _ = scope {B} do ^ end
-    _ = scope {C} do ^ end
-    use {Bool} in true
-    end
-    ```
 ---
 - Let-bindings
 - Since we have scopes, I decided to reuse this construct for let bindings also.
@@ -228,21 +145,7 @@ Let's consider both approaches.
 
 `Internal` approach allows to encode tagging in the calculus and code related operations in the calculus only.
 The "example" of such approach in the code:
-```elixir
-3_val = ^(^^^)
-tag_int = 3_val
-
-to_string_int = <convert int to list of bytes>
-
-tag = \val \tag ^ val tag
-untag = <untag impl>
-
-3 = tag 3_val tag_int
-plus = <plus implementation> # plus unwraps the values and adds them, then wraps again
-
-print = \x evalcall x
-print (to_string_int 3) # list of bytes that interpreter actually understands
-```
+See [`project/internal_tagging_approach.md`](project/internal_tagging_approach.md)
 
 Note that this approach implies that numbers are defined in the source code, when in reality the interpreter
 encoder can just construct numbers before interpretation. In either case the information about the structure
@@ -251,19 +154,7 @@ encode the value `3` as calculus expected.
 
 `Native` approach is the other way around -- calculus "obeys" the interpreter and asks it in some
 cases. The "example" is the code:
-```elixir
-# 3 is predefined
-# tag_int is predefined
-tag = <predefined in the interpreter> # allows to construct some value and tag it
-untag = <predefined in the interpreter> # allows to get 3_val
-get_tag = <predefined in the interpreter> # allows to get tag_int
-
-to_string_int = <could still be encoded in the calculus, or could be native also>
-plus = <plus implementation> # this implementation can be native also
-
-print = \x evalcall x
-print 3 # since interpreter knows about the tags it can convert the values accordingly
-```
+See [`project/native_tagging_approach.md`](project/native_tagging_approach.md)
 
 It is clear that `native` approach is the way to go, since it is faster and more convenient.
 The only downside is that we "extend" the channel of communication between calculus and hardware, effectively
@@ -451,31 +342,7 @@ for any term `t` that is known statically, I have its corresponding location
 - an application is just things together in the list, right associative `(a b c) == (a (b c))`
 - so, there are no lists with `()`: this is an application; To encode a list: `^ a : ^ b : ^ c nil == (^ a (^ b (^ c nil)))`
 - example for wisp
-```
-(a ((b c))
-    d (e f)
-    g
-)
-```
-as
-```lisp
-a : : b c
-  . d : e f
-  . g
-; or
-a
-  :
-    b c
-  . d
-  e f
-  . g
-```
-- parens are still allowed from time to time for simplification, i.e.
-```
-a : (b c)
-  . d (e f)
-  . g
-```
+See [`project/wisp_syntax_example.md`](project/wisp_syntax_example.md)
 ---
 - strings are hard... currently, I'm discussing the syntactical standpoint:
 - they can be single line or multiline 
@@ -501,15 +368,7 @@ match ending `}...}`
     we are only interested in the string of digits for 64bit ints; so I need to
     make them as extensible as strings
 - intrinsics, being the opcodes `lambda, seq` and others can be encoded verbatim
-```
-:
-    lambda : ^ (params) : ^ (closed-overs) : ^ (mutables) nil
-        seq 
-            print s{Hello, world!}
-            print s{From vetochka!}
-    nil
-```
-- this is quirky and I like it
+See [`project/vetochka_lambda_example.md`](project/vetochka_lambda_example.md)
 
 ### 13.02.2026
 - WISP: https://srfi.schemers.org/srfi-119/srfi-119.html
@@ -563,44 +422,7 @@ match ending `}...}`
 - Since we'll have designated build step anyway (in some way or another), these 
     opcodes can be calculated beforehand. 
 - an example
-```lisp
-;; any opcode can have a luxury to accept any syntax, this is a very powerful idea
-;; unit = ^
-;; all closed ones must be provided by intrinsics, I think
-;; .lambda body is desugared in the sequence of `.seq` since it is a list
-;; TODO: idk how to do functions with multiple arguments
-;; TODO: imperative for is awkward
-.lambda [
-  closed= [<= and or expr for concat length hashmap-set hashmap-get hashmap-keys print] 
-  params= [is-letter to-lower count-words]
-] 
-  : .set is-letter ;; .lambda param is implicit
-      : .lambda [c] : expr [[{a} <= c and c <= {z}] or [{A} <= c and c <= {Z}]]
-    .set to-lower .lambda [c]
-      : .if : expr {A} <= c and c <= {Z}
-          expr c - {A} + {a}
-          c
-    .set count-words .lambda [closed= [is-letter to-lower] params= [text] locals= [counts current]]
-      : .set counts : hashmap []
-        .set current : {}
-        for [c text]
-          : .if (is-letter c)
-              .set current : concat [current (to-lower c)]
-              : .if (> (length current) 0)
-                  .seq hashmap-set [counts (current (+ 1 (hashmap-get [counts current])))]
-                    .set current {}
-        .if : (expr (length current) > 0)
-          .seq hashmap-set [counts (current (+ 1 (hashmap-get [counts current])))]
-          unit
-        counts
-      .lambda [locals= [text counts] closed=[count-words]]
-        : .set text {Hello world hello test world}
-          .set counts (count-words text)
-          for [key (hashmap-keys [counts])]
-            print (concat key (concat {: } (hashmap-get counts key)))
-        unit
-  unit
-```
+See [`project/vetochka_word_count_example.md`](project/vetochka_word_count_example.md)
 - ❌ not a syntax one. I need to use adjacency for apply. So, no `REDUCER_APPLY_TOKEN`.
     Therefore, reducer stack contains indices which should be evaluated next, not `f arg` implicit pairs. Therefore, **every** application must be implemented as two nearby nodes in cells, and any two nodes near each other are subject to application.
     This is done because when I was pondering on lambdas, I've realized that I have two options: apply by adjacency, or somehow structure reducer stack in a way to call a lambda that was defined way before the code I'm currently executing. This is unplausible.
@@ -782,98 +604,4 @@ expr marker1: <block> marker2: <block> ... markerN: block end
 - No precedence. No mixed infix.
 - annotations: `@[basically, any(expression)] expr`
 - example
-```vetochka
-module [collections.vec] do:
-    import(std.mem);
-    import(std.assert);
-
-    ;; stuff
-    struct [Vec, [T]] do:
-        field(data, ptr(T));
-        field(len, usize);
-        field(cap, usize);
-        field(alloc, ptr(Allocator));
-    end;
-
-    @[an annotation]
-    fn [vec_init, [alloc :: ptr(Allocator)]] ret: Vec do:
-        return(make(Vec, [
-            data = null,
-            len = 0,
-            cap = 0,
-            alloc = alloc,
-        ]));
-    end;
-
-    fn [vec_free, [v :: ptr(Vec(T))]] do:
-        if [v.data != null] do:
-            free(v.alloc, v.data);
-        end;
-
-        v.data = null;
-        v.len = 0;
-        v.cap = 0;
-    end;
-
-    fn [vec_reserve, [v :: ptr(Vec(T)), wanted :: usize]] ret: bool do:
-        if [wanted <= v.cap] do:
-            return(true);
-        let ~val doubled = v.cap * 2,
-            ~val new_cap = max(wanted, max(doubled, 8));
-
-        with [new_data = alloc_array(v.alloc, T, new_cap)] do:
-            if [v.data != null] do:
-                copy(new_data, v.data, v.len);
-                free(v.alloc, v.data);
-            end;
-
-            v.data = new_data;
-            v.cap = new_cap;
-
-            return(true);
-        else:
-            return(false);
-        end;
-    end;
-
-    fn [vec_push, [v :: ptr(Vec(T)), value :: T]] ret: bool do:
-        if [v.len == v.cap] do:
-            if [not(vec_reserve(v, v.len + 1))] do:
-                return(false);
-            else:
-                v.data[v.len] = value;
-                v.len = v.len + 1;
-                return(true);
-            end;
-        else:
-            v.data[v.len] = value;
-            v.len = v.len + 1;
-            return(true);
-        end;
-    end;
-
-    fn [vec_get, [v :: ptr(Vec(T)), index :: usize]] ret: ptr(T) do:
-        assert(index < v.len);
-        v.data[index];
-    end;
-
-    fn [emit_vec_api, [T, Name]] ret: artifact do:
-        emit_header [
-            c_name = Name,
-            decls = [
-                fn_decl [concat(Name, {init}), [], Name],
-                fn_decl [concat(Name, {free}), [ptr(Name)], void],
-                fn_decl [concat(Name, {push}), [ptr(Name), T], bool],
-                fn_decl [concat(Name, {get}), [ptr(Name), usize], ptr(T)],
-            ],
-        ];
-
-        emit_source [
-            c_name = Name,
-            body = c {generated vector implementation goes here},
-        ];
-
-    end;
-end
-
-```
+See [`project/vetochka_collections_vec_example.md`](project/vetochka_collections_vec_example.md)
