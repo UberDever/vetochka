@@ -22,7 +22,9 @@ t_ws ::= 09 | 0A | 0B | 0C | 0D | 20
     i64{1234} or f32{-5.4e9}
 *)
 t_string_literal ::= "{" t_literal_chars "}"
-t_literal ::= t_string_literal | "^" | "Δ"
+(*integer literal is always i64*)
+t_integer_literal ::= [1-9][0-9]* | [0-9]
+t_literal ::= t_string_literal | t_integer_literal | "^" | "Δ"
 
 (*excluding "end"*)
 t_identifier ::= [a-zA-Z_][a-zA-Z0-9_]*
@@ -75,6 +77,7 @@ named_expr_suffix ::=
 primary ::=
     t_literal
   | t_identifier
+  | t_integer_literal
   | "[" comma_list? "]"
   | "(" expression ")"
 
