@@ -614,3 +614,12 @@ but the main one: currying is very useful
 - so, how to do it: we should store an application counter in the function object
     and do actual computation as it reaches N; this way we can do "stateful" opcodes
     and fully curried functions easily
+
+
+### 31.05.2026
+- I need to store apply nodes in the parsed tree, since I lose application info (and
+homoiconicity as a whole) when I don't do that. I don't have enough information after
+control (reducer) stack is executed, so I either need to store "template" stack alongside
+any referencable expression, or I need to store this info in nodes. I choose latter.
+- Name resolution should happen in certain opcodes, which means that for the raw calculus
+operations I would need manual name resolution
