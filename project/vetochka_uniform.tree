@@ -1,8 +1,8 @@
 ;; everyting below is imaginary
 
-def module: Example do:
-def fn: moving_average args: [values :: List[f64], window :: i64] ret: List[f64] do:
-    def ~var result = List[f64](^)
+def :module Example do:
+def :fn moving_average :args [values :: List[f64], window :: i64] :ret List[f64] do:
+    def :var result = List[f64](^);
     for range: [i = u64{0}, values.length(^)] do:
         def let:
             from = max(0, i - window + 1);
@@ -20,10 +20,10 @@ print(^(^, ^)(^)); ;; by rule 1 => ^
 end;
 
 
-def module: analytics.storage do:
+def :module analytics.storage do:
 
-def newtype: user_id_t is: i64 end;
-def type: event_kind_t is: {click} | {view} | {purchase}; end;
+def :newtype user_id_t :is i64;
+def :type event_kind_t :cases [{click}, {view}, {purchase}];
 
 def struct: event_t is:
     user_id :: user_id_t;
@@ -33,14 +33,13 @@ def struct: event_t is:
     timestamp :: i64;
 end;
 
-def struct: user_stats_t is:
-    views :: i64;
-    clicks :: i64;
-    purchases :: i64;
-    total_value :: f64;
-end;
+def :struct user_stats_t
+    :views i64
+    :clicks i64
+    :purchases i64
+    :total_value f64
 
-def fn: classify_path args: [path :: string] ret: string do:
+def :fn classify_path :args [path :: string] :ret string do:
     if (path.starts_with({/docs/})) do:
         return({docs});
     end;
@@ -50,14 +49,14 @@ def fn: classify_path args: [path :: string] ret: string do:
     return({other});
 end;
 
-def fn: score_event args: [event :: event_t] ret: f64 do:
-    def ~let base = 
+def :fn score_event :args [event :: event_t] :ret f64 do:
+    def :let base = 
         match (event.kind) with:
-            case {click} ~do 1;
-            case {view} ~do f64{0.5};
-            case {purchase} ~do 20 + event.value;
+            {click} => 1;
+            {view} => f64{0.5};
+            {purchase} => 20 + event.value;
         end;
-    def ~let section_bonus =
+    def :let section_bonus =
         if (classify_path(event.path) == {pricing}) do:
             10;
         else:
@@ -66,21 +65,19 @@ def fn: score_event args: [event :: event_t] ret: f64 do:
     return(base + section_bonus);
 end;
 
-def fn: update_stats args: [stats :: user_stats_t, event :: event_t] ret: user_stats_t do:
-    def ~var result = stats;
+def :fn update_stats :args [stats :: user_stats_t, event :: event_t] :ret user_stats_t do:
+    def :var result = stats;
     match (event.kind) with:
-        case {click} ~do result.clicks += 1;
-        case {view} ~do result.views += 1;
-        case {purchase} do: result.purchases += 1; result.total_value += event.value; end
+        {click} => result.clicks += 1;
+        {view} => result.views += 1;
+        {purchase} => block do: result.purchases += 1; result.total_value += event.value; end
     end;
     return(result);
 end;
 
-def fn: process_batch args: [db :: database_t, events :: List[event_t]] ret: report_t do:
-    def var:
-        total_score = f32{0};
-        updated_users = set_t[user_id_t](^);
-    end;
+def :fn process_batch :args [db :: database_t, events :: List[event_t]] :ret report_t do:
+    def :var total_score = f32{0}
+        :var updated_users = set_t[user_id_t](^);
     with [transaction(db)] do:
         for each: [event, events] do:
             def let: 
@@ -94,26 +91,26 @@ def fn: process_batch args: [db :: database_t, events :: List[event_t]] ret: rep
             updated_users.insert(event.user_id);
         end;
     end;
-    return(report_t call:
-        event_count = events.length(^);
-        user_count = updated_users.length(^);
-        total_score = total_score;
-        average_score = if (events.length(^) > 0) ~do total_score / events.length(^) ~else f32{0};
+    return(report_t :args:
+        event_count: events.length(^);
+        user_count: updated_users.length(^);
+        total_score: total_score;
+        average_score: if (events.length(^) > 0) :do total_score / events.length(^) :else f32{0};
     end);
 end;
 
-@route({POST}, {/api/events})
-def fn: do:
+@route({POST}, {/api/events});
+def :fn: do:
     def let:
         body = request.json(^);
         events = parse_events(body);
     end;
     if (events.length(^) > 10000) do:
-        return(response.status(413).json(any_t call:
-            error = {Too many events};
+        return(response.status(413).json(any_t :args:
+            error: {Too many events};
         end));
     end;
-    def ~let report = process_batch(database.main, events);
+    def :let report = process_batch(database.main, events);
     return(response.json(report));
 end;
 

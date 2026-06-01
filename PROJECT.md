@@ -623,3 +623,8 @@ control (reducer) stack is executed, so I either need to store "template" stack 
 any referencable expression, or I need to store this info in nodes. I choose latter.
 - Name resolution should happen in certain opcodes, which means that for the raw calculus
 operations I would need manual name resolution
+- make `~expr => :expr`
+- operators are separated by whitespace, : is allowed as suffix/prefix of identifier, also `:label:` can be an empty label to support "block naming", it is equivalent to `label:^;`
+- ❌ make `do: block_list? end` and `:do expression?` expressions themselves, expressions must be greedy and will only proceed on postfix
+expressions, every which of them has a separate beginning token
+    + nah, its better to keep them as suffixies, since we have clear separation of primary and postfix and it keeps less confusion

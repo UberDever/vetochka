@@ -26,10 +26,13 @@ t_string_literal ::= "{" t_literal_chars "}"
 t_integer_literal ::= [1-9][0-9]* | [0-9]
 t_literal ::= t_string_literal | t_integer_literal | "^" | "Δ"
 
+TODO: properly extend this and extract "identifier label, identifier marker"
 (*excluding "end"*)
-t_identifier ::= [a-zA-Z_][a-zA-Z0-9_]*
+t_identifier ::= [a-zA-Z_][a-zA-Z0-9_=+-*/%<>!&|:]* |
+                 ":"[a-zA-Z_][a-zA-Z0-9_=+-*/%<>!&|]*
 
-(*excluding ":"*)
+(*operators must be separated by whitespace, in other case they
+are considered as part of identifier*)
 t_operator       ::= operator_char+
 operator_char    ::= "=" | "+" | "-" | "*" | "/" | "%" | "<" | ">" | "!" | "&" | "|" | ":"
 
@@ -40,7 +43,9 @@ operator_char    ::= "=" | "+" | "-" | "*" | "/" | "%" | "<" | ">" | "!" | "&" |
 ```ebnf
 source ::= expression
 
-expression ::= infix_expression
+expression ::= annotation? infix_expression
+
+annotation ::= "@" expression ";"
 
 (*
     mixed infix is rejected by the parser, i.e.
@@ -69,22 +74,21 @@ block_suffix ::=
     block_section+ "end"
 
 block_section ::=
-    t_identifier ":" block_list
+    t_identifier <nows> ":" block_list
 
 named_expr_suffix ::=
-    "~" t_identifier expression ("," "~" t_identifier expression)* ","?
+    ":" <nows> t_identifier expression (":" <nows> t_identifier expression)*
 
 primary ::=
     t_literal
   | t_identifier
-  | t_integer_literal
   | "[" comma_list? "]"
   | "(" expression ")"
 
 prefix_operator ::= "!" | "-" | "~" | "*" | "&"
 
 block_list ::=
-    expression (";" expression)* ";"?
+    expression (";" expression)* ";"
 
 comma_list ::=
     expression ("," expression)* ","?
