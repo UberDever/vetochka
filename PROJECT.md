@@ -641,3 +641,26 @@ expressions, every which of them has a separate beginning token
 def module: Example body: do ... end
 ```
 This way a `do a;b;c end` block is just a syntax sugar for `[do:,a,b,c]` or something
+- opcodes are `[callable-tag, [cur_arity,max_arity], [curried_args], stuff-to-apply]`
+- raw tree data follows standard application protocol using reducer
+- apply nodes (maybe special bytes in cells) are encoded syntactically as `f(x)` and
+    as `$ f x` in cells, VM uses them to build its stack to schedule applications
+- rules:
+    * apply(delta, x) -> reducer rules
+    * apply(native_opcode, x) -> accumulate argument or invoke native implementation
+    * apply(user_function, x) -> accumulate argument or execute function term
+    * apply(non_callable, x) -> error
+- Functions and native opcodes can indeed be the same category:
+    callable value = arity + immutable supplied arguments + implementation;
+    The implementation is either:
+    * native pointer
+    * term/code node
+- rule3 to inspect structure, certain opcodes to inspect contents
+- How to do lazy/eager? `term` is no eval, `eager` is eval to true value
+    + delta:
+        * next mode = term
+        * apply = reducer rule selected by delta shape
+    + native opcode:
+        * next mode = opcode-defined
+    + user function:
+        * next mode = parameter-defined
