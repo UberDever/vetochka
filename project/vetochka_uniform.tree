@@ -1,23 +1,40 @@
 ;; everyting below is imaginary
 
-def :module Example do:
-def :fn moving_average :args [values :: List[f64], window :: i64] :ret List[f64] do:
-    def :var result = List[f64](^);
-    for range: [i = u64{0}, values.length(^)] do:
-        def let:
+def module: Example do
+def fn: moving_average args: [values :: List[f64], window :: i64] ret: List[f64] do
+    def var: result = List[f64](^);
+    for range: [i = u64{0}, values.length(^)] do
+        def let: do
             from = max(0, i - window + 1);
             slice = values[range(from, i+1)];
-        var: sum = 0; end;
-        for each: [x, slice] do:
+        end var: sum = 0;
+        for each: [x, slice] do
             sum += x;
         end;
         result.append(sum / slice.length(^));
     end;
     return(result);
+    
 end;
 print(moving_average([1, 2, 3, 4, 5], 3));
 print(^(^, ^)(^)); ;; by rule 1 => ^
 end;
+
+def :module WithC do:
+@pub;
+def :let code = #compile do:
+
+def :module stuff_t do:
+
+    ;; gives
+    ;; def :let x = 42;
+    ;; def :let y = {foo};
+    #map (fn [e] do: def :let (car e) = (cadr e); end [[{x}, 42], [{y}, {foo}]];
+
+end;
+
+end;
+end
 
 
 def :module analytics.storage do:

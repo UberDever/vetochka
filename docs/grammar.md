@@ -27,7 +27,7 @@ t_integer_literal ::= [1-9][0-9]* | [0-9]
 t_literal ::= t_string_literal | t_integer_literal | "^" | "Δ"
 
 TODO: properly extend this and extract "identifier label, identifier marker"
-(*excluding "end"*)
+(*excluding "do", "end"*)
 t_identifier ::= [a-zA-Z_][a-zA-Z0-9_=+-*/%<>!&|:]* |
                  ":"[a-zA-Z_][a-zA-Z0-9_=+-*/%<>!&|]*
 
@@ -67,17 +67,14 @@ postfix ::=
   | "(" comma_list ")"
   | "[" comma_list? "]"
   | t_string_literal
-  | block_suffix
-  | named_expr_suffix
+  | block_argument
+  | named_argument
 
-block_suffix ::=
-    block_section+ "end"
+block_argument ::=
+    "do" block_list? "end"
 
-block_section ::=
-    t_identifier <nows> ":" block_list
-
-named_expr_suffix ::=
-    ":" <nows> t_identifier expression (":" <nows> t_identifier expression)*
+named_argument ::=
+    t_identifier <nows> ":" expression
 
 primary ::=
     t_literal
@@ -95,8 +92,8 @@ comma_list ::=
 ```
 
 The main advantage of this grammar is that it allows for relatively readable common
-imperative code while being fully homoiconic and unbound in terms of keywords. The only keyword
-is `end` and only other reserved syntax objects are operators and literals, the rest is
+imperative code while being fully homoiconic and unbound in terms of keywords. The only keywords
+are (`end` and `do`) and only other reserved syntax objects are operators and literals, the rest is
 just structure, as triage-calculus bequeathed.
 
 Following "rules" describe the main idea of a parser rewrite: in the end, tree must contain
@@ -114,8 +111,8 @@ primary "." t_identifier => ($($ "." primary) t_identifier)
 primary "(" comma_list? ")" => ($...($($ primary comma_list[0]) comma_list[1])...)
 primary "[" comma_list? "]" => ($ primary [comma_list...])
 primary t_string_literal => ($ primary t_string_literal)
-primary block_suffix => ($ primary [[t_identifier1, block_list1], ..., [t_identifierN, block_listN]])
-primary named_expr_suffix => ($ primary [[t_identifier1, expression1], ..., [t_identifierN, expressionN]])
+primary named_argument => ($ primary [t_identifier:, expression])
+primary block_argument => ($ primary [expression1, ..., expressionN])
 prefix_operator postfix_expression => ($ [:prefix, prefix_operator] postfix_expression)
 prefix_expression t_operator prefix_expression => ($($ [:infix, t_operator] prefix_expression) prefix_expression)
 ```

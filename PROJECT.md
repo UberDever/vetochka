@@ -628,3 +628,16 @@ operations I would need manual name resolution
 - ❌ make `do: block_list? end` and `:do expression?` expressions themselves, expressions must be greedy and will only proceed on postfix
 expressions, every which of them has a separate beginning token
     + nah, its better to keep them as suffixies, since we have clear separation of primary and postfix and it keeps less confusion
+
+
+### 04.06.2026
+- on modules: need to separate module discovery from the semantic effect on VM
+- VM state: reducer, environment (immutable frames with rebinding, persistent scope graphs), underlying special forms
+- ⬜ somewhere here should be ideas about box for mutability
+- on special forms: it is a part of VM (but designed explicitly to be separate from VM state to be semantically swappable) that defines known symbols == opcodes; e.g. `def`, `print`, `return`, `let` and others; my thinking is that there are a couple of groups for these kinds of forms like "directives", "imperative core", "functional core" and something else
+- on currying: it is good to be explicit about currying and we do that, except for `stuff: ... end` block form; idea: just make block list a separate construct
+```
+;; module: is a marker that becomes identical to :module, since we don't have a block form anymore
+def module: Example body: do ... end
+```
+This way a `do a;b;c end` block is just a syntax sugar for `[do:,a,b,c]` or something
