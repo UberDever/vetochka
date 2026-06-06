@@ -664,3 +664,24 @@ This way a `do a;b;c end` block is just a syntax sugar for `[do:,a,b,c]` or some
         * next mode = opcode-defined
     + user function:
         * next mode = parameter-defined
+
+### 05.06.2026
+- ⬜ on syntax: we can eliminate `;` with two 
+    rules: we sometimes don't consider `\n` as a semicolon: in braces and parens and after `do`; we add `...` as a line-continuation marker for explicit newline-skip;
+    after certain chars (`,` `;` `:` `t_operator` `do`, `(` `[`)
+- ⬜ on compilation: the code should be compiled: at least parsing + semantic analysis
+- semantic analysis is: name+module resolution and opcode generation
+- parsing -> ir (just a sepxr with strings) => module resolution, binding resolution -> 
+    (generate proper opcodes with arity+eagerness, already cells) => execution
+- this resolution knows about module root, entrypoint, builtins; so basically we
+    involve only scoping system on this step
+- ⬜ migrate to C+lua (unmigrate from zig???!??!?!?!)
+
+### 06.06.2026
+- ⬜ better to state function arity in two ways / or a single way only:
+    + two ways: positional + labeled args
+    + one way: only positionals matter, rest are labeled
+- on rewrite: describe the main idea of a parser rewrite: in the end, tree must contain
+only literals, identifiers+operators, lists (encoded via `^`) and applications. It
+must also contain tagged expressions/values/other stuff to provide enough information
+after desugaring, i.e. infix/prefix tag or groupping tag, since all parsing is left-associative and we lose distinction between intentional/unintentional grouping.
