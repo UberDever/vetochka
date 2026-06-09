@@ -2,14 +2,26 @@
 
 # What is Vetochka?
 
-`Vetochka` is a interpreted functional language, based on `tree-calculus`, particularly on `triage-calculus`.
+`Vetochka` is an interpreted functional language and at the same time a new frontend for `C`.
+
+It treats C as the operational substrate: the generated code uses the ordinary C compiler, ABI, debugger, libraries, and mental model. The language exists to add structure around C, not to replace it: checked modules, explicit dependencies, analyzable declarations, compile-time execution, code generation, and project-level conventions that can be verified mechanically.
+
+The research question is whether a small reflective term system can serve as both the compiler’s internal representation and the user-facing metaprogramming substrate, while still producing boring, inspectable C.
 
 # Why?
 
-This project exists for 3 reasons:
-1. I want to learn more about PLD and do so from a functional purist standpoint
-1. I want to develop a practical, system level language with pure core
-1. I'm one of those people who wants to develop their own `lisp`
+I always struggled to keep my C consistent, since I'm a somewhat sloppy person.
+I know C guys develop their own style and hack stuff together, but I want to go to other
+direction -- invent a set of conventions (mainly for a particular project) that could be
+inforced by metaprogramming utility. At the same time, I realized that C would benefit from
+new frontend that is explicitly designed for metaprogramming, analysis and flexibility.
+
+My goals:
+1. Keep C a usual boring explicit language 
+2. Soften it's edges, close the room for certain types of errors, make scaling less painful, make code more manageable and increase its analysis potential 
+3. Keep integration with existing C stuff: same compiler, same debugger, same ABI, just a different frontend 
+4. Research the space for metaprogramming via a niche calculus and imperative system's language 
+5. Write compiler and tooling code
 
 This is why there is a big project development log and little actual documentation. Below
 are main points that describe project development across years. 
