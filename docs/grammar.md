@@ -26,21 +26,34 @@ Encoding is utf-8 text.
 Comments: 
 1. `;;` till the end of the line or eof.
 2. Nestable: `#|` and `|#`
-3. Structured: `#;` (comments out next expression in its entirety)
+3. Structured: `#;` (comments out next expression in its entirety, doin it on parser level)
 
 ### Tokens
 
 ```ebnf
-(* whitespace in hexadecimal notation *)
-t_ws ::= 09 | 0A | 0B | 0C | 0D | 20
+t_hws ::= 09 | 0B | 0C | 20
+t_nl  ::= 0A | 0D 0A | 0D
 
 line_comment ::= ";;" <until newline or eof>
 
 block_comment ::= "#|" <nestable contents> "|#"
 
-structured_comment ::= "#;" trivia* expression
+line_continue ::=
+    "..." t_hws* line_comment? t_nl
 
-trivia ::= t_ws | line_comment | block_comment | structured_comment
+structured_comment ::=
+    "#;" trivia* expression
+
+trivia_no_nl ::=
+    t_hws
+  | block_comment
+  | structured_comment
+
+trivia ::=
+    trivia_no_nl
+  | t_nl
+  | line_comment
+  | line_continue
 
 (* 
     t_literal_chars can include any utf-8 character;
@@ -66,8 +79,6 @@ identifier_continue ::=
   | "?" | "=" | "+" | "-" | "*" | "/" | "%" | "<" | ">"
   | "!" | "&" | "|"
 
-t_label ::= t_identifier ":"
-
 t_colon ::= ":"
 
 (* except exact ":" *)
@@ -81,6 +92,48 @@ operator_run ::= operator_char+
 operator_char ::= "=" | "+" | "-" | "*" | "/" | "%" | "<" | ">"
                 | "!" | "&" | "|" | ":"
 ```
+
+### Automatic semicolon insertion
+
+Newlines may be converted into virtual semicolon tokens before parsing.
+
+A physical newline is converted to `;` iff:
+
+1. the current lexical context is layout-active;
+2. the newline is not suppressed by `...`;
+3. the previous significant token can end an expression.
+
+Layout-active contexts are:
+
+```txt
+source
+do ... end block
+```
+
+Layout-inactive contexts are:
+
+```txt
+(...)
+[...]
+@[...]
+```
+
+Tokens that can end an expression:
+
+```txt
+t_literal
+t_identifier
+")"
+"]"
+"end"
+```
+
+The closing `]` of an annotation `@[ ... ]` does not trigger semicolon insertion.
+
+`...` before a newline suppresses semicolon insertion and continues the expression on the next line.
+
+After ASI, virtual semicolons are parsed exactly like explicit `;`.
+
 
 ### Syntax
 
@@ -116,7 +169,7 @@ block_argument ::=
     "do" block_list? "end"
 
 labeled_argument ::=
-    t_label argument_expression
+    t_identifier t_colon argument_expression
 
 argument_expression ::=
     annotation? infix_expression_tight
@@ -145,24 +198,27 @@ comma_list ::=
     expression ("," expression)* ","?
 ```
 
+Special rule: `f()` is equivalent to `f(^)`
+
 ### Rewrite rules into a unstructured tree
 
 ```elixir
 # Rules are recursive
+# Numeric literals are converted when this code is dumped into cells 
 
 t_literal => t_literal
-t_identifier => [:id, t_identifier]
+t_identifier => [{:id}, {t_identifier}]
 
 "[" comma_list? "]" => [comma_list...]
 
-"(" expression ")" => [:group, expression]
+"(" expression ")" => [{:group}, expression]
 
-block_list => [:block, expression1, ..., expressionN]
+block_list => [{:block}, expression1, ..., expressionN]
 
-@[ann] expr => [:annot, ann, expr]
+@[ann] expr => [{:annot}, ann, expr]
 
 primary "." t_identifier =>
-    ($ ($ "." primary) t_identifier)
+    ($ ($ {.} primary) t_identifier)
 
 primary "(" comma_list? ")" =>
     left_apply(primary, comma_list...)
@@ -174,14 +230,14 @@ primary t_string_literal =>
     ($ primary t_string_literal)
 
 primary labeled_argument =>
-    ($ primary [:label, t_label, argument_expression])
+    ($ primary [{:label}, t_label, argument_expression])
 
 primary block_argument =>
-    ($ primary [:block, expression1, ..., expressionN])
+    ($ primary [{:block}, expression1, ..., expressionN])
 
 prefix_operator postfix_expression =>
-    ($ [:prefix, prefix_operator] postfix_expression)
+    ($ [{:prefix}, prefix_operator] postfix_expression)
 
 prefix_expression t_operator prefix_expression =>
-    ($ ($ [:infix, t_operator] lhs) rhs)
+    ($ ($ [{:infix}, t_operator] lhs) rhs)
 ```
