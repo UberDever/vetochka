@@ -666,10 +666,10 @@ This way a `do a;b;c end` block is just a syntax sugar for `[do:,a,b,c]` or some
         * next mode = parameter-defined
 
 ### 05.06.2026
-- ⬜ on syntax: we can eliminate `;` with two 
+- ✅ on syntax: we can eliminate `;` with two 
     rules: we sometimes don't consider `\n` as a semicolon: in braces and parens and after `do`; we add `...` as a line-continuation marker for explicit newline-skip;
     after certain chars (`,` `;` `:` `t_operator` `do`, `(` `[`)
-- ⬜ on compilation: the code should be compiled: at least parsing + semantic analysis
+- ✅ on compilation: the code should be compiled: at least parsing + semantic analysis
 - semantic analysis is: name+module resolution and opcode generation
 - parsing -> ir (just a sepxr with strings) => module resolution, binding resolution -> 
     (generate proper opcodes with arity+eagerness, already cells) => execution
@@ -678,10 +678,58 @@ This way a `do a;b;c end` block is just a syntax sugar for `[do:,a,b,c]` or some
 - ⬜ migrate to C+lua (unmigrate from zig???!??!?!?!)
 
 ### 06.06.2026
-- ⬜ better to state function arity in two ways / or a single way only:
+- ✅ better to state function arity in two ways / or a single way only:
     + two ways: positional + labeled args
     + one way: only positionals matter, rest are labeled
 - on rewrite: describe the main idea of a parser rewrite: in the end, tree must contain
 only literals, identifiers+operators, lists (encoded via `^`) and applications. It
 must also contain tagged expressions/values/other stuff to provide enough information
 after desugaring, i.e. infix/prefix tag or groupping tag, since all parsing is left-associative and we lose distinction between intentional/unintentional grouping.
+- ✅ need a clear semantic boundary for "specialized ir", what are we doing there exactly?
+
+### 11.06.2026 -- consolidated current design
+- look ma [new syntax in action](./project/newer_syntax.tree)
+- In the beginning, there was a bootstrap. The process roughly:
+    + `./vetochka --entry boot.tree --init initial.tree -- [additional args that got into initial_term]`
+    + This in turn launches bootstrap: pure `v0` code that extracts source code from relevant files,
+        does name-resolution and semantic checks and compiles the code to `v0`
+    + This code later gets executed as usual
+- Bootstrap process is vague on purpose, since I don't really know what steps it would
+    involve, but broad picture is about name resolution, module discovery, closures and lowering
+- A byte-string literal in function position names a native operation:
+    `{operation}(argument)`. We basically have a separate from general `environment`
+    prebuilt registry
+- On cells lowering step this construction must become a stem, and I think we'll get
+    generic callable shape: `{fn}` => `^ [opcode_payload]`, so it is applicable by exactly one argument
+- Callable protocol for vm is as follows:  `^ [{:call}, {opcode}, [cur_arity, max_arity], [curried_args]]`
+- We don't have any "variadic stuff" and named params are also count as params, so we
+    have strict signature, i.e. `{fn}/3 [ [[{:id}, {x}], [{:id}, {eager}|{term}]], ...] [{:do}, <expr1>, ...] [{:with}, <expr>]`
+- `{fn}` Invocation temporarily extends the VM environment, evaluates the body, and restores
+    the previous environment.
+- `{fn}` The low-level function is dynamically scoped: unresolved identifiers are looked up in
+    the environment active at call time. Its persistent state is only its definition and
+    immutable curried arguments.
+- `{fn}` Also allows to simulate let-bindings by `{fn} [[x, eager]] with: {stuff} do ... end`.
+- Every application is encoded within cells by binary `{$}`. The following
+is a text representation of cells encoding (minus list encoding, its trivial)
+```vetochka
+{$} {$} {$} {$} {fn} [[[{:id}, {x}], [{:id}, {eager}]], ...] [{:do}, <expr1>, ...] [{:with}, <expr>] 42
+```
+- Technically we can separate host api from the raw builtin substrate into a separate
+    library mechanism, but I think that for now we can just build it in
+- on modules
+- Module discovery and module semantics are separate. The host/build layer supplies
+    candidate sources; bootstrap code decides what those candidates mean.
+- Sensitive host authority should eventually be passed as explicit capabilities in
+    `initial_term`; globally nameable intrinsics are forgeable ambient authority.
+
+#### Next implementation order
+
+1. Define the smallest VM state and literal intrinsic dispatch, then implement `{fn}`.
+2. Define explicit application cells, activation rules, `initial_term`, raw-tree handles,
+   and traversal operations.
+3. Embed a minimal bootstrap that can lower one source file using only primitive forms.
+4. Fix the explicit closure record/application convention, then add lexical resolution
+   and immutable closure conversion.
+5. Add checked module candidates, dependency resolution, exports, and build integration.
+6. Add recursive/mutable binding cells only after immutable closures work end to end.

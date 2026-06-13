@@ -17,9 +17,20 @@ This language is a form of sugar that represents 4 main entities of a VM+reducer
 3. Integer `i64` literals
 4. String literals (aka byte utf-8 sequences)
 
-As such, this language is parsed into a single expression
-with different tagged nodes (ir), that is later analyzed
-(specialized ir) and lowered (VM+reducer cells).
+I would call this language `vetochka0` or `v0`. In contrast, language with
+extended syntax and semantics is `vetochka*` or `v*`, since I don't know the
+exact semantical level beneath such language: this is user's right.
+
+The pipeline for `v0` is as follows: it parsed into a single expression
+with different tagged nodes (ir) and later lowered into VM+reducer cells.
+Executable surface of the language is very small: currently we have triage nodes `^`
+and string literals `{fn}` carrying the semantics. "Compilation" of this language to cells
+is straightforward.
+
+On the other hand, `v*` is compiled in `v0` itself, thanks to `vetochka` reflectivity.
+An extended syntax allows for great expressibility of source-level terms, that is, module-system,
+datatypes, rich functional features, sugary constructs -- all built from `v*` terms by `v0` bootstrap/compile step to
+`v0` language itself.
 
 Encoding is utf-8 text.
 
