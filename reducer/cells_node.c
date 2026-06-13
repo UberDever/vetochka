@@ -1,6 +1,6 @@
 #include "cells_api.h"
 #include "cells_impl.h"
-#include "typedefs.h"
+#include "domain_api.h"
 #include <stdio.h>
 
 typedef struct cells_node_t cells_node_t;

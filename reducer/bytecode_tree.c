@@ -1,7 +1,6 @@
 #include "bytecode_api.h"
 #include "cells_api.h"
-// cells_api.h provides cells_new_ref2/8, cells_fits_in_ref2/8
-#include "typedefs.h"
+#include "domain_api.h"
 #include "vendor/stb_ds.h"
 #include <assert.h>
 #include <stdint.h>
@@ -34,7 +33,7 @@ void bytecode_tree_builder_reset(struct bytecode_tree_builder_t* builder) {
   stbds_arrsetlen(builder->nodes, 0);
 }
 
-error_t do_build(
+static error_t do_build(
     struct bytecode_tree_builder_t* b,
     struct cells_t* cells,
     struct opt_size_t root_i,

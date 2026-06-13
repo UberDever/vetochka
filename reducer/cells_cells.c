@@ -1,6 +1,6 @@
 #include "cells_api.h"
 #include "cells_impl.h"
-#include "typedefs.h"
+#include "domain_api.h"
 #include "vendor/stb_ds.h"
 #include <assert.h>
 #include <stddef.h>

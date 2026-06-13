@@ -88,6 +88,8 @@ const TestSuite = struct {
             "-Wextra",
             "-Werror",
             "-pedantic-errors",
+            "-fvisibility=hidden",
+            "-DMUH_BUILDING",
         });
         if (!sanitized) {
             try flags.appendSlice(self.b.allocator, &.{"-g"});
@@ -128,12 +130,19 @@ pub fn build(b: *std.Build) !void {
 
     const c_core_sources = &.{
         b.pathJoin(&.{ c_core_dir, "vendor_stbds.c" }),
+        b.pathJoin(&.{ c_core_dir, "vendor_arena.c" }),
         b.pathJoin(&.{ c_core_dir, "cells_cells.c" }),
         b.pathJoin(&.{ c_core_dir, "cells_debug.c" }),
         b.pathJoin(&.{ c_core_dir, "cells_node.c" }),
         b.pathJoin(&.{ c_core_dir, "bytecode_tree.c" }),
-        b.pathJoin(&.{ c_core_dir, "bytecode_text.c" }),
         b.pathJoin(&.{ c_core_dir, "reducer_reducer.c" }),
+        b.pathJoin(&.{ c_core_dir, "allocator_arena.c" }),
+        b.pathJoin(&.{ c_core_dir, "allocator_libc.c" }),
+        b.pathJoin(&.{ c_core_dir, "domain_array.c" }),
+        b.pathJoin(&.{ c_core_dir, "domain_debug.c" }),
+        b.pathJoin(&.{ c_core_dir, "source_tokenize.c" }),
+        b.pathJoin(&.{ c_core_dir, "source_ast.c" }),
+        b.pathJoin(&.{ c_core_dir, "source_formatting.c" }),
     };
 
     const lib = b.addLibrary(.{
@@ -158,7 +167,7 @@ pub fn build(b: *std.Build) !void {
         try test_run_targets.append(b.allocator, run);
     }
     {
-        const run, const compile = try s.addTest("bytecode", lib);
+        const run, const compile = try s.addTest("source", lib);
         try test_compile_targets.append(b.allocator, compile);
         try test_run_targets.append(b.allocator, run);
     }

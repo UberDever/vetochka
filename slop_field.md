@@ -240,7 +240,7 @@ Therefore, ASI behavior must be fully determined before parsing proper.
 
 #### Implemented now
 
-- The C parser produces a host-side `parsing_nodes_t` tree. It preserves concrete
+- The C parser produces a host-side `source_tree_t`. It preserves concrete
     syntax structure and token spans; it performs no name resolution or semantic
     specialization.
 - The cells library stores compact triage terms and references. The reducer implements

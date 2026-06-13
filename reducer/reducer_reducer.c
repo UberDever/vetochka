@@ -2,9 +2,9 @@
 
 #include "bytecode_api.h"
 #include "cells_api.h"
+#include "domain_api.h"
 #include "reducer_api.h"
 #include "reducer_impl.h"
-#include "typedefs.h"
 #include "vendor/stb_ds.h"
 
 #include <assert.h>

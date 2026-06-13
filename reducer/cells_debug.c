@@ -1,6 +1,6 @@
 #include "cells_api.h"
 #include "cells_impl.h"
-#include "typedefs.h"
+#include "domain_api.h"
 #include <inttypes.h>
 #include <stdarg.h>
 #include <stdio.h>
