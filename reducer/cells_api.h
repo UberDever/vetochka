@@ -6,34 +6,39 @@
 
 struct cells_t;
 
-struct CELLS_NODE_TYPE {
-  u8 value;
+/*
+ * Semantic node identities. Values are C API identities, not bytecode tags.
+ * X(PREFIX, NAME, VALUE, STRING)
+ */
+#define CELLS_NODE_TYPE_ITEMS(X, P)                                                                \
+  X(P, INVALID, 0x00, "invalid")                                                                   \
+  X(P, DELTA0, 0x01, "delta0")                                                                     \
+  X(P, DELTA1, 0x02, "delta1")                                                                     \
+  X(P, DELTA2, 0x03, "delta2")                                                                     \
+  X(P, VALUEF0, 0x04, "valuef0")                                                                   \
+  X(P, VALUEF1, 0x05, "valuef1")                                                                   \
+  X(P, VALUEF2, 0x06, "valuef2")                                                                   \
+  X(P, VALUEV0, 0x07, "valuev0")                                                                   \
+  X(P, VALUEV1, 0x08, "valuev1")                                                                   \
+  X(P, VALUEV2, 0x09, "valuev2")                                                                   \
+  X(P, REF, 0xF0, "ref")
+
+DECL_TYPED_ENUM(cells_node_type_t, u8, CELLS_NODE_TYPE, CELLS_NODE_TYPE_ITEMS)
+
+#define CELLS_NODE_ARITY_NONE (-1)
+
+struct cells_node_header_t {
+  cells_node_type_t type;
+  size_t encoded_size;
 };
 
-#define CELLS_NODE_TYPE_INVALID 0U
-#define CELLS_NODE_TYPE_DELTA0  1U
-#define CELLS_NODE_TYPE_DELTA1  2U
-#define CELLS_NODE_TYPE_DELTA2  3U
-#define CELLS_NODE_TYPE_VALUEF0 4U
-#define CELLS_NODE_TYPE_VALUEF1 5U
-#define CELLS_NODE_TYPE_VALUEF2 6U
-#define CELLS_NODE_TYPE_VALUEV0 7U
-#define CELLS_NODE_TYPE_VALUEV1 8U
-#define CELLS_NODE_TYPE_VALUEV2 9U
-
-#define CELLS_NODE_TYPE_REF2 0xF0U
-#define CELLS_NODE_TYPE_REF8 0xF1U
-
-struct cells_node_meta_t {
-  struct CELLS_NODE_TYPE type;
-  size_t size;
-};
-
-MUH_PUBLIC bool cells_is_ref(struct cells_node_meta_t meta);
-MUH_PUBLIC bool cells_is_value(struct cells_node_meta_t meta);
+MUH_PUBLIC i8 cells_node_type_get_arity(cells_node_type_t type);
+MUH_PUBLIC cells_node_type_t cells_node_type_with_arity(cells_node_type_t type, u8 arity);
+MUH_PUBLIC bool cells_node_type_is_ref(cells_node_type_t type);
+MUH_PUBLIC bool cells_node_type_is_encodable(cells_node_type_t type);
 
 struct cells_node_t {
-  struct cells_node_meta_t meta;
+  struct cells_node_header_t header;
 
   union {
     i64 ref;
@@ -41,6 +46,8 @@ struct cells_node_t {
     span_byte_t nativev;
   } as;
 };
+
+MUH_PUBLIC bool cells_node_set_arity(struct cells_node_t* node, u8 arity);
 
 struct opt_cells_node_t {
   bool has_value;
@@ -58,20 +65,23 @@ MUH_PUBLIC error_t cells_create(struct cells_t** cells, size_t capacity);
  */
 MUH_PUBLIC void cells_destroy(struct cells_t** cells);
 
+/** Get read-only span over full cells capacity, including free bytes. */
+MUH_PUBLIC span_cbyte_t cells_get_span(const struct cells_t* cells);
+
 /**
- * Get meta of the node at the specified index in the cells structure.
+ * Get decoded header of the node at the specified index in the cells structure.
  * Calls to this function parse internal representation of the node, so be
  * careful doing it frequently.
- * @return cells_node_meta_t on success, or an invalid node on failure.
+ * @return cells_node_header_t on success, or an invalid header on failure.
  */
-MUH_PUBLIC struct cells_node_meta_t cells_get_node_meta(struct cells_t* cells, size_t index);
+MUH_PUBLIC struct cells_node_header_t cells_get_node_header(struct cells_t* cells, size_t index);
 
 /**
  * Get the value at the specified index in the cells structure.
  * @return cells_node_t on success, or an invalid node on failure.
  */
 MUH_PUBLIC struct cells_node_t cells_get_node(
-    struct cells_t* cells, size_t index, struct cells_node_meta_t meta);
+    struct cells_t* cells, size_t index, struct cells_node_header_t header);
 
 /**
  * Allocate a chunk of memory with the specified size and get its index.
@@ -119,23 +129,9 @@ MUH_PUBLIC error_t cells_node_free(struct cells_t* cells, size_t index, size_t n
 // Node constructors
 // ---------------------------------------------------------------------------
 
-#define ON_NODE_ARITY0                                                                             \
-  case CELLS_NODE_TYPE_VALUEF0:                                                                    \
-  case CELLS_NODE_TYPE_VALUEV0:                                                                    \
-  case CELLS_NODE_TYPE_DELTA0:
-
-#define ON_NODE_ARITY1                                                                             \
-  case CELLS_NODE_TYPE_VALUEF1:                                                                    \
-  case CELLS_NODE_TYPE_VALUEV1:                                                                    \
-  case CELLS_NODE_TYPE_DELTA1:
-
-#define ON_NODE_ARITY2                                                                             \
-  case CELLS_NODE_TYPE_VALUEF2:                                                                    \
-  case CELLS_NODE_TYPE_VALUEV2:                                                                    \
-  case CELLS_NODE_TYPE_DELTA2:
-
-MUH_PUBLIC struct cells_node_t cells_new_ref2(i16 offset);
-MUH_PUBLIC struct cells_node_t cells_new_ref8(i64 offset);
+/** Construct a payloadless node whose wire layout is TAG. */
+MUH_PUBLIC struct cells_node_t cells_new_node(cells_node_type_t type);
+MUH_PUBLIC struct cells_node_t cells_new_ref(i64 offset);
 MUH_PUBLIC struct cells_node_t cells_new_delta0(void);
 MUH_PUBLIC struct cells_node_t cells_new_delta1(void);
 MUH_PUBLIC struct cells_node_t cells_new_delta2(void);
@@ -145,9 +141,6 @@ MUH_PUBLIC struct cells_node_t cells_new_value2f(i64 value);
 MUH_PUBLIC struct cells_node_t cells_new_value0v(span_byte_t payload);
 MUH_PUBLIC struct cells_node_t cells_new_value1v(span_byte_t payload);
 MUH_PUBLIC struct cells_node_t cells_new_value2v(span_byte_t payload);
-
-MUH_PUBLIC bool cells_fits_in_ref2(i64 value);
-MUH_PUBLIC bool cells_fits_in_ref8(i64 value);
 
 // NOTE: this allows ref to ref, and doesn't handle cycles.
 // cycle currently considered as malformed bytecode, so hanging is abnormal

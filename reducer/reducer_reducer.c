@@ -30,7 +30,6 @@
   } while (0)
 
 typedef struct cells_node_t cells_node_t;
-typedef struct cells_node_meta_t cells_node_meta_t;
 
 static int stbds_arr_printf(char** arr, const char* fmt, ...) {
   va_list ap;
@@ -111,21 +110,12 @@ error_t reducer_step(struct reducer_t* reducer) {
   err = cells_dereference_node(reducer->cells, &redex_i, &redex);
   ERR_CHECK_MASKED("", ERROR_INTERNAL);
 
-  switch (redex.meta.type.value) {
+  switch (cells_node_type_get_arity(redex.header.type)) {
     // rule 0.a
-    ON_NODE_ARITY0 {
-      cells_node_t arity1;
-      switch (redex.meta.type.value) {
-        case CELLS_NODE_TYPE_VALUEF0: arity1 = cells_new_value1f(redex.as.nativef); break;
-        case CELLS_NODE_TYPE_VALUEV0:
-          arity1 = cells_new_value1v(
-              redex.as
-                  .nativev); // TODO: this will break on GC since now we have sharing of the payload
-          break;
-        case CELLS_NODE_TYPE_DELTA0: arity1 = cells_new_delta1(); break;
-        default: assert(false);
-      }
-      size_t total_size = arity1.meta.size;
+    case 0: {
+      cells_node_t arity1 = redex;
+      if (!cells_node_set_arity(&arity1, 1)) { return ERROR_INTERNAL; }
+      size_t total_size = arity1.header.encoded_size;
       size_t result_index = 0;
       err = cells_alloc_chunk_with_refs(
           reducer->cells,
@@ -134,34 +124,24 @@ error_t reducer_step(struct reducer_t* reducer) {
           (struct opt_size_t){0},
           &result_index);
       ERR_CHECK_MASKED("", ERROR_INTERNAL);
-      size_t index_out = result_index + arity1.meta.size;
+      size_t index_out = result_index + arity1.header.encoded_size;
       i64 arg_shift = arg_i - index_out;
-      cells_node_t arg_ref;
-      if (cells_fits_in_ref2(arg_shift)) {
-        arg_ref = cells_new_ref2(arg_shift);
-      } else {
-        assert(cells_fits_in_ref8(arg_shift));
-        arg_ref = cells_new_ref8(arg_shift);
-      }
+      cells_node_t arg_ref = cells_new_ref(arg_shift);
+      if (arg_ref.header.type.value == CELLS_NODE_TYPE_INVALID) { return ERROR_INTERNAL; }
       cells_write_node(reducer->cells, result_index, arity1);
       cells_write_node(reducer->cells, index_out, arg_ref);
       reducer_push_to_stack(reducer, result_index);
       return ERROR_SUCCESS;
     }
     // rule 0.b
-    ON_NODE_ARITY1 {
-      cells_node_t arity2;
-      switch (redex.meta.type.value) {
-        case CELLS_NODE_TYPE_VALUEF1: arity2 = cells_new_value2f(redex.as.nativef); break;
-        case CELLS_NODE_TYPE_VALUEV1: arity2 = cells_new_value2v(redex.as.nativev); break;
-        case CELLS_NODE_TYPE_DELTA1: arity2 = cells_new_delta2(); break;
-        default: assert(false);
-      }
+    case 1: {
+      cells_node_t arity2 = redex;
+      if (!cells_node_set_arity(&arity2, 2)) { return ERROR_INTERNAL; }
       size_t delta1_left_i = redex_i;
       cells_node_t delta1_left;
       err = cells_get_left_node(reducer->cells, &delta1_left_i, &delta1_left);
       ERR_CHECK("");
-      size_t total_size = arity2.meta.size;
+      size_t total_size = arity2.header.encoded_size;
       size_t result_index = 0;
       err = cells_alloc_chunk_with_refs(
           reducer->cells,
@@ -173,32 +153,22 @@ error_t reducer_step(struct reducer_t* reducer) {
       cells_write_node(reducer->cells, result_index, arity2);
 
       size_t index_out = result_index;
-      index_out += arity2.meta.size;
+      index_out += arity2.header.encoded_size;
       i64 delta1_shift = delta1_left_i - index_out;
-      cells_node_t delta1_ref;
-      if (cells_fits_in_ref2(delta1_shift)) {
-        delta1_ref = cells_new_ref2(delta1_shift);
-      } else {
-        assert(cells_fits_in_ref8(delta1_shift));
-        delta1_ref = cells_new_ref8(delta1_shift);
-      }
+      cells_node_t delta1_ref = cells_new_ref(delta1_shift);
+      if (delta1_ref.header.type.value == CELLS_NODE_TYPE_INVALID) { return ERROR_INTERNAL; }
       cells_write_node(reducer->cells, index_out, delta1_ref);
 
-      index_out += delta1_ref.meta.size;
+      index_out += delta1_ref.header.encoded_size;
       i64 arg_shift = arg_i - index_out;
-      cells_node_t arg_ref;
-      if (cells_fits_in_ref2(arg_shift)) {
-        arg_ref = cells_new_ref2(arg_shift);
-      } else {
-        assert(cells_fits_in_ref8(arg_shift));
-        arg_ref = cells_new_ref8(arg_shift);
-      }
+      cells_node_t arg_ref = cells_new_ref(arg_shift);
+      if (arg_ref.header.type.value == CELLS_NODE_TYPE_INVALID) { return ERROR_INTERNAL; }
       cells_write_node(reducer->cells, index_out, arg_ref);
       reducer_push_to_stack(reducer, result_index);
       return ERROR_SUCCESS;
     }
     // rule 1,2,3
-    ON_NODE_ARITY2 {
+    case 2: {
       cells_node_t redex_left;
       size_t redex_left_i = redex_i;
       err = cells_get_left_node(reducer->cells, &redex_left_i, &redex_left);
@@ -208,13 +178,13 @@ error_t reducer_step(struct reducer_t* reducer) {
       err = cells_get_right_node(reducer->cells, &redex_right_i, &redex_right);
       ERR_CHECK("");
 
-      switch (redex_left.meta.type.value) {
-        ON_NODE_ARITY0 {
+      switch (cells_node_type_get_arity(redex_left.header.type)) {
+        case 0: {
           // rule 1
           reducer_push_to_stack(reducer, redex_right_i);
           return ERROR_SUCCESS;
         }
-        ON_NODE_ARITY1 {
+        case 1: {
           // rule 2
           cells_node_t x;
           size_t x_i = redex_left_i;
@@ -237,7 +207,7 @@ error_t reducer_step(struct reducer_t* reducer) {
           reducer_push_to_stack(reducer, z_i);
           return ERROR_SUCCESS;
         }
-        ON_NODE_ARITY2 {
+        case 2: {
           // rule 3
           cells_node_t w;
           size_t w_i = redex_left_i;
@@ -256,13 +226,13 @@ error_t reducer_step(struct reducer_t* reducer) {
           err = cells_dereference_node(reducer->cells, &z_i, &z);
           ERR_CHECK("");
 
-          switch (z.meta.type.value) {
-            ON_NODE_ARITY0 {
+          switch (cells_node_type_get_arity(z.header.type)) {
+            case 0: {
               // rule 3a
               reducer_push_to_stack(reducer, w_i);
               return ERROR_SUCCESS;
             }
-            ON_NODE_ARITY1 {
+            case 1: {
               // rule 3b
               cells_node_t u;
               size_t u_i = z_i;
@@ -274,7 +244,7 @@ error_t reducer_step(struct reducer_t* reducer) {
               reducer_push_to_stack(reducer, u_i);
               return ERROR_SUCCESS;
             }
-            ON_NODE_ARITY2 {
+            case 2: {
               // rule 3c
               cells_node_t u;
               size_t u_i = z_i;

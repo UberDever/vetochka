@@ -723,6 +723,12 @@ is a text representation of cells encoding (minus list encoding, its trivial)
 - Sensitive host authority should eventually be passed as explicit capabilities in
     `initial_term`; globally nameable intrinsics are forgeable ambient authority.
 
+### 13.06.2026
+- cleanup stuff
+
+### 14.06.2026
+- need to revisit byte encoding
+
 #### Next implementation order
 
 1. Define the smallest VM state and literal intrinsic dispatch, then implement `{fn}`.

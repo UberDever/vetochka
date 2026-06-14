@@ -50,7 +50,7 @@ static error_t do_build(
   if (err != ERROR_SUCCESS) { return err; }
 
   if (left_i == SIZE_MAX && right_i == SIZE_MAX) {
-    err = cells_alloc_chunk(cells, root.payload.meta.size, index_out);
+    err = cells_alloc_chunk(cells, root.payload.header.encoded_size, index_out);
     if (err != ERROR_SUCCESS) { return err; }
     return cells_write_node(cells, *index_out, root.payload);
   }
@@ -64,33 +64,26 @@ static error_t do_build(
   }
 
   err = cells_alloc_chunk_with_refs(
-      cells, root.payload.meta.size, left_index, right_index, index_out);
+      cells, root.payload.header.encoded_size, left_index, right_index, index_out);
   if (err != ERROR_SUCCESS) { return err; }
   err = cells_write_node(cells, *index_out, root.payload);
   if (err != ERROR_SUCCESS) { return err; }
 
-  i64 lhs_ref_i = (i64)left_i - (i64)(*index_out + root.payload.meta.size);
-  cells_node_t lhs_ref;
-  if (cells_fits_in_ref2(lhs_ref_i)) {
-    lhs_ref = cells_new_ref2(lhs_ref_i);
-  } else {
-    assert(cells_fits_in_ref8(lhs_ref_i));
-    lhs_ref = cells_new_ref8(lhs_ref_i);
-  }
-  err = cells_write_node(cells, *index_out + root.payload.meta.size, lhs_ref);
+  i64 lhs_ref_i = (i64)left_i - (i64)(*index_out + root.payload.header.encoded_size);
+  cells_node_t lhs_ref = cells_new_ref(lhs_ref_i);
+  if (lhs_ref.header.type.value == CELLS_NODE_TYPE_INVALID) { return ERROR_OVERFLOW; }
+  err = cells_write_node(cells, *index_out + root.payload.header.encoded_size, lhs_ref);
   if (err != ERROR_SUCCESS) { return err; }
 
   if (right_i == SIZE_MAX) { return err; }
 
-  i64 rhs_ref_i = (i64)right_i - (i64)(*index_out + root.payload.meta.size + lhs_ref.meta.size);
-  cells_node_t rhs_ref;
-  if (cells_fits_in_ref2(rhs_ref_i)) {
-    rhs_ref = cells_new_ref2(rhs_ref_i);
-  } else {
-    assert(cells_fits_in_ref8(rhs_ref_i));
-    rhs_ref = cells_new_ref8(rhs_ref_i);
-  }
-  err = cells_write_node(cells, *index_out + root.payload.meta.size + lhs_ref.meta.size, rhs_ref);
+  i64 rhs_ref_i =
+      (i64)right_i
+      - (i64)(*index_out + root.payload.header.encoded_size + lhs_ref.header.encoded_size);
+  cells_node_t rhs_ref = cells_new_ref(rhs_ref_i);
+  if (rhs_ref.header.type.value == CELLS_NODE_TYPE_INVALID) { return ERROR_OVERFLOW; }
+  err = cells_write_node(
+      cells, *index_out + root.payload.header.encoded_size + lhs_ref.header.encoded_size, rhs_ref);
   if (err != ERROR_SUCCESS) { return err; }
 
   return err;

@@ -173,7 +173,7 @@ pub fn build(b: *std.Build) !void {
     }
 
     const test_all_step = b.step("test-all", "Run all unit tests");
-    for (test_compile_targets.items) |test_step| {
+    for (test_run_targets.items) |test_step| {
         test_all_step.dependOn(&test_step.step);
     }
 
