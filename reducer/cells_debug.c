@@ -5,14 +5,15 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#define COLOR_RESET   "\033[0m"
-#define COLOR_RED     "\033[31m"
-#define COLOR_GREEN   "\033[32m"
-#define COLOR_YELLOW  "\033[33m"
-#define COLOR_BLUE    "\033[34m"
-#define COLOR_MAGENTA "\033[35m"
-#define COLOR_CYAN    "\033[36m"
-#define COLOR_GREY    "\033[90m"
+#define COLOR_RESET           "\033[0m"
+#define COLOR_RED             "\033[31m"
+#define COLOR_GREEN           "\033[32m"
+#define COLOR_YELLOW          "\033[33m"
+#define COLOR_BLUE            "\033[34m"
+#define COLOR_MAGENTA         "\033[35m"
+#define COLOR_CYAN            "\033[36m"
+#define COLOR_GREY            "\033[90m"
+#define COLOR_GREY_UNDERLINED "\033[4;37m"
 
 static const char* get_node_color(cells_node_type_t type) {
   enum cells_node_layout_t layout = cells_node_type_get_layout(type);
@@ -21,8 +22,10 @@ static const char* get_node_color(cells_node_type_t type) {
       || type.value == CELLS_NODE_TYPE_DELTA2) {
     return COLOR_GREEN;
   }
+  if (type.value == CELLS_NODE_TYPE_APPLY) { return COLOR_MAGENTA; }
+  if (layout == CELLS_NODE_LAYOUT_TAG) { return COLOR_BLUE; }
   if (layout == CELLS_NODE_LAYOUT_I64) { return COLOR_YELLOW; }
-  if (layout == CELLS_NODE_LAYOUT_BYTES) { return COLOR_MAGENTA; }
+  if (layout == CELLS_NODE_LAYOUT_BYTES) { return COLOR_GREY_UNDERLINED; }
   return COLOR_RED;
 }
 

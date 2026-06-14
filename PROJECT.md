@@ -699,9 +699,22 @@ after desugaring, i.e. infix/prefix tag or groupping tag, since all parsing is l
 - A byte-string literal in function position names a native operation:
     `{operation}(argument)`. We basically have a separate from general `environment`
     prebuilt registry
-- On cells lowering step this construction must become a stem, and I think we'll get
-    generic callable shape: `{fn}` => `^ [opcode_payload]`, so it is applicable by exactly one argument
-- Callable protocol for vm is as follows:  `^ [{:call}, {opcode}, [cur_arity, max_arity], [curried_args]]`
+- Cell encoding recognizes a known opcode string at the head of an application chain and
+    replaces it with its special stem node. Thus `{$} {fn} x` becomes an `APPLY` node
+    over the `OP_FN` stem and encoded `x`; `{fn}` in ordinary data remains `VALUEV0`.
+- Opcode protocol:
+```text
+SOME_OPCODE [
+    {:call},
+    [cur_arity, max_arity],
+    [curried_args],
+    stuff_to_apply
+]
+
+APPLY(SOME_OPCODE(payload), argument)
+    -> VM(payload, argument)
+    -> value | SOME_OPCODE(updated_payload)
+```
 - We don't have any "variadic stuff" and named params are also count as params, so we
     have strict signature, i.e. `{fn}/3 [ [[{:id}, {x}], [{:id}, {eager}|{term}]], ...] [{:do}, <expr1>, ...] [{:with}, <expr>]`
 - `{fn}` Invocation temporarily extends the VM environment, evaluates the body, and restores
@@ -710,8 +723,8 @@ after desugaring, i.e. infix/prefix tag or groupping tag, since all parsing is l
     the environment active at call time. Its persistent state is only its definition and
     immutable curried arguments.
 - `{fn}` Also allows to simulate let-bindings by `{fn} [[x, eager]] with: {stuff} do ... end`.
-- Every application is encoded within cells by binary `{$}`. The following
-is a text representation of cells encoding (minus list encoding, its trivial)
+- Every application is encoded by a binary `APPLY` cell node. `{$}` is only its textual
+    notation. The following is a text representation of cell encoding, minus list encoding:
 ```vetochka
 {$} {$} {$} {$} {fn} [[[{:id}, {x}], [{:id}, {eager}]], ...] [{:do}, <expr1>, ...] [{:with}, <expr>] 42
 ```
@@ -727,7 +740,7 @@ is a text representation of cells encoding (minus list encoding, its trivial)
 - cleanup stuff
 
 ### 14.06.2026
-- need to revisit byte encoding
+- ✅ need to revisit byte encoding
 
 #### Next implementation order
 

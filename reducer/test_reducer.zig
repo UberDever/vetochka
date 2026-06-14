@@ -52,6 +52,17 @@ test "node info projections" {
     const value2_type = c.cells_node_type_with_arity(value1_type, 2);
     try std.testing.expectEqual(c.CELLS_NODE_TYPE_VALUEV2, value2_type.value);
 
+    const op_fn_type = c.cells_node_type_t{ .value = c.CELLS_NODE_TYPE_OP_FN };
+    try std.testing.expectEqual(@as(i8, 1), c.cells_node_type_get_arity(op_fn_type));
+    try std.testing.expectEqual(
+        c.CELLS_NODE_TYPE_INVALID,
+        c.cells_node_type_with_arity(op_fn_type, 0).value,
+    );
+    try std.testing.expectEqual(
+        c.CELLS_NODE_TYPE_INVALID,
+        c.cells_node_type_with_arity(op_fn_type, 2).value,
+    );
+
     const delta = c.cells_new_node(.{ .value = c.CELLS_NODE_TYPE_DELTA0 });
     try std.testing.expectEqual(c.CELLS_NODE_TYPE_DELTA0, delta.header.type.value);
     const invalid = c.cells_new_node(value1_type);

@@ -21,6 +21,8 @@ struct cells_t;
   X(P, VALUEV0, 0x07, "valuev0")                                                                   \
   X(P, VALUEV1, 0x08, "valuev1")                                                                   \
   X(P, VALUEV2, 0x09, "valuev2")                                                                   \
+  X(P, APPLY, 0x0A, "$")                                                                           \
+  X(P, OP_FN, 0x0B, "fn")                                                                          \
   X(P, REF, 0xF0, "ref")
 
 DECL_TYPED_ENUM(cells_node_type_t, u8, CELLS_NODE_TYPE, CELLS_NODE_TYPE_ITEMS)

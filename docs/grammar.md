@@ -211,44 +211,65 @@ comma_list ::=
 
 Special rule: `f()` is equivalent to `f(^)`
 
-### Rewrite rules into a unstructured tree
+### CST normalization
+
+The parser CST is normalized into one bootstrap syntax term before cell encoding.
+Punctuation and parser-only wrapper nodes are discarded. Every non-core syntax record is
+a list whose first element is a colon-prefixed string tag. Applications use the explicit
+binary `{$}` form.
+
+| CST form                         | Bootstrap syntax term                            |
+|----------------------------------|--------------------------------------------------|
+| `source`                         | normalized top-level `block_list`                |
+| `^`                              | `^`                                              |
+| integer literal `n`              | `n`                                              |
+| string literal `{bytes}`         | `{bytes}`                                        |
+| identifier `name`                | `[{:id}, {name}]`                                |
+| `[item1, ..., itemN]`            | `[{:list}, item1, ..., itemN]`                   |
+| `block_list`                     | `[{:block}, expr1, ..., exprN]`                  |
+| `(expr)`                         | `[{:group}, expr]`                               |
+| `@[ann] expr`                    | `[{:annot}, ann, expr]`                          |
+| `f(arg1, ..., argN)`             | left fold: `{$} ... ({$} f arg1) ... argN`       |
+| `f()`                            | `{$} f ^`                                        |
+| `f[arg1, ..., argN]`             | `{$} f [{:list}, arg1, ..., argN]`               |
+| `f{bytes}`                       | `{$} f {bytes}`                                  |
+| `base.name`                      | `[{:selector}, base, {name}]`                    |
+| `f name: expr`                   | `{$} f [{:label}, {name}, expr]`                 |
+| `f do expr1; ...; exprN end`     | `{$} f [{:block}, expr1, ..., exprN]`            |
+| prefix `op expr`                 | `[{:prefix}, {op}, expr]`                        |
+| infix chain `a op b op c`        | `[{:infix}, {op}, a, b, c]`                      |
+
+Rules are recursive. Infix chains remain flat; normalization does not choose
+associativity.
+
+### Cell encoding
+
+Cell encoding is a mechanical implementation step. It recursively
+encodes the bootstrap syntax term:
+
+| Bootstrap syntax            | Cell encoding                                                     |
+|-----------------------------|-------------------------------------------------------------------|
+| `^`                         | `DELTA0`                                                          |
+| integer `n`                 | `VALUEF0(n)`                                                      |
+| string `{bytes}`            | `VALUEV0(bytes)`                                                  |
+| `{$} f x`                   | `APPLY` node referencing encoded `f` and `x`                      |
+| `[x1, ..., xN]`             | `^ x1 ^ x2 ... ^ xN ^`                                            |
+| `{$} {some_opcode} x`       | `APPLY` referencing the `SOME_OPCODE` stem and encoded `x`        |
+
+Opcode protocol:
 
 ```elixir
-# Rules are recursive
-# Numeric literals are converted when this code is dumped into cells 
+SOME_OPCODE [
+    {:call},
+    [cur_arity, max_arity],
+    [curried_args],
+    stuff_to_apply
+]
 
-t_literal => t_literal
-t_identifier => [{:id}, {t_identifier}]
-
-"[" comma_list? "]" => [comma_list...]
-
-"(" expression ")" => [{:group}, expression]
-
-block_list => [{:block}, expression1, ..., expressionN]
-
-@[ann] expr => [{:annot}, ann, expr]
-
-primary "." t_identifier =>
-    ($ ($ {.} primary) t_identifier)
-
-primary "(" comma_list? ")" =>
-    left_apply(primary, comma_list...)
-
-primary "[" comma_list? "]" =>
-    ($ primary [comma_list...])
-
-primary t_string_literal =>
-    ($ primary t_string_literal)
-
-primary labeled_argument =>
-    ($ primary [{:label}, t_label, argument_expression])
-
-primary block_argument =>
-    ($ primary [{:block}, expression1, ..., expressionN])
-
-prefix_operator postfix_expression =>
-    ($ [{:prefix}, prefix_operator] postfix_expression)
-
-prefix_expression t_operator prefix_expression =>
-    ($ ($ [{:infix}, t_operator] lhs) rhs)
+APPLY(
+    SOME_OPCODE(payload),
+    argument
+)
+    -> VM(payload, argument)
+    -> value | SOME_OPCODE(updated_payload)
 ```
