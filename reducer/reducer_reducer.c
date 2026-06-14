@@ -47,20 +47,26 @@ static int stbds_arr_printf(char** arr, const char* fmt, ...) {
 }
 
 error_t reducer_create(struct reducer_t** reducer, struct cells_t* cells) {
+  if (reducer == NULL || cells == NULL) { return ERROR_INVALID_PARAM; }
+  *reducer = NULL;
   *reducer = calloc(1, sizeof(reducer_t));
+  if (*reducer == NULL) { return ERROR_NOMEM; }
   reducer_reset(*reducer);
   (*reducer)->cells = cells;
   return ERROR_SUCCESS;
 }
 
 void reducer_free(struct reducer_t** reducer) {
+  if (reducer == NULL || *reducer == NULL) { return; }
   stbds_arrfree((*reducer)->stack);
   stbds_arrfree((*reducer)->_stash);
   stbds_arrfree((*reducer)->_error);
   free(*reducer);
+  *reducer = NULL;
 }
 
 void reducer_reset(struct reducer_t* reducer) {
+  if (reducer == NULL) { return; }
   stbds_arrsetlen(reducer->stack, 0);
   reducer->result = 0;
   reducer->has_result = false;

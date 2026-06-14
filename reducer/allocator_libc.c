@@ -11,11 +11,9 @@ static opaque_t _allocator_libc_alloc(opaque_t ctx, size_t len, size_t align) {
 static bool _allocator_libc_resize(
     opaque_t ctx, opaque_t ptr, size_t old_size, size_t new_size, size_t align) {
   (void)ctx;
-  (void)old_size;
+  (void)ptr;
   (void)align;
-  void* result = realloc(ptr, new_size);
-  if (result == NULL) { return false; }
-  return true;
+  return new_size <= old_size;
 }
 
 static opaque_t _allocator_libc_remap(

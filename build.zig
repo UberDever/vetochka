@@ -135,6 +135,7 @@ pub fn build(b: *std.Build) !void {
         b.pathJoin(&.{ c_core_dir, "cells_debug.c" }),
         b.pathJoin(&.{ c_core_dir, "cells_node.c" }),
         b.pathJoin(&.{ c_core_dir, "bytecode_tree.c" }),
+        b.pathJoin(&.{ c_core_dir, "bytecode_source.c" }),
         b.pathJoin(&.{ c_core_dir, "reducer_reducer.c" }),
         b.pathJoin(&.{ c_core_dir, "allocator_arena.c" }),
         b.pathJoin(&.{ c_core_dir, "allocator_libc.c" }),
@@ -168,6 +169,11 @@ pub fn build(b: *std.Build) !void {
     }
     {
         const run, const compile = try s.addTest("source", lib);
+        try test_compile_targets.append(b.allocator, compile);
+        try test_run_targets.append(b.allocator, run);
+    }
+    {
+        const run, const compile = try s.addTest("bytecode", lib);
         try test_compile_targets.append(b.allocator, compile);
         try test_run_targets.append(b.allocator, run);
     }

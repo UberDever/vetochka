@@ -489,7 +489,10 @@ Arena* arena_create(size_t size) {
   if (arena == NULL) { return NULL; }
 
   region = ARENA_MALLOC(size);
-  if (region == NULL) { return NULL; }
+  if (region == NULL) {
+    ARENA_FREE(arena);
+    return NULL;
+  }
 
   arena_init(arena, region, size);
 
