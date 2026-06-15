@@ -254,22 +254,15 @@ encodes the bootstrap syntax term:
 | string `{bytes}`            | `VALUEV0(bytes)`                                                  |
 | `{$} f x`                   | `APPLY` node referencing encoded `f` and `x`                      |
 | `[x1, ..., xN]`             | `^ x1 ^ x2 ... ^ xN ^`                                            |
-| `{$} {some_opcode} x`       | `APPLY` referencing the `SOME_OPCODE` stem and encoded `x`        |
+| `{$} {some_opcode} x`       | `APPLY` referencing the `SOME_OPCODE0` leaf and encoded `x`       |
 
 Opcode protocol:
 
-```elixir
-SOME_OPCODE [
-    {:call},
-    [cur_arity, max_arity],
-    [curried_args],
-    stuff_to_apply
-]
+```text
+APPLY(SOME_OPCODE0, x)
+    -> SOME_OPCODE1(x)
 
-APPLY(
-    SOME_OPCODE(payload),
-    argument
-)
-    -> VM(payload, argument)
-    -> value | SOME_OPCODE(updated_payload)
+APPLY(SOME_OPCODE1(x), y)
+    -> SOME_OPCODE2(x, y)
+    -> VM opcode dispatch
 ```

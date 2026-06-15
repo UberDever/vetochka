@@ -54,10 +54,6 @@ static size_t new_node0(bytecode_source_encoder_t* self, struct cells_node_t nod
   return bytecode_new_node0(self->builder, node);
 }
 
-static size_t new_node1(bytecode_source_encoder_t* self, struct cells_node_t node, size_t left) {
-  return bytecode_new_node1(self->builder, node, left);
-}
-
 static size_t new_node2(
     bytecode_source_encoder_t* self, struct cells_node_t node, size_t left, size_t right) {
   return bytecode_new_node2(self->builder, node, left, right);
@@ -102,16 +98,8 @@ static size_t new_tagged(
 
 // TODO: abstract this later and use VM info for that
 static size_t new_op_fn(bytecode_source_encoder_t* self) {
-  size_t arity_items[] = {new_i64(self, 0), new_i64(self, 3)};
-  size_t payload_items[] = {
-      new_static_bytes(self, ":call"),
-      new_list(self, arity_items, 2),
-      new_list(self, NULL, 0),
-      new_delta(self),
-  };
-  size_t payload = new_list(self, payload_items, 4);
-  cells_node_type_t type = {.value = CELLS_NODE_TYPE_OP_FN};
-  return new_node1(self, cells_new_node(type), payload);
+  cells_node_type_t type = {.value = CELLS_NODE_TYPE_OP_FN0};
+  return new_node0(self, cells_new_node(type));
 }
 
 static error_t parse_i64(span_cbyte_t token, i64* out) {

@@ -33,7 +33,9 @@ enum cells_node_layout_t {
   X(VALUEV1, VALUEV1, 0xFF, 0x87, BYTES, 1, VALUEV2, 0)                                            \
   X(VALUEV2, VALUEV2, 0xFF, 0x88, BYTES, 2, INVALID, 0)                                            \
   X(APPLY, APPLY, 0xFF, 0x89, TAG, 2, INVALID, 1)                                                  \
-  X(OP_FN, OP_FN, 0xFF, 0x8A, TAG, 1, INVALID, 1)                                                  \
+  X(OP_FN0, OP_FN0, 0xFF, 0x8A, TAG, 0, OP_FN1, 1)                                                 \
+  X(OP_FN1, OP_FN1, 0xFF, 0x8B, TAG, 1, OP_FN2, 1)                                                 \
+  X(OP_FN2, OP_FN2, 0xFF, 0x8C, TAG, 2, INVALID, 1)                                                \
   X(REF14, REF, 0xC0, 0x00, REF14, CELLS_NODE_ARITY_NONE, INVALID, 2)                              \
   X(REF62, REF, 0xC0, 0x40, REF62, CELLS_NODE_ARITY_NONE, INVALID, 8)
 

@@ -700,20 +700,16 @@ after desugaring, i.e. infix/prefix tag or groupping tag, since all parsing is l
     `{operation}(argument)`. We basically have a separate from general `environment`
     prebuilt registry
 - Cell encoding recognizes a known opcode string at the head of an application chain and
-    replaces it with its special stem node. Thus `{$} {fn} x` becomes an `APPLY` node
-    over the `OP_FN` stem and encoded `x`; `{fn}` in ordinary data remains `VALUEV0`.
+    replaces it with its special leaf node. Thus `{$} {fn} x` becomes an `APPLY` node
+    over the `OP_FN0` leaf and encoded `x`; `{fn}` in ordinary data remains `VALUEV0`.
 - Opcode protocol:
 ```text
-SOME_OPCODE [
-    {:call},
-    [cur_arity, max_arity],
-    [curried_args],
-    stuff_to_apply
-]
+APPLY(SOME_OPCODE0, x)
+    -> SOME_OPCODE1(x)
 
-APPLY(SOME_OPCODE(payload), argument)
-    -> VM(payload, argument)
-    -> value | SOME_OPCODE(updated_payload)
+APPLY(SOME_OPCODE1(x), y)
+    -> SOME_OPCODE2(x, y)
+    -> VM opcode dispatch
 ```
 - We don't have any "variadic stuff" and named params are also count as params, so we
     have strict signature, i.e. `{fn}/3 [ [[{:id}, {x}], [{:id}, {eager}|{term}]], ...] [{:do}, <expr1>, ...] [{:with}, <expr>]`

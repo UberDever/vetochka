@@ -52,14 +52,14 @@ test "node info projections" {
     const value2_type = c.cells_node_type_with_arity(value1_type, 2);
     try std.testing.expectEqual(c.CELLS_NODE_TYPE_VALUEV2, value2_type.value);
 
-    const op_fn_type = c.cells_node_type_t{ .value = c.CELLS_NODE_TYPE_OP_FN };
+    const op_fn_type = c.cells_node_type_t{ .value = c.CELLS_NODE_TYPE_OP_FN1 };
     try std.testing.expectEqual(@as(i8, 1), c.cells_node_type_get_arity(op_fn_type));
     try std.testing.expectEqual(
-        c.CELLS_NODE_TYPE_INVALID,
+        c.CELLS_NODE_TYPE_OP_FN0,
         c.cells_node_type_with_arity(op_fn_type, 0).value,
     );
     try std.testing.expectEqual(
-        c.CELLS_NODE_TYPE_INVALID,
+        c.CELLS_NODE_TYPE_OP_FN2,
         c.cells_node_type_with_arity(op_fn_type, 2).value,
     );
 
@@ -109,6 +109,9 @@ test "stable node byte encoding" {
         &cursor,
         c.cells_new_value2v(.{ .data = &payload_data, .len = payload_data.len }),
     );
+    try append_node(cells, &cursor, c.cells_new_node(.{ .value = c.CELLS_NODE_TYPE_OP_FN0 }));
+    try append_node(cells, &cursor, c.cells_new_node(.{ .value = c.CELLS_NODE_TYPE_OP_FN1 }));
+    try append_node(cells, &cursor, c.cells_new_node(.{ .value = c.CELLS_NODE_TYPE_OP_FN2 }));
 
     const short_ref_index = cursor;
     try append_node(cells, &cursor, c.cells_new_ref(0x0123));
@@ -128,7 +131,8 @@ test "stable node byte encoding" {
         0xFF, 0xFF, 0xFF,
         0x86, 0x00, 0x87,
         0x00, 0x88, 0x02,
-        0xAA, 0xBB, 0x01,
+        0xAA, 0xBB, 0x8A,
+        0x8B, 0x8C, 0x01,
         0x23, 0x40, 0x00,
         0x00, 0x00, 0x00,
         0x00, 0x20, 0x00,
@@ -231,6 +235,72 @@ test "debug view demo" {
 
     // std.debug.print("\n--- Debug View Demo ---\n", .{});
     // c.cells_print_debug_view(cells, debug_print, null);
+}
+
+test "opcode follows leaf stem fork saturation" {
+    var cells: ?*c.struct_cells_t = null;
+    try cTry(c.cells_create(&cells, 128));
+    defer c.cells_destroy(&cells);
+
+    var reducer: ?*c.struct_reducer_t = null;
+    try cTry(c.reducer_create(&reducer, cells));
+    defer c.reducer_free(&reducer);
+
+    var opcode_index: usize = 0;
+    const opcode = c.cells_new_node(.{ .value = c.CELLS_NODE_TYPE_OP_FN0 });
+    try cTry(c.cells_alloc_chunk(cells, opcode.header.encoded_size, &opcode_index));
+    try cTry(c.cells_write_node(cells, opcode_index, opcode));
+
+    var first_index: usize = 0;
+    const first = c.cells_new_value0f(1);
+    try cTry(c.cells_alloc_chunk(cells, first.header.encoded_size, &first_index));
+    try cTry(c.cells_write_node(cells, first_index, first));
+
+    c.reducer_push_to_stack(reducer, c.REDUCER_APPLY_TOKEN);
+    c.reducer_push_to_stack(reducer, opcode_index);
+    c.reducer_push_to_stack(reducer, first_index);
+    while (true) {
+        const result = c.reducer_step(reducer);
+        try cTry(result);
+        if (result == c.REDUCER_DONE) break;
+    }
+
+    const stem_index = c.reducer_get_result(reducer);
+    try std.testing.expectEqual(
+        c.CELLS_NODE_TYPE_OP_FN1,
+        c.cells_get_node_header(cells, stem_index).type.value,
+    );
+    var stem_left_index = stem_index;
+    var stem_left = c.cells_node_t{};
+    try cTry(c.cells_get_left_node(cells, &stem_left_index, &stem_left));
+    try std.testing.expectEqual(c.CELLS_NODE_TYPE_VALUEF0, stem_left.header.type.value);
+    try std.testing.expectEqual(@as(c.i64, 1), stem_left.as.nativef);
+
+    c.reducer_reset(reducer);
+    var second_index: usize = 0;
+    const second = c.cells_new_value0f(2);
+    try cTry(c.cells_alloc_chunk(cells, second.header.encoded_size, &second_index));
+    try cTry(c.cells_write_node(cells, second_index, second));
+
+    c.reducer_push_to_stack(reducer, c.REDUCER_APPLY_TOKEN);
+    c.reducer_push_to_stack(reducer, stem_index);
+    c.reducer_push_to_stack(reducer, second_index);
+    while (true) {
+        const result = c.reducer_step(reducer);
+        try cTry(result);
+        if (result == c.REDUCER_DONE) break;
+    }
+
+    const fork_index = c.reducer_get_result(reducer);
+    try std.testing.expectEqual(
+        c.CELLS_NODE_TYPE_OP_FN2,
+        c.cells_get_node_header(cells, fork_index).type.value,
+    );
+    var fork_right_index = fork_index;
+    var fork_right = c.cells_node_t{};
+    try cTry(c.cells_get_right_node(cells, &fork_right_index, &fork_right));
+    try std.testing.expectEqual(c.CELLS_NODE_TYPE_VALUEF0, fork_right.header.type.value);
+    try std.testing.expectEqual(@as(c.i64, 2), fork_right.as.nativef);
 }
 
 test "eval smoke" {

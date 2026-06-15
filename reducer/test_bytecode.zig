@@ -118,22 +118,8 @@ test "source encodes bootstrap syntax into cells" {
     try expectType(try right(cells, block_items), c.CELLS_NODE_TYPE_DELTA0);
 
     const opcode = try left(cells, application);
-    try expectType(opcode, c.CELLS_NODE_TYPE_OP_FN);
+    try expectType(opcode, c.CELLS_NODE_TYPE_OP_FN0);
     const argument = try right(cells, application);
     try expectType(argument, c.CELLS_NODE_TYPE_VALUEF0);
     try std.testing.expectEqual(@as(c.i64, 42), argument.node.as.nativef);
-
-    const payload = try left(cells, opcode);
-    try expectType(payload, c.CELLS_NODE_TYPE_DELTA2);
-    try expectBytes(try left(cells, payload), ":call");
-
-    const payload_rest = try right(cells, payload);
-    const arity = try left(cells, payload_rest);
-    try expectType(arity, c.CELLS_NODE_TYPE_DELTA2);
-    const current_arity = try left(cells, arity);
-    try expectType(current_arity, c.CELLS_NODE_TYPE_VALUEF0);
-    try std.testing.expectEqual(@as(c.i64, 0), current_arity.node.as.nativef);
-    const max_arity = try left(cells, try right(cells, arity));
-    try expectType(max_arity, c.CELLS_NODE_TYPE_VALUEF0);
-    try std.testing.expectEqual(@as(c.i64, 3), max_arity.node.as.nativef);
 }
