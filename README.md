@@ -33,7 +33,7 @@ are main points that describe project development across years.
 1. After some time, I decided to redesign a language from ground up, since I didn't want
     to encode effects as purely tree terms; so I designed opcodes + intrinsics, and syntax
     * sometime in winter 2025
-1. This session has been taking 3 or so months and then I arrived at conclusion (see the entry at `17.02.2026` in `PROJECT.md`) that I need to do a deep dive into calculus itself
+1. This session has been taking 3 or so months and then I arrived at conclusion (see the entry at `17.02.2026` in [project history](.memsearch/memory/project_history.md)) that I need to do a deep dive into calculus itself
     and leverage its expressiveness to my advantage
 
 # Trying it

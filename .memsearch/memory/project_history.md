@@ -29,7 +29,7 @@ This would be a project development log to concisely write the current state of 
 - Declared as `scope [name: string | none] do ... end`
 - Named scopes are `modules` and unnamed ones are alternative form of `let-bindings`
 - Inside: series of sugared bindings of the form
-    See [`project/scope_syntax_example.md`](project/scope_syntax_example.md)
+    See [`project/scope_syntax_example.md`](../../project/scope_syntax_example.md)
 - Ending expression of the scope is final value of the expression. If no
     expression is provided, false/nullish idk value is returned (maybe 
     do an analysis before? not for interpreter...)
@@ -89,9 +89,9 @@ This would be a project development log to concisely write the current state of 
     considered to be a linear sequence of declarations in the file.~~
     Nesting of modules does nothing to their names, instead, it just brings outer definitions to the scope of
     the inner module
-    See [`project/module_nesting_example.md`](project/module_nesting_example.md)
+    See [`project/module_nesting_example.md`](../../project/module_nesting_example.md)
 - All modules can be used as follows:
-    See [`project/module_use_example.md`](project/module_use_example.md)
+    See [`project/module_use_example.md`](../../project/module_use_example.md)
 - `use` construct can enclose any expression, and since `scope` is an expression on itself, `use`
     can appear on top level with unrestricted embedding depth.
 - `use` brings in top-level declarations (i.e. let bindings) into the scope of the expression
@@ -101,10 +101,10 @@ This would be a project development log to concisely write the current state of 
     `use {some/path.tree} in func foo bar` rather than `path.func foo bar`.
     But this really simplifies module system.
     If you have a name clash you can alias the clashing things yourself.
-    See [`project/module_name_clash_example.md`](project/module_name_clash_example.md)
+    See [`project/module_name_clash_example.md`](../../project/module_name_clash_example.md)
 - The `module` can be described as a syntax sugar. It acts as a "statement" that doesn't return
     anything. This makes language less consistent, but much pleasant to work with.
-    See [`project/module_syntax_sugar_example.md`](project/module_syntax_sugar_example.md)
+    See [`project/module_syntax_sugar_example.md`](../../project/module_syntax_sugar_example.md)
 - If module is defined at top-level, implicit clause is created
 ---
 - Let-bindings
@@ -145,7 +145,7 @@ Let's consider both approaches.
 
 `Internal` approach allows to encode tagging in the calculus and code related operations in the calculus only.
 The "example" of such approach in the code:
-See [`project/internal_tagging_approach.md`](project/internal_tagging_approach.md)
+See [`project/internal_tagging_approach.md`](../../project/internal_tagging_approach.md)
 
 Note that this approach implies that numbers are defined in the source code, when in reality the interpreter
 encoder can just construct numbers before interpretation. In either case the information about the structure
@@ -154,7 +154,7 @@ encode the value `3` as calculus expected.
 
 `Native` approach is the other way around -- calculus "obeys" the interpreter and asks it in some
 cases. The "example" is the code:
-See [`project/native_tagging_approach.md`](project/native_tagging_approach.md)
+See [`project/native_tagging_approach.md`](../../project/native_tagging_approach.md)
 
 It is clear that `native` approach is the way to go, since it is faster and more convenient.
 The only downside is that we "extend" the channel of communication between calculus and hardware, effectively
@@ -342,7 +342,7 @@ for any term `t` that is known statically, I have its corresponding location
 - an application is just things together in the list, right associative `(a b c) == (a (b c))`
 - so, there are no lists with `()`: this is an application; To encode a list: `^ a : ^ b : ^ c nil == (^ a (^ b (^ c nil)))`
 - example for wisp
-See [`project/wisp_syntax_example.md`](project/wisp_syntax_example.md)
+See [`project/wisp_syntax_example.md`](../../project/wisp_syntax_example.md)
 ---
 - strings are hard... currently, I'm discussing the syntactical standpoint:
 - they can be single line or multiline 
@@ -368,7 +368,7 @@ match ending `}...}`
     we are only interested in the string of digits for 64bit ints; so I need to
     make them as extensible as strings
 - intrinsics, being the opcodes `lambda, seq` and others can be encoded verbatim
-See [`project/vetochka_lambda_example.md`](project/vetochka_lambda_example.md)
+See [`project/vetochka_lambda_example.md`](../../project/vetochka_lambda_example.md)
 
 ### 13.02.2026
 - WISP: https://srfi.schemers.org/srfi-119/srfi-119.html
@@ -422,7 +422,7 @@ See [`project/vetochka_lambda_example.md`](project/vetochka_lambda_example.md)
 - Since we'll have designated build step anyway (in some way or another), these 
     opcodes can be calculated beforehand. 
 - an example
-See [`project/vetochka_word_count_example.md`](project/vetochka_word_count_example.md)
+See [`project/vetochka_word_count_example.md`](../../project/vetochka_word_count_example.md)
 - ❌ not a syntax one. I need to use adjacency for apply. So, no `REDUCER_APPLY_TOKEN`.
     Therefore, reducer stack contains indices which should be evaluated next, not `f arg` implicit pairs. Therefore, **every** application must be implemented as two nearby nodes in cells, and any two nodes near each other are subject to application.
     This is done because when I was pondering on lambdas, I've realized that I have two options: apply by adjacency, or somehow structure reducer stack in a way to call a lambda that was defined way before the code I'm currently executing. This is unplausible.
@@ -604,8 +604,8 @@ expr marker1: <block> marker2: <block> ... markerN: block end
 - No precedence. No mixed infix.
 - annotations: `@[basically, any(expression)] expr`
 - example
-See [`project/vetochka_collections_vec_example.md`](project/vetochka_collections_vec_example.md);
-Also [`project/vetochka_uniform.tree`](project/vetochka_uniform.tree)
+See [`project/vetochka_collections_vec_example.md`](../../project/vetochka_collections_vec_example.md);
+Also [`project/vetochka_uniform.tree`](../../project/vetochka_uniform.tree)
 
 ### 30.05.2026
 - we can do saturation: since we have `f(x,y,z) == f(x)(y)(z)`, we need to
@@ -688,7 +688,7 @@ after desugaring, i.e. infix/prefix tag or groupping tag, since all parsing is l
 - ✅ need a clear semantic boundary for "specialized ir", what are we doing there exactly?
 
 ### 11.06.2026 -- consolidated current design
-- look ma [new syntax in action](./project/newer_syntax.tree)
+- look ma [new syntax in action](../../project/newer_syntax.tree)
 - In the beginning, there was a bootstrap. The process roughly:
     + `./vetochka --entry boot.tree --init initial.tree -- [additional args that got into initial_term]`
     + This in turn launches bootstrap: pure `v0` code that extracts source code from relevant files,
@@ -738,13 +738,111 @@ APPLY(SOME_OPCODE1(x), y)
 ### 14.06.2026
 - ✅ need to revisit byte encoding
 
+### 15.06.2026
+
+- LLM THOUGHTS, TREAD CAREFULLY:
+- Execution engine is extended `CESK`: callee-first evaluation, lexical closures,
+    semantic store, pending argument spine, and runtime-selected argument mode.
+- Cells may back stable mutable boxes. Immutable bindings can remain direct values;
+    first implementation may therefore behave as the CEK subset.
+- `{fn}` is eager. `{form}` is lazy
+- `APPLY` is pending executable application. Delta/opcode values separately saturate
+    through `TYPE0 -> TYPE1 -> TYPE2`, then dispatch by family.
+- Proposal (not approved yet): [`v0_cesk_draft.md`](v0_cesk_draft.md).
+- Basis review: [`v0_basis_review.md`](v0_basis_review.md).
+
+### 17.06.2026
+- General opcode: `^ [opcode_payload]`
+- Fn opcode: `{fn}/3 [ [{:id}, {x}], ...] [{:do}, <expr1>, ...] [{:with}, <expr>]`
+    `{fn}(x) with: 5 do print(x) end`
+
 #### Next implementation order
 
-1. Define the smallest VM state and literal intrinsic dispatch, then implement `{fn}`.
+1. Define the smallest CESK state and literal intrinsic dispatch, then implement `{fn}` and `{form}`.
 2. Define explicit application cells, activation rules, `initial_term`, raw-tree handles,
    and traversal operations.
 3. Embed a minimal bootstrap that can lower one source file using only primitive forms.
-4. Fix the explicit closure record/application convention, then add lexical resolution
-   and immutable closure conversion.
+4. Fix runtime closure/`TERM` representation, then add static lexical resolution.
+   Add explicit closure conversion only if a later lowering target requires it.
 5. Add checked module candidates, dependency resolution, exports, and build integration.
 6. Add recursive/mutable binding cells only after immutable closures work end to end.
+
+### 09.07.2026
+- context restoration session; produced snapshot doc [`project/v0_layers.md`](../../project/v0_layers.md),
+    it wins over `v0_cesk_draft.md` on conflict; layer 5 (machine) not yet restated there
+- decisions made during restoration:
+    * families over delta-encodings re-approved; supersedes 18.03.2026 magic-delta opcode encoding
+    * syntax seam ruled: syntax is nameful tree terms in cells, spans in a host side table keyed
+        by cell index; the draft's `source_tree_t`-behind-handle design dropped as unintentional
+        (LLM familiarity, not design intent)
+    * lexical scoping confirmed; 11.06.2026 dynamic-scoping note retracted
+    * closed-term specialization: free names resolve to natives or error; value injection
+        by application only, never environment surgery
+    * APPLY semantics: structurally inspectable as code, shapeless as a value; present from parse time
+    * backbone intrinsics: `{load_file}` / `{parse_term}` / `{specialize}`; effect isolated
+        in `{load_file}`; no capability machinery in v0
+    * GLOBAL removed from executable vocabulary: top-level and cross-unit references lower to
+        binder application (a module is a function of its imports); may return later as a
+        link-time constant pool, which would be an optimization, not semantics
+    * machine owns all application dispatch, family-first arity-second; inverts the
+        22.02.2026 picture (reducer outer loop, VM intervening)
+- ✅ recursion ruled: derived, not primitive. Self-application (U-combinator idiom) verified
+    in a strict-lambda stand-in: bare self-passing, library `fix`, and mutual recursion via
+    function lists all work. Cost: one extra application per recursive call (stack use ~2x).
+    `{rec}` (lambda-restricted letrec) rejected for v0; re-entry only on measured overhead.
+    Layer 0 ground truth remains the tree book's waiting-based fixpoint construction
+- ✅ recursion refined via `{form}`: `fix` is the plain Y-combinator (no eta wrapper) —
+    `{form}` receives `f(f)` unevaluated, callee position forces it; a definition is
+    `{form}(rec)` wrapping a `{fn}`; mutual recursion binds a function list through one `rec`;
+    verified in call-by-name stand-in. Delay mechanisms per layer: waiting (L0), `{form}` (v0)
+- ⬜ pending: restate machine layer (state components, suspension/forcing, spine, GRAB,
+    evaluation-order commitments) into the snapshot doc
+- ⬜ pending ruling: `do ... end` sequencing. Two candidates: (A) pure sugar — desugar to
+    bind-discard chains `{$}({fn}[_] rest) s1` (no machine rules, but closure alloc + dummy
+    frame per statement at runtime); (B) body is a `{:do}` statement list executed by the
+    machine via a BLOCK continuation frame (matches draft `{fn}/3` protocol, cheap, but needs
+    the pop-frame-before-last-statement rule or tail calls break). Proposed reconciliation:
+    A is the specification (defines meaning + tail position equationally), B is the
+    implementation (must be observationally equivalent). A stated precisely (10.07): a
+    one-statement body `[{:do}, s]` is the primitive base case; `[{:do}, s1, ...rest]`
+    desugars to `{$} ({$} {$} {$} {fn} [[{:id},{_}]] [{:do}, ...rest] [{:with}, ^]) s1`,
+    where `_` is an ordinary (unreferenced) identifier, not special syntax. NOTE: the
+    binder-chain lowering used in the 09.07 tail-call trace was assistant extrapolation,
+    not a prior ruling
+- ⬜ pending ruling: proper tail calls as semantic guarantee. Discussed, not yet recorded:
+    frames arise only when a sub-result is needed (F1 eager closure arg, F2 eager native arg,
+    F3 triage shape demand); all other transitions replace control, so tail calls hold by
+    construction; sequencing via `{fn}` block lowering is PTC-trivial (no seq opcode by design);
+    obligations: state the frame invariant, native trampoline discipline (no machine re-entry
+    from C); caveat: PTC bounds control state, storage still grows per iteration until
+    reclamation exists (heap is acyclic thanks to `{rec}` rejection → refcount/free-list viable;
+    arena + measured limit acceptable for one-shot bootstrap)
+
+### 10.07.2026
+
+- v0 surface/core boundary corrected:
+    * no separate v1 merely for `do!`, statements, multiple parameters, or similar sugar;
+      these are v0 syntax
+    * `do!` is syntax, never a runtime opcode
+    * specialization both rewrites/lowers v0 and compiles executable cells; names die and
+      runtime opcode objects arise there
+    * opcode state globally identifies opcode kind and transition; separate family identity
+      is redundant
+- implementation/design distinction corrected:
+    * current parser produces host `source_tree_t`; `bytecode_source_encode` subsequently
+      creates cells, so the 09.07 phrase "syntax is ... in cells" did not describe current code
+    * this supersedes the 09.07 claim that spans are keyed by cell index; span ownership/keying
+      remains open until runtime parsed-syntax representation is settled
+    * runtime `{parse_term}` result remains open; current host parsing pipeline is evidence, not
+      by itself the language-level representation decision
+- opcode/function surface refined:
+    * opcode values are always stem-shaped at rest; the completing application dispatches
+      immediately, so no saturated opcode fork becomes observable
+    * `{fn}` removed from v0 syntax; settled direction uses `do!` for function construction
+    * `do! fn: [x, y, ...] do ... end with: ...` and a possible short `do! fun:` form using
+      implicit `it` are recognition-text candidates only, not yet syntax decisions
+- authority boundary corrected:
+    * only Layers 0–4 in `v0_layers.md` are settled; Layer 5 remains open
+    * `CLOSURE`, `TERM`, lexical environment chains, forcing, and continuation machinery in
+      `v0_cesk_draft.md` are candidates, not decisions
+    * notes must record only explicit rulings; draft vocabulary must not silently become semantics
