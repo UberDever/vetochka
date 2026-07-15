@@ -171,6 +171,16 @@ Decision:
 - Do not add literal grammar merely to make data structures prettier. Require a
   demonstrated semantic distinction that existing structure cannot preserve.
 
+## vf inclusion rule — 2026-07-11
+
+Decision:
+- v0 is a vf subset: any v0 code may occur unchanged as ordinary vf code.
+- This is semantic inclusion, not merely shared parser acceptance.
+- vf adds source forms and programmer-written interpretation above v0; it does not
+  cross a special bridge to call v0.
+- `$` therefore occurs unchanged in vf as ordinary inherited v0 code. Its protocol
+  semantics remain defined by v0.
+
 ## Diff review before L3 — 2026-07-11
 
 Checked:
@@ -262,7 +272,7 @@ Decision draft:
 - Keep `load_file` and `parse_term` as v0 backbone facilities.
 - `load_file :: path-bytes -> bytes | diagnostic` is the only required host effect in v0.
 - `parse_term :: source-bytes -> normalized syntax term | diagnostic` is pure.
-- `parse_term` returns ordinary term data with no executable meaning.
+- `parse_term` accepts full shared Vetochka syntax and returns ordinary term data with no vf or executable meaning.
 - No `specialize`, `execute`, or `eval` intrinsic exists in v0.
 - Execution is the semantic event of term entering executable position, which supplies activation context and invokes L3 specialization, then L5 execution.
 - v0 does not define module roots, import names, dependency resolution, package discovery, caching, authority policy, or path search rules.
@@ -276,6 +286,5 @@ Rationale:
 Open:
 - Diagnostic term shapes.
 - Path byte interpretation and authority boundary for `load_file`.
-- Whether `parse_term` accepts only v0 or full shared vf parser substrate while assigning no vf semantics.
 - Concrete term representation for parsed normalized terms.
 
