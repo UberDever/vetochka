@@ -1,7 +1,7 @@
 # v0 Layered Design (restated)
 
 Status: authoritative snapshot, updated 10.07.2026. Where this conflicts with
-[`v0_cesk_draft.md`](v0_cesk_draft.md), this wins. Layer 5 not yet restated.
+[`v0_cesk_draft.md`](../.memsearch/memory/v0_cesk_draft.md), this wins. Layer 5 not yet restated.
 Decision history lives in [project history](../.memsearch/memory/project_history.md).
 
 Claim labels used below: **implemented** describes current C code; **decided** is
@@ -40,17 +40,16 @@ Byte array of tree-shaped nodes. Vocabulary: `CELLS_NODE_TYPE_ITEMS` in
   `OP_FN*` is obsolete experimental encoding. `LOCAL` and generic opcode-state
   cells are target additions. Enum values are C API identities; wire tags differ.
 
-**Opcodes over delta-encodings.** Opcode state identifies its kind and transition;
-no separate opcode family identity exists. An opcode value is always stem-shaped:
+**Opcodes over delta-encodings.** Opcode cells are target additions, not delta-term
+encodings. Opcode state identifies its kind and transition; no separate opcode
+family identity exists.
 
-```text
-OPCODE(s) @ x -> next opcode stem | dispatch immediately
-```
-
-Completion never exposes a saturated fork. Rule 3 therefore sees any opcode value
-as a stem. Opcodes are not decomposable into deltas;
-deeper inspection needs intrinsics (`get_type` / `get_payload`). Literals likewise:
-leaf-shaped, value family — "literals are deltas" holds only shape-wise.
+Speculative Layer 5 direction, not a Layer 1 design decision: runtime opcode values
+may be kept stem-shaped, with completing application dispatching immediately rather
+than exposing a saturated fork. If so, Rule 3 sees any opcode value as a stem.
+Opcodes are not decomposable into deltas; deeper inspection needs intrinsics
+(`get_type` / `get_payload`). Literals likewise: leaf-shaped, value family —
+"literals are deltas" holds only shape-wise.
 
 **APPLY is a distinct executable-cell node, not a fork.** It records application
 structure; losing it loses homoiconicity. **Implemented:** parsing first produces
@@ -66,7 +65,9 @@ structure; losing it loses homoiconicity. **Implemented:** parsing first produce
 
 Summary: **APPLY is inspectable as code, shapeless as a value.**
 
-Storage is inert. Activation is explicit (Layer 3 defines what is activatable).
+Cells are storage only. A cell root becomes executable only after specialization
+marks it as an executable root and Layer 5 activates/evaluates that root. Merely
+storing an opcode/APPLY-shaped node does not run it.
 
 ## Layer 2: Syntax
 
@@ -134,18 +135,20 @@ do! fn: [x, y, ...] do ... end with: ...
 The exact spelling above, plus a possible `do! fun:` expression form with implicit
 parameter `it`, remains speculative rather than decided semantics.
 
-**Recursion is derived, not primitive; `{rec}` is rejected.** The plain
-Y-combinator was validated under a non-strict function mode: `f(f)` is received
-unevaluated and evaluates in callee position. Old notation records that semantic
-experiment, not current surface syntax:
+**Recursion is intended to be derived, not primitive; `{rec}` is rejected.**
+Speculative validation, pending Layer 5 argument/forcing decisions: the plain
+Y-combinator works if a non-strict function/form mode receives `f(f)` unevaluated
+and forces it in callee position. Historical notation below is not current v0
+syntax; it records only that semantic experiment:
 
 ```text
 fix = {fn}(F) do ({fn}(f) do F(f(f)) end)({fn}(f) do F(f(f)) end) end
 fact = fix({form}(rec) do {fn}(n) do ... rec(n - 1) ... end end)
 ```
 
-Mutual recursion: `rec` binds one expression yielding the list of functions.
-Cost: `f(f)` re-evaluates at each recursive call (no memoization).
+If Layer 5 keeps that non-strict mode, mutual recursion can bind one expression
+yielding the list of functions. Cost: `f(f)` re-evaluates at each recursive call
+(no memoization).
 
 **Closed-term discipline.** Free names must resolve to native intrinsics; all
 else must be bound inside the term. Output is closed: it contains no unresolved
@@ -193,4 +196,4 @@ Open: meaning of `LOCAL` at runtime; function values; strict/non-strict argument
 machine state; argument spine and GRAB; under/exact/over-application; continuations;
 evaluation order; effect duplication; exact function/opcode cell encoding.
 
-`v0_cesk_draft.md` provides candidates for these questions, not settled semantics.
+[`v0_cesk_draft.md`](../.memsearch/memory/v0_cesk_draft.md) provides candidates for these questions, not settled semantics.

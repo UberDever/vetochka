@@ -1,3 +1,13 @@
+# Artifact: uniform syntax experiment
+
+- Original path: `project/vetochka_uniform.tree`
+- Historical context date: 2026-05-28
+- Status: historical design artifact; design hint only, not current spec.
+- Preservation: exact original content follows.
+
+---
+
+```vetochka
 ;; everyting below is imaginary
 
 def module: Example do
@@ -132,3 +142,5 @@ def :fn: do:
 end;
 
 end;
+
+```

@@ -1,3 +1,12 @@
+# Artifact: internal tagging approach sketch
+
+- Original path: `project/internal_tagging_approach.md`
+- Historical context date: 2025-01-23
+- Status: historical design artifact; design hint only, not current spec.
+- Preservation: exact original content follows.
+
+---
+
 # Internal Tagging Approach
 
 ```elixir

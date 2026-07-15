@@ -1,3 +1,12 @@
+# Artifact: word count syntax experiment
+
+- Original path: `project/vetochka_word_count_example.md`
+- Historical context date: 2026-02-16
+- Status: historical design artifact; design hint only, not current spec.
+- Preservation: exact original content follows.
+
+---
+
 # Vetochka Word Count Example
 
 ```lisp

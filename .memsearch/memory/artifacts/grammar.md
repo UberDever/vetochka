@@ -1,6 +1,21 @@
+# Artifact: shared parser grammar design note
+
+- Original path: `docs/grammar.md`
+- Historical context date: before 2026-07-11 reconciliation
+- Status: historical design artifact; conflicts with current split between v0 and the v-family (`v*`) and is not current spec.
+- Preservation: exact moved content follows.
+
+---
+
 ⬜ ✅ ❌
 
 # Grammar
+
+Status: shared parser grammar design note. Reconciled 2026-07-11 against
+`docs/spec/02_v0_layers.md`. This file is close to the concrete grammar, but it is
+not yet the normative layer spec. In particular, forms recognized here may belong
+to `vstar`, not v0, and the old `{fn}`/opcode and cell-encoding text below is
+historical until rewritten.
 
 ## Rationale
 

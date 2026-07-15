@@ -1,3 +1,13 @@
+# Artifact: newer syntax experiment
+
+- Original path: `project/newer_syntax.tree`
+- Historical context date: 2026-06-11
+- Status: historical design artifact; design hint only, not current spec.
+- Preservation: exact original content follows.
+
+---
+
+```vetochka
 def module: Example do
 def fn: moving_average args: [values :: List[f64], window :: i64] ret: List[f64] do
     def var: result = List[f64]()
@@ -100,3 +110,5 @@ end
     ]
   )
 ]
+
+```

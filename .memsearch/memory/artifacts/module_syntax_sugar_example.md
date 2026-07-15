@@ -1,3 +1,12 @@
+# Artifact: module syntax-sugar example
+
+- Original path: `project/module_syntax_sugar_example.md`
+- Historical context date: 2024-12-25
+- Status: historical design artifact; design hint only, not current spec.
+- Preservation: exact original content follows.
+
+---
+
 # Module Syntax Sugar Example
 
 ```elixir

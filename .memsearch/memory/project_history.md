@@ -29,7 +29,7 @@ This would be a project development log to concisely write the current state of 
 - Declared as `scope [name: string | none] do ... end`
 - Named scopes are `modules` and unnamed ones are alternative form of `let-bindings`
 - Inside: series of sugared bindings of the form
-    See [`project/scope_syntax_example.md`](../../project/scope_syntax_example.md)
+    See [`artifacts/scope_syntax_example.md`](artifacts/scope_syntax_example.md)
 - Ending expression of the scope is final value of the expression. If no
     expression is provided, false/nullish idk value is returned (maybe 
     do an analysis before? not for interpreter...)
@@ -89,9 +89,9 @@ This would be a project development log to concisely write the current state of 
     considered to be a linear sequence of declarations in the file.~~
     Nesting of modules does nothing to their names, instead, it just brings outer definitions to the scope of
     the inner module
-    See [`project/module_nesting_example.md`](../../project/module_nesting_example.md)
+    See [`artifacts/module_nesting_example.md`](artifacts/module_nesting_example.md)
 - All modules can be used as follows:
-    See [`project/module_use_example.md`](../../project/module_use_example.md)
+    See [`artifacts/module_use_example.md`](artifacts/module_use_example.md)
 - `use` construct can enclose any expression, and since `scope` is an expression on itself, `use`
     can appear on top level with unrestricted embedding depth.
 - `use` brings in top-level declarations (i.e. let bindings) into the scope of the expression
@@ -101,10 +101,10 @@ This would be a project development log to concisely write the current state of 
     `use {some/path.tree} in func foo bar` rather than `path.func foo bar`.
     But this really simplifies module system.
     If you have a name clash you can alias the clashing things yourself.
-    See [`project/module_name_clash_example.md`](../../project/module_name_clash_example.md)
+    See [`artifacts/module_name_clash_example.md`](artifacts/module_name_clash_example.md)
 - The `module` can be described as a syntax sugar. It acts as a "statement" that doesn't return
     anything. This makes language less consistent, but much pleasant to work with.
-    See [`project/module_syntax_sugar_example.md`](../../project/module_syntax_sugar_example.md)
+    See [`artifacts/module_syntax_sugar_example.md`](artifacts/module_syntax_sugar_example.md)
 - If module is defined at top-level, implicit clause is created
 ---
 - Let-bindings
@@ -145,7 +145,7 @@ Let's consider both approaches.
 
 `Internal` approach allows to encode tagging in the calculus and code related operations in the calculus only.
 The "example" of such approach in the code:
-See [`project/internal_tagging_approach.md`](../../project/internal_tagging_approach.md)
+See [`artifacts/internal_tagging_approach.md`](artifacts/internal_tagging_approach.md)
 
 Note that this approach implies that numbers are defined in the source code, when in reality the interpreter
 encoder can just construct numbers before interpretation. In either case the information about the structure
@@ -154,7 +154,7 @@ encode the value `3` as calculus expected.
 
 `Native` approach is the other way around -- calculus "obeys" the interpreter and asks it in some
 cases. The "example" is the code:
-See [`project/native_tagging_approach.md`](../../project/native_tagging_approach.md)
+See [`artifacts/native_tagging_approach.md`](artifacts/native_tagging_approach.md)
 
 It is clear that `native` approach is the way to go, since it is faster and more convenient.
 The only downside is that we "extend" the channel of communication between calculus and hardware, effectively
@@ -342,7 +342,7 @@ for any term `t` that is known statically, I have its corresponding location
 - an application is just things together in the list, right associative `(a b c) == (a (b c))`
 - so, there are no lists with `()`: this is an application; To encode a list: `^ a : ^ b : ^ c nil == (^ a (^ b (^ c nil)))`
 - example for wisp
-See [`project/wisp_syntax_example.md`](../../project/wisp_syntax_example.md)
+See [`artifacts/wisp_syntax_example.md`](artifacts/wisp_syntax_example.md)
 ---
 - strings are hard... currently, I'm discussing the syntactical standpoint:
 - they can be single line or multiline 
@@ -368,7 +368,7 @@ match ending `}...}`
     we are only interested in the string of digits for 64bit ints; so I need to
     make them as extensible as strings
 - intrinsics, being the opcodes `lambda, seq` and others can be encoded verbatim
-See [`project/vetochka_lambda_example.md`](../../project/vetochka_lambda_example.md)
+See [`artifacts/vetochka_lambda_example.md`](artifacts/vetochka_lambda_example.md)
 
 ### 13.02.2026
 - WISP: https://srfi.schemers.org/srfi-119/srfi-119.html
@@ -422,7 +422,7 @@ See [`project/vetochka_lambda_example.md`](../../project/vetochka_lambda_example
 - Since we'll have designated build step anyway (in some way or another), these 
     opcodes can be calculated beforehand. 
 - an example
-See [`project/vetochka_word_count_example.md`](../../project/vetochka_word_count_example.md)
+See [`artifacts/vetochka_word_count_example.md`](artifacts/vetochka_word_count_example.md)
 - ❌ not a syntax one. I need to use adjacency for apply. So, no `REDUCER_APPLY_TOKEN`.
     Therefore, reducer stack contains indices which should be evaluated next, not `f arg` implicit pairs. Therefore, **every** application must be implemented as two nearby nodes in cells, and any two nodes near each other are subject to application.
     This is done because when I was pondering on lambdas, I've realized that I have two options: apply by adjacency, or somehow structure reducer stack in a way to call a lambda that was defined way before the code I'm currently executing. This is unplausible.
@@ -604,8 +604,8 @@ expr marker1: <block> marker2: <block> ... markerN: block end
 - No precedence. No mixed infix.
 - annotations: `@[basically, any(expression)] expr`
 - example
-See [`project/vetochka_collections_vec_example.md`](../../project/vetochka_collections_vec_example.md);
-Also [`project/vetochka_uniform.tree`](../../project/vetochka_uniform.tree)
+See [`artifacts/vetochka_collections_vec.tree.md`](artifacts/vetochka_collections_vec.tree.md);
+Also [`artifacts/vetochka_uniform.tree.md`](artifacts/vetochka_uniform.tree.md)
 
 ### 30.05.2026
 - we can do saturation: since we have `f(x,y,z) == f(x)(y)(z)`, we need to
@@ -688,7 +688,7 @@ after desugaring, i.e. infix/prefix tag or groupping tag, since all parsing is l
 - ✅ need a clear semantic boundary for "specialized ir", what are we doing there exactly?
 
 ### 11.06.2026 -- consolidated current design
-- look ma [new syntax in action](../../project/newer_syntax.tree)
+- look ma [new syntax in action](artifacts/newer_syntax.tree.md)
 - In the beginning, there was a bootstrap. The process roughly:
     + `./vetochka --entry boot.tree --init initial.tree -- [additional args that got into initial_term]`
     + This in turn launches bootstrap: pure `v0` code that extracts source code from relevant files,

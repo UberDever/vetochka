@@ -1,3 +1,13 @@
+# Artifact: collections/vector syntax experiment
+
+- Original path: `project/vetochka_collections_vec.tree`
+- Historical context date: 2026-05-28
+- Status: historical design artifact; design hint only, not current spec.
+- Preservation: exact original content follows.
+
+---
+
+```vetochka
 module [collections.vec] do:
     import(std.mem);
     import(std.assert);
@@ -90,3 +100,5 @@ module [collections.vec] do:
 
     end;
 end
+
+```
