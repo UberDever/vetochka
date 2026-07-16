@@ -159,6 +159,9 @@ base.name           -> [{:selector}, base, {name}]
 Ordinary list syntax always desugars to proper lists. A language needing a special
 source-level list form must introduce an explicit tag for that form.
 
+A labeled argument lowers to generic tagged data: `name: expr` becomes
+`[{:label}, {name}, expr]`.
+
 `{@}` normalizes to Layer 1 `APPLY` structure when the term is encoded. Source tags
 are inert data until some language protocol interprets them.
 

@@ -181,6 +181,115 @@ Decision:
 - `$` therefore occurs unchanged in vf as ordinary inherited v0 code. Its protocol
   semantics remain defined by v0.
 
+## `$` protocol model — 2026-07-11
+
+Confirmed model:
+- `$` is special lexer/parser token, then participates in ordinary labeled/postfix
+  application structure.
+- `$f: x do: x + 1` is smallest one-parameter non-eager lambda primitive.
+- `$force: e` is proposed explicit forcing operation for delayed terms.
+- `$fn: [x, y] with: [42, 69] do body end` has `with:` as surface convenience
+  exactly equivalent to postfix application of function to `[42, 69]`; no hidden
+  capture/prebinding semantics.
+- `$fn` is proposed eager multi-argument function form; `$form` proposed
+  non-eager multi-argument analogue.
+- `do:` / `end:` are ordinary labels wherever labels occur.
+
+Assessment pending:
+- Whether `$force` forces a supplied suspended argument only or activates arbitrary
+  syntax data; latter conflicts with previous no-`eval`/no-user-visible activation
+  decision.
+- Whether `$fn` and `$form` must be raw protocols or derive from `$f` plus an
+  explicit forcing/delay mechanism.
+- Whether `with:` should be parser-level desugaring rather than opcode field/order
+  semantics.
+
+## Opcode privacy and function protocol — 2026-07-11
+
+Decisions:
+- No in-place term rewrites anywhere unless explicitly introduced later as a
+  justified optimization.
+- `$f: x do: body` is eager one-argument function with single-expression `do:`
+  body.
+- `$fn: [x, y, ...] do body-forms end` is eager multi-argument function form.
+- `$form` is not a v0 protocol.
+- `LOCAL(n)` is L3 output only; raw syntax and ordinary programs have no direct
+  `LOCAL` constructor.
+- Every opcode is generic `OPCODE(state)` in cells. State identifies kind,
+  transition, and arity; no per-opcode node family/layout.
+- On first activation source `$` specializes directly into generic opcode state;
+  subsequent labeled arguments apply to transient opcode state.
+- Opcodes have stable public term/cell structure and private unforgeable runtime
+  state. All terms are public API, so public opcode interface must be explicit and
+  Rule 3 inspectable.
+- Lexical environment/captures are private implementation detail. No general
+  capture/environment inspection or forging facility.
+- Opcode state is called unsaturated/saturated, not leaf/stem/fork. Unsaturated
+  opcode projects as stem when Rule 3 demands structural observation. Saturation
+  dispatches immediately; no saturated opcode value is observable as fork.
+
+Candidates / open:
+- K does not safely delay lexical code that escapes without capture. Candidate
+  replacement: eager `$f` thunk `$f: _ do: body`, forced by `thunk(^)`.
+- Exact opcode public structure, state fields, closure payload, sequencing account,
+  and `with:` semantics remain unresolved.
+
+## `$` body block normalization — 2026-07-11
+
+Decision:
+- Bare `do ... end` supplied to `$fn` remains positional block term, normalized as
+  `[{:block}, S1, S2, ...]`; it is not rewritten to `do: block` label.
+- Current implementation and old grammar normalize labeled input `name: value` as
+  generic tagged data `[{:label}, {name}, value]`. Dynamic `{:name}` tags remain
+  unchosen design, not current decision.
+- Generic opcode input history is ordered ordinary terms. It contains generic label
+  terms, block terms, and raw postfix call/list/string terms in application order.
+  State decides what each input term means.
+
+## Opcode state and input policy — 2026-07-11
+
+Decision:
+- Public opcode state is a stable flat global integer enum. Debug names may map IDs
+  to text but have no semantics.
+- Every opcode state declares the policy for its next input. v0 presently has
+  `syntax` (retain normalized term without evaluation) and `eager` (evaluate in
+  caller context before transition); future policies must be explicit.
+- An eager input evaluates to `V`, then creates a fresh next opcode state whose
+  ordered public inputs append `V`. A syntax input appends the original normalized
+  term. There is no in-place rewrite and no observable half-transition.
+- `$` protocols are runtime opcode forms with state-defined input policy, not parser
+  special forms. First-class thunk/force semantics remain open.
+
+## Deferred opcode/L5 questions — 2026-07-11
+
+Resume in this order:
+
+1. Final opcode argument-record protocol and L2-to-opcode storage boundary. Candidate:
+   `[{:pos}, ^, payload] | [{:label}, key, payload]`, held in ordered proper-list
+   input history. Do not preserve separate list/string source spelling.
+2. Saturation/dispatch protocol: which state transitions dispatch; diagnostics;
+   behavior when application continues after a dispatch result.
+3. Exact `$SELECT` routing table and allocation of flat state IDs.
+4. Closure runtime representation: opaque lexical `E`, capture lifecycle, and
+   `LOCAL(n)` frame/account model.
+5. Precise eager evaluation model: evaluation target, left-to-right order, one-time
+   evaluation, and under/exact/overapplication.
+6. First-class thunk/force protocol. Candidate `$f: _ do: body`; K alone is unsafe
+   for escaping lexical code. This is not decided.
+7. `$fn` block sequencing semantic account and implementation equivalence.
+8. `$fn with:` state protocol, evaluation order, and postfix-application equivalence.
+
+Settled before pause:
+- Public opcode state uses a flat global integer enum.
+- Public opcode projection candidate accepted: `^ i64(state) inputs`, with private
+  payload unreachable. `eval_step` handles opcode nodes explicitly.
+- Inputs are an ordered proper list; no hidden vector/tuple.
+- `syntax`, `eager`, and `route` are explicit state input policies.
+- `route` accepts raw `[{:label}, {selector}, payload]`, selects an arm, and applies
+  that arm's payload policy. `$load_file` / `$parse_term` use `$` selector spelling.
+- Eager transition evaluates in caller context, appends the resulting value in a
+  fresh state, and exposes no half-transition.
+
 ## Diff review before L3 — 2026-07-11
 
 Checked:
