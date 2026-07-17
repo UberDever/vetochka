@@ -289,6 +289,66 @@ Settled before pause:
   that arm's payload policy. `$load_file` / `$parse_term` use `$` selector spelling.
 - Eager transition evaluates in caller context, appends the resulting value in a
   fresh state, and exposes no half-transition.
+- Final opcode argument-storage protocol: `[:pos, ^, payload] | [:label, key,
+  payload]`. L2 labels already have the latter normalized shape. At opcode entry,
+  non-label postfix operands—including `[{:block}, ...]`—are wrapped as `:pos`;
+  no list/string spelling metadata is retained.
+- Every opcode transition returns exactly `Continue(next-state, inputs)`,
+  `Dispatch(result)`, or `Error(diagnostic)`. Dispatch exposes no saturated opcode;
+  remaining postfix application applies normally to its result.
+- `$` constructs an effectful state machine; dispatch is the point where its state
+  performs or initiates its designated action.
+- `$SELECT` immediately validates `f` and `fn` parameter payloads before entering
+  their continuation states; malformed binders/parameter lists hard-trap at routing.
+- `$f` dispatch immediately specializes its `do:` body under the current lexical
+  environment extended with its validated binder. The resulting function has closed
+  executable code plus opaque capture; raw body syntax is not re-specialized per call.
+- Executable `APPLY(A, B)` determines its callee `A` first and retains `B` as code
+  until that callee's explicit input policy requires it. v0 eagerly evaluates only
+  call operands of `$f`/`$fn` function values and routed payloads of `$load_file` /
+  `$parse_term`; constructor binders/parameters/bodies are syntax. Raw `foo: bar`
+  is inert data and hard-traps if used as an unrecognized v0 executable callee.
+- `F_AFTER_PARAM` accepts only `[:label, {do}, body]` as syntax. It retains this
+  label/body as code and dispatches closure construction; a positional bare block
+  or another label hard-traps.
+- ~~A function call must eliminate/instantiate all reachable `LOCAL` bindings before
+  its lexical frame dies.~~ Superseded by `TERM(root; private E)` below.
+- `TERM(root; private E)` is a real runtime family, like `OPCODE`. It retains the
+  lexical environment of an open structural term, so function calls do not traverse
+  or close-copy a body before L0 reduction. Triage treats `TERM` transparently: when
+  it selects a root branch, that branch remains paired with the same `E`; direct
+  `LOCAL(n)` lookup happens only when demanded in executable position.
+- `TERM` environment is opaque/unforgeable. It is not a public structural child;
+  public structural operations must not distinguish a term-wrapped list from its
+  list root. Mutation is outside v0, so duplicated term captures are immutable.
+- Semantically, open terms objectively carry `TERM(root, E)`. Implementation may
+  thread `E` in CEK/CESK control without allocating wrappers on descent, but must
+  preserve `(root, E)` as a runtime TERM value whenever it returns, is stored in
+  structural data, becomes pending argument, or crosses a continuation/frame.
+- Activation recursively resolves identifier syntax throughout an activated term,
+  including inside lists and other nested structure, but does not evaluate those
+  subterms unless a runtime rule says so. Only lexical binders resolve; any other
+  identifier in executable activation traps. To forge arbitrary identifier syntax,
+  construct `[{:id}, {name-bytes}]` as data and activate it only under a matching
+  lexical binder.
+- A list returns its instantiated proper L0 list structure without independently
+  evaluating its elements.
+- `FN_AFTER_PARAMS` accepts its body only as positional syntax
+  `[:pos, ^, [{:block}, S1, S2, ...]]`; it rejects `do: expression`.
+- v0 is effectful and curried: transition/source order determines host-effect and
+  hard-trap order. Thus placing `$fn with:` before or after its block may observably
+  differ; this is deliberate, not cosmetic.
+- Full v0 opcode spec is authoritative as one nested tree per opcode state, with
+  fields **ID**, **input shape**, **policy**, and **outcome** (including uniform
+  diagnostics/traps). Mermaid is a readable projection only. Allocate numeric IDs
+  in one pass after all v0 state names/transitions are approved.
+- Recoverable backbone failure is ordinary result data:
+  `[{:ok}, value] | [{:error}, diagnostic]`. User-defined errors and vf operate on
+  these values. Non-local failure remains a separate opcode/runtime outcome.
+- Execution-time protocol failures are uncatchable v0 traps. The host marks its
+  execution state errored, retains an optional diagnostic term handle, and halts
+  evaluation. This replaces the current textual `reducer_t._error`; invalid handle
+  means no error. Diagnostic term contents remain deliberately unspecified.
 
 ## Diff review before L3 — 2026-07-11
 
@@ -396,4 +456,93 @@ Open:
 - Diagnostic term shapes.
 - Path byte interpretation and authority boundary for `load_file`.
 - Concrete term representation for parsed normalized terms.
+
+## Working v0 opcode state tree — 2026-07-11
+
+This is the authoritative working shape. `Open` is deliberately unspecified.
+IDs are allocated once all states are approved.
+
+- `DOLLAR_SELECT`
+    + Id: later
+    + Input: `[:label, key, payload]`
+    + Policy: `route`
+    + Outcome:
+        * `key = f`: validate `payload` as one binder identifier; retain syntax;
+          `Continue(F_AFTER_PARAM)`
+        * `key = fn`: validate `payload` as parameter-list syntax; retain syntax;
+          `Continue(FN_AFTER_PARAMS)`
+        * `key = load_file`: eagerly evaluate `payload`; `Dispatch({:ok, bytes} |
+          {:error, diagnostic})`
+        * `key = parse_term`: eagerly evaluate `payload`; `Dispatch({:ok, term} |
+          {:error, diagnostic})`
+        * otherwise: hard trap
+
+- `F_AFTER_PARAM`
+    + Id: later
+    + Invariant: input history has validated `[:label, {f}, binder]`
+    + Input: `[:label, {do}, body]`
+    + Policy: `syntax`
+    + Outcome: immediately specialize `body` under current lexical environment plus
+      `binder`; `Dispatch` a one-argument eager function with closed executable code
+      and opaque capture
+    + Otherwise: hard trap
+
+- `FN_AFTER_PARAMS`
+    + Id: later
+    + Invariant: input history has validated `[:label, {fn}, parameter-list]`
+    + Input:
+        * `[:pos, ^, [{:block}, S1, S2, ...]]`
+        * `[:label, {with}, args]`
+    + Policy:
+        * block: `syntax`
+        * with: Open — depends on exact eager evaluation semantics
+    + Outcome:
+        * block: Open — multi-argument closure specialization/dispatch details
+        * with: `Continue(FN_HAVE_WITH)`
+        * otherwise: hard trap
+
+- `FN_HAVE_WITH`
+    + Id: later
+    + Input: positional block `[:pos, ^, [{:block}, S1, S2, ...]]`
+    + Policy: `syntax`
+    + Outcome: Open — closure construction and application of stored `with` arguments
+    + Otherwise: hard trap
+
+Notes:
+- A `with:` following a dispatched `$fn` block applies to the resulting closure, not
+  to `FN_AFTER_PARAMS`.
+- v0 transition/source order determines host-effect and hard-trap order.
+- Hard traps are host-visible halted execution with optional diagnostic term handle;
+  user errors are `{:ok, value} | {:error, diagnostic}` data.
+
+## Working v0 evaluation rules — 2026-07-11
+
+This section is the concise authoritative record for the ongoing eagerness/CESK
+pass. It supersedes conflicting earlier exploratory wording. The lexical-reference
+model remains open; see `dialogue/lexical-reference-models.md`.
+
+- A closure retains body plus opaque lexical capture. Function call runs body as
+  `TERM(body, Ecall)`; it does not close-copy the whole body.
+- `TERM(root, E)` is a real runtime family with opaque `E`. It is transparent to
+  structural observation: selected delta branches retain the same `E`.
+- Selected lexical-reference model: bodies remain nameful executable code;
+  `TERM([{:id}, {name}], E) -> lookup(E, name)` on executable demand. Raw syntax
+  remains nameful data. Function closure stores raw body, binder names, and opaque
+  defining E; call extends E with eager argument values.
+- Resolved `LOCAL` IR is rejected for v0 semantics. It may later be a private cache
+  optimization only if it preserves this nameful TERM behavior.
+- `TERM(APPLY(f, x), E)` evaluates `TERM(f, E)` with pending `TERM(x, E)`.
+- When delta accepts pending `TERM(arg, Ecaller)`, it stores that TERM unchanged;
+  the argument retains caller environment. Delta application does not force it.
+- Triage rule 1 discards its applied argument. It returns selected branch `x` under
+  callee E unless `x` is already a TERM carrying its own environment.
+- Triage rule 2 threads environments: branches `x` and `y` retain callee E; both
+  duplicated uses of `z` retain the same immutable caller TERM environment.
+- Triage rule 3 obtains argument triage view through TERM. Calee branches retain
+  callee E; stem/fork children selected from argument retain argument E.
+- Lists are proper L0 structure and do not evaluate their elements. An open list
+  returns as TERM/list with its lexical environment retained.
+- Semantic TERM association is objective. CESK may thread E without allocating a
+  wrapper while descending, but allocates/preserves TERM on return, structural
+  storage, pending argument, or continuation/frame crossing.
 
