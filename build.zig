@@ -71,6 +71,7 @@ const TestSuite = struct {
 
     fn addTest(self: *TestSuite, name: str, lib: *std.Build.Step.Compile) !struct { *std.Build.Step.Run, *std.Build.Step.Compile } {
         const compile_tests = try self.makeTest(try std.fmt.allocPrint(self.b.allocator, "test_{s}", .{name}), lib);
+        self.b.installArtifact(compile_tests);
         const run_tests = self.b.addRunArtifact(compile_tests);
         self.b.step(
             try std.fmt.allocPrint(self.b.allocator, "test-{s}", .{name}),

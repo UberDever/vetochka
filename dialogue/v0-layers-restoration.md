@@ -457,6 +457,44 @@ Open:
 - Path byte interpretation and authority boundary for `load_file`.
 - Concrete term representation for parsed normalized terms.
 
+## Layer 5 entry point — 2026-07-10/11
+
+**Question**
+
+```text
+What is the smallest Layer 5 machine that implements settled Layers 0–4?
+```
+
+L0–L4 deliberately stop before executable application semantics. L5 was opened
+because it alone must say what happens when an activated `APPLY` reaches delta,
+function, opcode, identifier, or other runtime family.
+
+**Initial constraints**
+
+- Machine owns executable application dispatch; L0 triage is only delta case.
+- Keep no store/boxes for first machine; preserve proper tail calls.
+- Prefer small CESK/CEK-like control with callee-first pending arguments.
+- `$` (then provisional `do!`) is source/executable-position protocol, not a
+  dedicated runtime syntax node.
+- Opcode identity is state, not a per-family cell tag.
+- Current `OP_FN*` cells are historical implementation artifacts.
+
+**Initial open cruxes**
+
+Function/opcode runtime representation; partial application; lexical binding;
+strictness/forcing; machine registers/continuations; under/exact/overapplication;
+effect order; tail calls; and body/block sequencing.
+
+**What changed during this session**
+
+- `TERM(root,E)` replaced close-copy lexical bodies.
+- Model B nameful `ID` plus captured persistent E replaced semantic `LOCAL`.
+- `$` replaced `do!`; `$f`, `$fn`, `$load_file`, `$parse_term`, and `to:` were
+  introduced/settled in part.
+- Generic `OPCODE(state, inputs; private)` replaced old `OP_FN0/1/2` design.
+- Early "opcode is a stem; saturation is unobservable" projection is no longer
+  sufficient: triage lenses now reopen the runtime-to-calculus boundary.
+
 ## Working v0 opcode state tree — 2026-07-11
 
 This is the authoritative working shape. `Open` is deliberately unspecified.
@@ -518,17 +556,18 @@ Notes:
 ## Working v0 evaluation rules — 2026-07-11
 
 This section is the concise authoritative record for the ongoing eagerness/CESK
-pass. It supersedes conflicting earlier exploratory wording. The lexical-reference
-model remains open; see `dialogue/lexical-reference-models.md`.
+pass. It supersedes conflicting earlier exploratory wording. Model B nameful TERM
+lexical semantics is accepted; see `dialogue/lexical-reference-models.md`.
 
 - A closure retains body plus opaque lexical capture. Function call runs body as
   `TERM(body, Ecall)`; it does not close-copy the whole body.
 - `TERM(root, E)` is a real runtime family with opaque `E`. It is transparent to
   structural observation: selected delta branches retain the same `E`.
 - Selected lexical-reference model: bodies remain nameful executable code;
-  `TERM([{:id}, {name}], E) -> lookup(E, name)` on executable demand. Raw syntax
-  remains nameful data. Function closure stores raw body, binder names, and opaque
-  defining E; call extends E with eager argument values.
+  `TERM(ID(name), E) -> lookup(E, name)` when its active lens treats ID as
+  executable usage. Raw syntax remains nameful data. Function closure stores raw
+  body, binder names, and opaque defining E; call extends E with eager argument
+  values.
 - Resolved `LOCAL` IR is rejected for v0 semantics. It may later be a private cache
   optimization only if it preserves this nameful TERM behavior.
 - `TERM(APPLY(f, x), E)` evaluates `TERM(f, E)` with pending `TERM(x, E)`.
@@ -545,4 +584,113 @@ model remains open; see `dialogue/lexical-reference-models.md`.
 - Semantic TERM association is objective. CESK may thread E without allocating a
   wrapper while descending, but allocates/preserves TERM on return, structural
   storage, pending argument, or continuation/frame crossing.
+- Opcode operands are curried one at a time. Each state receives one raw TERM; when
+  that state saturates, it may demand accumulated operands and dispatch next curried
+  state or final result. This is not multi-field/batch application. Labels remain
+  encoded term structure; lenses recognize and direct their traversal. CESK has no
+  separate label-metadata state.
+- Terms are application-first: `^ ^ ^` means `((^ ^) ^)`, not a ready source fork.
+  Rule 0a/0b make it reduction-equivalent to leaf/stem/fork storage. `$f`/`$fn`
+  likewise remain application chains until active demand evaluates them.
+- Triage view is an internal L5 matching operation only for Rules 0a–3c. Every
+  cell/runtime family must declare its root view; it is not a user-visible generic
+  reflection API. Root view returns only `Leaf`, `Stem(child)`, or
+  `Fork(left,right)`. Rule 3 remains language-level structural observation and does
+  not force APPly reduction. Pure delta triage view recognizes application spines
+  `APPLY(^,u)` as stem and `APPLY(APPLY(^,u),v)` as fork; an arbitrary APPly chain
+  is not automatically a fork.
+- REF is implicitly dereferenced before triage and is absent from triage semantics.
+  ID resolves through captured TERM environment when the active lens traverses it as
+  executable usage, including usage triage. A construction/declaration lens may
+  preserve its syntax instead; `$f` binder traversal is the motivating case.
+- Labels remain encoded term structure (current encoder uses `:label` tagged trees).
+  Lenses recognize and direct their traversal. CESK has no separate label-metadata
+  state.
+- Postponed: traversal/provenance of triage-view children. An OPCODE public view may
+  be list-like, but raw selected children would lose opcode/private-state provenance
+  over later reductions; define this before exposing multi-step node-content view.
+
+## Current structural baseline — 2026-07-11
+
+**Decisions**
+
+```text
+L2 label AST -> encoded label term -> L5 lens traversal
+```
+
+There is no CESK label side channel. In the current encoder a label is a tagged
+DELTA tree; a future cell ABI may change its storage but must preserve term-level
+label data unless a later decision supersedes this.
+
+```text
+APPLY is application syntax/storage.
+```
+
+In executable control, `TERM(APPLY(f,x),E)` evaluates the callee first and retains
+`TERM(x,E)` pending. Rule 3 does not execute that pending application. Pure triage
+recognizes only delta-headed application spines as leaf/stem/fork:
+`DELTA0`, `APPLY(DELTA0,u)`, and `APPLY(APPLY(DELTA0,u),v)`. When Rule 3 shape demand sees
+top-level `APPLY`, L5 schedules it and retains a Rule-3 continuation; it does not
+classify it by generic storage arity. ~~Pure L0 cell representation also has scoped
+`≡₀` congruence.~~ Superseded: all semantics, including Rules 0a/0b, are expressed
+as explicit transitions; any pure observational equivalence is a later derived
+property, not a semantic primitive.
+
+```text
+lens is the added CESK traversal state.
+```
+
+A lens supplies current triage view and controls syntax-like versus eager-like
+traversal. Runtime implementation may use a lens stack, but an escaped child must
+retain sufficient provenance to resume its correct view. Exact lens composition and
+OPCODE/closure projections remain open.
+
+**Open immediate task**
+
+Define, using strict cell constructors and grouping, the `$`/OPCODE lens for a raw
+`APPLY` spine containing encoded `:label` terms. It must explain Rule 3 inspection
+without executing the `$` chain, and preserve child provenance over later traversal.
+
+## L5 partial spec record — 2026-07-11
+
+Recorded settled L5 substrate in `docs/spec/03_v0.md` under **L5 Execution machine**
+and added it to the contents. The spec uses the agreed hybrid: L0 term rewriting and
+L5 small-step CESK-style transitions. Added environment-threaded delta/TERM/ID `RUN`/`RETURN`/`SHAPE` transition catalogue,
+including `ARG`, `R3`, `RESHAPE`, `RESTORE`, and `RESTORE-SHAPE` continuations.
+TERM installs E in machine state; structural results reify one root TERM only at
+restoration boundary, while SHAPE captures selected children. The runtime-family
+catalogue remains open; its previous `≡₀` proposal is superseded
+by explicit operational transitions. It records callee-first pending application,
+TERM/Model B lexical semantics, non-forcing Rule 3, pure delta application-spine
+triage, REF transparency, generic OPCODE, labels as term data, and settled `$`/
+`to:` surface protocol. It deliberately leaves configuration grammar, lenses,
+normal-form stopping, exact opcode traversal, and unfinished function protocols
+open.
+
+## Active settlement TODO — 2026-07-11
+
+1. `to:` application: replace postfix calls for `$f`, `$fn`, and suitable v0
+   callables; define normalization, curried saturation, eligible states, argument
+   ordering, repeated `to:`, and overapplication.
+2. Runtime families: settle ID, TERM, OPCODE, and closure public/private semantics,
+   including triage lenses: root demand, root shape, child mapping, application
+   interception, and escape/provenance.
+3. Normal form/demand: define v0 values, active APPLY, and L5 relation to unchanged
+   L0 triage/branch-first strategy.
+4. Dynamic tree construction: settle strict `$cons: el to: list`, ID/label builders,
+   and generated-code routing through `$`.
+5. Finish `$f`/`$fn`: parameter binding, body execution, block sequencing, `with:`.
+
+## `to:` application — 2026-07-11
+
+Decision:
+- `to:` is ordinary labeled-argument syntax; parser gives it no universal call
+  semantics.
+- v0 runtime states choose whether it is accepted. `$f`/`$fn` closure values consume
+  it as their call operand after constructor dispatch; `$cons` will consume it as its
+  second construction operand.
+- Postfix parenthesized calls have no v0 function-call semantics. Shared parser may
+  retain them for vf.
+- `$f`/`$fn` closure values accept only `[:label, {to}, argument]` as call operand;
+  another label or positional operand hard-traps.
 
