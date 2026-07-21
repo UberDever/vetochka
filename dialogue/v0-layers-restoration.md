@@ -656,9 +656,11 @@ without executing the `$` chain, and preserve child provenance over later traver
 Recorded settled L5 substrate in `docs/spec/03_v0.md` under **L5 Execution machine**
 and added it to the contents. The spec uses the agreed hybrid: L0 term rewriting and
 L5 small-step CESK-style transitions. Added environment-threaded delta/TERM/ID `RUN`/`RETURN`/`SHAPE` transition catalogue,
-including `ARG`, `R3`, `RESHAPE`, `RESTORE`, and `RESTORE-SHAPE` continuations.
-TERM installs E in machine state; structural results reify one root TERM only at
-restoration boundary, while SHAPE captures selected children. The runtime-family
+including `ARG`, `R3`, `RESHAPE`, and `RESTORE` continuations.
+All transitions now use effect-labelled form `⟨C,E,K⟩ -> ⟨C',E',K'⟩ : ε`; current
+rules emit `τ` or terminal `trap(diagnostic)`, while future host actions use
+`host(operation,input,output)`. TERM installs E in machine state; structural results
+reify one root TERM only at restoration boundary, while SHAPE captures selected children. The runtime-family
 catalogue remains open; its previous `≡₀` proposal is superseded
 by explicit operational transitions. It records callee-first pending application,
 TERM/Model B lexical semantics, non-forcing Rule 3, pure delta application-spine
@@ -667,6 +669,76 @@ triage, REF transparency, generic OPCODE, labels as term data, and settled `$`/
 normal-form stopping, exact opcode traversal, and unfinished function protocols
 open.
 
+## Continuation after operational triage pass — 2026-07-11
+
+**Settled today**
+
+- L5 is specified by explicit small-step transitions, not representation equivalence.
+  `≡₀` was superseded; Rules 0a/0b remain operational transitions.
+- Pure triage machine configuration is now
+  `⟨RUN|SHAPE|RETURN|SHAPE-RETURN, E, continuation⟩`.
+- Its rule catalogue includes delta Rules 0a/0b/1/2/3, callee-first `RUN-APPLY`,
+  Rule-3 shape demand/resumption, TERM entry/restoration, and executable ID lookup.
+- `E` is active machine state. Entering TERM installs it. A structural delta result
+  that crosses its restore boundary gets one root TERM association; SHAPE attaches
+  TERM only to selected structural children.
+- Current C reducer regression identified: commit `e0b7b3f` changed explicit
+  delta/value type whitelists to generic `cells_node_type_get_arity`, causing Rule 3
+  to treat APPLY as fork. A TODO now marks this in `reducer/reducer_reducer.c`.
+- Intended Rule 3 behavior for top-level APPLY is schedule application, retain
+  `RESHAPE`/Rule-3 continuation, and resume on result; never classify by storage
+  arity.
+
+**Resume order**
+
+1. Review the new TERM/restore transition table for semantic mistakes before adding
+   more families.
+2. Add explicit RUN/SHAPE rules for REF, then VALUEF/V leaf/stem/fork behavior.
+3. Add SHAPE-ID plus unbound-ID trap; declaration treatment remains opcode-specific.
+4. Specify closure and generic OPCODE execution/shape rules, then strict `$` lens
+   over encoded `:label` application terms.
+5. Finish `$f`/`$fn`, `to:` ordering/overapplication, `$cons`, code builders, and
+   normal-form stopping rule.
+
+## LENS continuation — 2026-07-11
+
+**Decision**
+
+`LENS` is implementation-defined and unforgeable. It has no source constructor and
+is not a callable. The only way to materialize a LENS is for Rule 3 shape demand to
+inspect a non-delta term.
+
+```text
+RUN(LENS(...)) -> strict error
+```
+
+**Proposed role**
+
+A LENS carries the state/provenance needed to inspect a runtime term as a calculus
+leaf, stem, or fork. Derived lenses must survive structural storage by Rules 0/1,
+duplication by Rule 2, and capture/transport through `$f`; this replaces an ambient
+or losable inspection stack.
+
+Every non-delta runtime family that can reach Rule 3 requires a corresponding LENS
+interpretation or an explicit error. Candidate: bytes/string lens exposes a
+Tree-Book-style character-list encoding. Lenses themselves have no recursively
+inspectable lens.
+
+**L5 rule progress**
+
+Added generic `SHAPE-MATERIALIZE-LENS`, `SHAPE-NO-LENS`, and
+`SHAPE-LENS-LEAF/STEM/FORK` rules to the L5 catalogue. Direct delta, APPLY, and
+already-LENS cases are disjoint from materialization. `RUN(LENS(...))` hard-traps.
+Family-specific `lens-initial`/`lens-view` definitions remain open.
+
+**Runtime ABI/object-system direction — open**
+
+Runtime terms should use binary fixed-buffer or variable-length cell ABI, rather
+than encode their private state in ordinary delta/tag trees. LENS defines their
+stable calculus-facing inspection projection. Consolidate primitives, callables,
+closures, and opcodes into one systematic runtime-object taxonomy; specifically
+settle whether a closure is an opcode kind or distinct runtime family.
+
 ## Active settlement TODO — 2026-07-11
 
 1. `to:` application: replace postfix calls for `$f`, `$fn`, and suitable v0
@@ -674,7 +746,9 @@ open.
    ordering, repeated `to:`, and overapplication.
 2. Runtime families: settle ID, TERM, OPCODE, and closure public/private semantics,
    including triage lenses: root demand, root shape, child mapping, application
-   interception, and escape/provenance.
+   interception, and escape/provenance. Define a systematic runtime-object taxonomy
+   and ABI: primitives, callables, closures, and opcodes; decide whether closure is
+   an opcode kind or separate family.
 3. Normal form/demand: define v0 values, active APPLY, and L5 relation to unchanged
    L0 triage/branch-first strategy.
 4. Dynamic tree construction: settle strict `$cons: el to: list`, ID/label builders,
