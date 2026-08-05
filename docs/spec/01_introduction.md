@@ -1,4 +1,6 @@
-# Introduction
+# Vetochka foundation
+
+## Motivation
 
 Yes, this is an another language. My goals for creation of the new language are simple:
 I want to make **my** language, as I understand the PLD currently and I want to improve my PLD skills.
@@ -42,3 +44,62 @@ try to create such and extension to fix some `C++` issues, that are present from
 That said, we need some sort of `Typescript` for `C` and when (or if) it will be created,
 many system programming concerns would become simpler. For the meantime, as `C` is still
 around (and would be), I'm tinkering around with the concept of macro language.
+
+## Tree calculus foundation
+
+### Spec
+
+Tree calculus is Vetochka foundation.
+
+Terms are built from:
+
+- `^` — the single primitive value;
+- binary application.
+
+In these rules, `$` marks binary application.
+
+The three observable shapes are:
+
+```text
+leaf: ^
+stem: ^ x
+fork: ^ x y
+```
+
+Reduction rules:
+
+```text
+0a. ^ $ x                  -> ^ x
+0b. ^ x $ y                -> ^ x y
+1.  ^ ^ x $ y              -> x
+2.  ^ (^ x) y $ z          -> (x z) (y z)
+3a. ^ (^ w x) y $ ^        -> w
+3b. ^ (^ w x) y $ (^ u)    -> x u
+3c. ^ (^ w x) y $ (^ u v)  -> y u v
+```
+
+This calculus has no literals, names, cells, opcodes, machine state, effects,
+environments, modules, or execution policy beyond its reduction relation.
+
+### Rationale
+
+Tree calculus gives Vetochka reflective foundation: rule 3 branches on the shape of
+a value. Higher layers may add practical representation and execution machinery,
+but they must not change these rules for the delta/triage case.
+
+### Open
+
+None for the current v0 spec.
+
+### Notes
+
+- `$` is explanatory notation for this section only.
+- Surface/calculus text is application-first: `^ ^ ^` means `((^ ^) ^)`. Leaf,
+  stem, and fork are reduction/storage shapes reached through Rules 0a/0b, not
+  separate source constructors.
+- Proper lists are a higher-layer convention encoded with right-nested forks:
+  `[x, y, z] == ^ x (^ y (^ z ^))`, `[] == ^`.
+- Confluence/order-independence is relied on only in the pure Layer 0 setting.
+  Once effects or host operations exist, Layer 5 must define observable order.
+- Older notes sometimes describe literals or opcodes as leaf/stem/fork-shaped.
+  That is a higher-layer compatibility claim, not Layer 0 vocabulary.

@@ -1,11 +1,4 @@
-# Vetochka concrete syntax
-
-Status: draft shared syntax specification, recomposed 2026-07-11.
-
-This document specifies syntax shared by all Vetochka languages. It specifies
-parsing and normalization only; it does not assign runtime meaning. `03_v0.md`
-says which forms v0 admits. `04_vf.md` says which additional forms vf languages
-may interpret.
+# Vetochka shared syntax and cells
 
 ## Source text and trivia
 
@@ -120,25 +113,17 @@ comma_list ::= expression ("," expression)* ","?
 A bare `do ... end` is block argument syntax. `do:` and `end:` are also allowed as labels.
 `$` participates in postfix application exactly as an identifier callee would; it is only lexically special.
 
-## Form ownership
+## v0 admission
 
-All forms above are parsed by shared syntax. Language documents assign admission
-and meaning:
+All shared forms parse into inert cell data. `03_v0.md` assigns v0 execution meaning
+only to its stated forms; other forms remain data for vf or user protocols. Parsing
+does not execute, resolve names, or create runtime bindings. Spans/locations are
+diagnostic metadata, not syntax meaning.
 
-| Form | v0 | vf |
-|---|---|---|
-| literals, identifiers, `$`, grouping, lists, `(...)` calls, labels, `do ... end` blocks | admitted | inherited |
-| annotations, selectors, bracket calls, byte calls, prefix, infix | not admitted | may be interpreted |
+## Parsed cells
 
-Parser recognition does not itself assign runtime meaning.
-
-## Normalization
-
-Parsing produces inert normalized term data. No language-level quote operation is
-involved.
-
-Application uses `{@}` as normalized-term marker. It is byte data in a normalized
-term; it does not conflict with source annotation punctuation `@[`.
+`{@}` marks application cell data. It does not conflict with source annotation
+punctuation `@[`.
 
 ```text
 x                   -> [{:id}, {x}]
@@ -156,17 +141,65 @@ x op y op z         -> [{:infix}, {op}, x, y, z]
 base.name           -> [{:selector}, base, {name}]
 ```
 
-Ordinary list syntax always desugars to proper lists. A language needing a special
-source-level list form must introduce an explicit tag for that form.
-
-A labeled argument lowers to generic tagged data: `name: expr` becomes
-`[{:label}, {name}, expr]`.
-
-`{@}` normalizes to Layer 1 `APPLY` structure when the term is encoded. Source tags
-are inert data until some language protocol interprets them.
+List syntax encodes proper lists; it has no list tag. `{@}` encodes Layer 1 `APPLY`.
+Source tags remain inert cell data.
 
 ## Open
 
 - Exact parse-diagnostic term shape.
-- Exact grammar for special source-level list forms, if one is ever needed.
 - Future literal extensions require explicit cross-layer specification.
+
+## Cells
+
+Cells store compact tree-shaped data.
+
+A cell root denotes a stored node graph. Nodes are typed and have storage arity:
+
+```text
+arity 0: node with no children
+arity 1: node with one child
+arity 2: node with two children
+```
+
+Leaf/stem/fork are Layer 0 triage shapes. Layer 1 arity is storage structure.
+Only `DELTA0/1/2` directly represent those triage shapes.
+
+Cells are inert. Storing a node never evaluates it, dispatches it, performs an
+effect, or resolves a name. Evaluation belongs to later layers.
+
+Cells use a portable binary ABI. Registry: [Runtime cell node type
+registry](03_v0.md#runtime-cell-node-type-registry).
+
+### Rationale
+
+v0 needs a concrete representation that preserves tree shape and remains
+inspectable. Separating cells from evaluation prevents old designs from smuggling
+machine behavior into storage.
+
+`APPLY` is a separate node because application structure must survive as data.
+Encoding application only by adjacency or stack scheduling loses homoiconic
+structure needed by runtime work.
+
+### Open
+
+- Exact direct node families and wire tags for concrete opcode states, TERM, and
+  other runtime nodes. They are real node families, not payload encodings hidden
+  inside `VALUE*`.
+- Exact stable public cell structure and Rule 3 shape projection for each opcode
+  state. Private opcode state must stay unforgeable.
+- Canonical text serialization for cells. Current code can format parsed source
+  trees canonically and can encode source trees into cells; it does not yet define
+  a canonical cell-to-text format.
+
+### Notes
+
+- Current C code exposes `CELLS_NODE_TYPE_ITEMS` in `reducer/cells_api.h` with
+  `DELTA*`, `VALUEF*`, `VALUEV*`, `APPLY`, old `OP_FN*`, and `REF`. The matching
+  wire ABI lives in `reducer/cells_impl.h` / `reducer/cells_cells.c`.
+- Current C code still contains `OP_FN0/1/2`; they are historical implementation
+  artifacts for an older function opcode experiment, not part of this spec.
+- Historical hint, 2026-02-04: earlier notes tried to make every node uniformly
+  leaf/stem/fork-shaped and inspectable via `get_type` / `get_payload`. Current
+  spec keeps the useful storage idea but does not decide runtime inspection here.
+- Historical hint, 2026-02-09: earlier notes explored compact byte tags and
+  variable-width refs. Current spec leaves exact wire encoding open.

@@ -735,9 +735,19 @@ Family-specific `lens-initial`/`lens-view` definitions remain open.
 
 Runtime terms should use binary fixed-buffer or variable-length cell ABI, rather
 than encode their private state in ordinary delta/tag trees. LENS defines their
-stable calculus-facing inspection projection. Consolidate primitives, callables,
-closures, and opcodes into one systematic runtime-object taxonomy; specifically
-settle whether a closure is an opcode kind or distinct runtime family.
+stable calculus-facing inspection projection. Core v0 uses **one cell node type per
+runtime state**, not generic core opcode/state-ID payload. `NS1`–`NS4` reserve all
+future extension states, including auxiliary/lens states. None has a current payload
+schema or semantics. Allocate cell encoding codes after state names stabilize.
+
+Describe each state uniformly in an ABI registry:
+`wire tag | state name | binary layout | lens constructor | CEK rule references`.
+The registry must reference, not restate, CEK transitions/effects/traps. Added the
+initial registry to `docs/spec/03_v0.md`, including current delta/value/APPLY/REF
+node types, planned ID/TERM/LENS and current `$` state names, plus NS1–NS4.
+Consolidate primitives, callables, closures, and opcodes into one systematic
+runtime-object taxonomy; specifically settle whether a closure is an opcode kind or
+distinct runtime family.
 
 ## Active settlement TODO — 2026-07-11
 
