@@ -31,7 +31,7 @@ literal         ::= string_literal | integer_literal
 identifier ::= identifier_start identifier_continue*
 identifier_start ::= [a-zA-Z_]
 identifier_continue ::= [a-zA-Z0-9_]
-  | "?" | "+" | "-" | "*" | "/" | "%" | "<" | ">"
+  | "?" | "'" | "+" | "-" | "*" | "/" | "%" | "<" | ">"
   | "!" | "&"
 
 special_dollar ::= "$"
