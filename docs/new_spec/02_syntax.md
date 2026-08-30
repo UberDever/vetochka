@@ -31,8 +31,8 @@ literal         ::= string_literal | integer_literal
 identifier ::= identifier_start identifier_continue*
 identifier_start ::= [a-zA-Z_]
 identifier_continue ::= [a-zA-Z0-9_]
-  | "?" | "=" | "+" | "-" | "*" | "/" | "%" | "<" | ">"
-  | "!" | "&" | "|"
+  | "?" | "+" | "-" | "*" | "/" | "%" | "<" | ">"
+  | "!" | "&"
 
 special_dollar ::= "$"
 special_tilde  ::= "~"
@@ -42,14 +42,19 @@ operator_char ::= "=" | "+" | "-" | "*" | "/" | "%" | "<" | ">"
                 | "!" | "&" | "|" | ":"
 ```
 
-`do` and `end` are reserved block words. `$` is a distinct special token, a quasiidentifier. It can be considered a single built-in identifier across the whole system. `~` is a distinct special token, the nyad sigil; it is not an operator and heads only the nyad form below. A lone `:` is punctuation, not an operator; multi-character operators may contain `:` (e.g. `::`).
+`do` and `end` are reserved block words. `$` and `~` are special tokens; each heads only its grammar form. A lone `:` is punctuation, not an operator; operators may contain `:` (e.g. `::`).
 
 An operator run is classified by adjacency; trivia breaks gluing:
 
-1. glued to a preceding identifier: continues that identifier;
-2. glued to a preceding literal, `)`, or `]`: syntax error;
-3. otherwise, glued to its right neighbor: `op_prefix`;
-4. otherwise: `op_infix`.
+1. glued to a preceding identifier, literal, `)`, or `]`: syntax error;
+2. otherwise, glued to its right neighbor: `op_prefix`;
+3. otherwise: `op_infix`.
+
+Delimiters split the same way, glued or free. Glued means stuck to the end of an expression (see ASI list):
+
+1. glued `(`, `[`, string: postfix `g_lparen` / `g_lbracket` / `g_string`; free: a primary;
+2. glued `.`: `g_dot`; free `.`: error;
+3. lone `:` stuck to a label word: `g_colon`; free lone `:`: error.
 
 `balanced_utf8_bytes` permits balanced braces without escape syntax. The exact
 scanner algorithm is implementation detail.
@@ -64,9 +69,9 @@ A physical newline becomes virtual `;` iff:
 
 Layout-active contexts: source and bare `do ... end` blocks.
 
-Layout-inactive contexts: `(...)`, `[...]`, `@[...]`, `~[...]`.
+Layout-inactive contexts: `(...)`, `[...]`, `@[...]`.
 
-Expression-ending tokens: literal, identifier, `$`, `)`, `]`, `end`.
+Expression-ending tokens: literal, identifier, `)`, `]`, `end`.
 
 After insertion, virtual and written semicolons parse identically.
 
@@ -86,23 +91,25 @@ postfix_expression ::= primary tight_postfix* loose_postfix*
 
 primary ::= literal
           | identifier
-          | special_dollar
           | nyad
+          | opcode
           | "[" comma_list? "]"
-          | "(" expression ")"
+          | "(" entry ")"
 
 nyad ::= "~" "[" ( expression ( "," expression )? )? "]"
 
-tight_postfix ::= "." identifier
-                | "(" comma_list? ")"
-                | "[" comma_list? "]"
-                | string_literal
+opcode ::= special_dollar ( g_lbracket comma_list "]" | labeled_expression )
 
-loose_postfix ::= block_argument | labeled_argument
+tight_postfix ::= g_dot identifier
+                | g_lparen comma_list? ")"
+                | g_lbracket comma_list? "]"
+                | g_string
+
+loose_postfix ::= block_argument | labeled_expression
 
 block_argument ::= "do" block_list? "end"
 
-labeled_argument ::= label ":" argument_expression
+labeled_expression ::= label g_colon argument_expression
 label ::= identifier | "do" | "end"
 
 argument_expression ::= annotation? infix_expression_tight
@@ -111,35 +118,35 @@ infix_expression_tight ::= prefix_expression_tight
 prefix_expression_tight ::= op_prefix* postfix_expression_tight
 postfix_expression_tight ::= primary tight_postfix*
 
-block_list ::= expression (";" expression)* ";"?
-comma_list ::= expression ("," expression)* ","?
+entry ::= labeled_expression | block_argument | expression
+
+block_list ::= entry (";" entry)* ";"?
+comma_list ::= entry ("," entry)* ","?
 ```
 
 `f()` is equivalent to `f(~[])`.
 
-A bare `do ... end` is block argument syntax. `do:` and `end:` are also allowed as labels.
+`do:` and `end:` are also allowed as labels.
 
-`$` participates in postfix application exactly as an identifier callee would; it is only lexically special.
+Spacing before a loose postfix is immaterial (`$fn:` and `$ fn:` are the same). A labeled expression's payload is tight; nesting requires parens: `x: (y: 1)`.
 
-`~` sigil is used to encode exact stem or fork and avoid unnecessary application. `~[](x)` is three nodes: application with lhs `~[]` and rhs `x`; `~[x]` is two nodes with `~[]` nyad root and `x` lhs. Hence, `~[]` is a leaf, `~[x]` an exact stem, `~[x, y]` an exact fork; `~[x, y, z]` is a syntax error.
+`~[]` is a leaf, `~[x]` an exact stem, `~[x, y]` an exact fork; `~[x, y, z]` is a syntax error.
 
 # Intensionality
 
 ## Rewrite rules
 
-To support intensionality, syntax above is lowered into simpler terms, representable by the same syntax. But there's a single
-exception.
-`{@}` marks application and isn't part of the syntax. They are shown simply to clarify how these nodes would be translated to cells later.
-In the current notation they can be considered strict binary nodes with positional application, i.e. `f(x) -> {@} f x`.
+To support intensionality, syntax above is lowered into simpler terms, representable by the same syntax — with one
+exception: `{@}` marks application and isn't part of the syntax, only notation for the cells to come: `f(x) -> {@} f x`.
 
 ```text
 1. x                    -> [{:id}, {x}]
-2. $                    -> [{:id}, {$}]
-3. [x, y]               -> ~[ [{:id}, {x}], ~[ [{:id}, {y}], ~[] ] ]
-4. (expr)               -> [{:group}, expr]
+2. $                    -> [{:id}, {$}]  ;; opcode head, never alone
+3. [a, b]               -> ~[a, ~[b, ~[]]]
+4. (entry)              -> entry  ;; parens are purely syntactic, erased
 5. f(x, y)              -> {@} ({@} f x) y
-6. f label: expr        -> {@} f [{:label}, {label}, expr]
-7. f do a; b end        -> {@} f [{:block}, a, b]
+6. label: expr          -> [{:label}, {label}, expr]
+7. do a; b end          -> [{:block}, a, b]
 8. @[a, b] expr         -> [{:annot}, ~[a, ~[b, ~[]]], expr]
 9. f[x, y]              -> {@} f ~[x, ~[y, ~[]]],
 10. f{bytes}            -> {@} f {bytes}
@@ -148,7 +155,7 @@ In the current notation they can be considered strict binary nodes with position
 13. base.name           -> [{:selector}, base, {name}]
 ```
 
-List syntax encodes proper lists, using simple lisp translation `[a, b, c] -> ~[a, ~[b, ~[c, ~[]]]]`.
+A loose postfix lowers as plain application of its datum: `f x: 1 -> {@} f [{:label}, {x}, 1]`.
 
 Note that the resulting tree is fully inert by itself, it isn't executed until it comes into executable position, see [v0
 execution rules](#v0-cesk).

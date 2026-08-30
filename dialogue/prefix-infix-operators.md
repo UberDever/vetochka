@@ -58,3 +58,21 @@ C1 accepted (2026-08-30). See `adr-1-operator-adjacency.md`. Applied to
 `docs/new_spec/02_syntax.md`: operator_run + 4-rule adjacency classification,
 `op_infix`/`op_prefix` terminals, closed `prefix_operator` list removed.
 Lexer cost: one-char peek, two branches, trivia breaks gluing.
+
+## Napkin desk-fuzz (post-decision case sweep)
+
+Confirmed: `x - y` infix; `x -y` error; `x-y` ident; `1-2`/`f(x)-y` error;
+`a - -b` ok; `- y` orphan error; ASI: `x`NL`-y` = prefix stmt, `x -`NL`y`
+continues infix (op can't end expression); `~[-x]`, `-~[]`, `f label: -y`,
+`f x: 1 + 2` all compose.
+
+Gaps found, need ruling:
+- G1: `:`-leading run glued after identifier (`x:: y`, `x:= 1`) — rule 1
+  cannot absorb (`:` not identifier_continue), rules 2-4 silent. Proposed:
+  error, lone-`:` label stays the only glued exception.
+- G2: spaced label colon `f x : y` — grammar doesn't forbid. Proposed: label
+  `:` must be glued.
+
+Observations: `x!= y` = ident `x!=` + `y` = error (infix needs both spaces);
+prefix binds whole loose-postfix chain (`-$fn: ... do ... end`); no operator
+sections — `(+)` is an error, operator-as-datum = `{+}` bytes or built term.
