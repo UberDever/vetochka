@@ -26,7 +26,7 @@ trivia       ::= trivia_no_nl | t_nl | line_comment | line_continue
 ```ebnf
 string_literal  ::= "{" balanced_utf8_bytes "}"
 integer_literal ::= [1-9][0-9]* | "0"
-delta_literal   ::= "^"
+delta_literal   ::= "^0"
 literal         ::= string_literal | integer_literal | delta_literal
 
 identifier ::= identifier_start identifier_continue*
@@ -113,15 +113,13 @@ block_list ::= expression (";" expression)* ";"?
 comma_list ::= expression ("," expression)* ","?
 ```
 
-`f()` is equivalent to `f(^)`.
+`f()` is equivalent to `f(^0)`.
 
 A bare `do ... end` is block argument syntax. `do:` and `end:` are also allowed as labels.
 
 `$` participates in postfix application exactly as an identifier callee would; it is only lexically special.
 
-Fixed arity `^1[x]` and `^2[x, y]` are used to encode exact stem or fork and avoid unnecessary application that would be introduced
-if the general delta literal is used. I.e. `^(x)` is really three nodes: application with lhs as `^` and rhs as `x`, when 
-`^1[x]` is just two nodes with `^` being the root and `x` being its lhs.
+Fixed arity `^1[x]` and `^2[x, y]` encode exact stem or fork and avoid unnecessary application. `^0(x)` is three nodes: application with lhs `^0` and rhs `x`; `^1[x]` is two nodes with `^1` root and `x` lhs.
 
 # Intensionality
 
@@ -135,20 +133,20 @@ In the current notation they can be considered strict binary nodes with position
 ```text
 1. x                    -> [{:id}, {x}]
 2. $                    -> [{:id}, {$}]
-3. [x, y]               -> ^2[ [{:id}, {x}], ^2[ [{:id}, {y}], ^ ] ]
+3. [x, y]               -> ^2[ [{:id}, {x}], ^2[ [{:id}, {y}], ^0 ] ]
 4. (expr)               -> [{:group}, expr]
 5. f(x, y)              -> {@} ({@} f x) y
 6. f label: expr        -> {@} f [{:label}, {label}, expr]
 7. f do a; b end        -> {@} f [{:block}, a, b]
-8. @[a, b] expr         -> [{:annot}, ^2[a, ^2[b, ^]], expr]
-9. f[x, y]              -> {@} f ^2[x, ^2[y, ^]],
+8. @[a, b] expr         -> [{:annot}, ^2[a, ^2[b, ^0]], expr]
+9. f[x, y]              -> {@} f ^2[x, ^2[y, ^0]],
 10. f{bytes}            -> {@} f {bytes}
 11. prefix-op expr      -> [{:prefix}, {op}, expr]
 12. x op y op z         -> [{:infix}, {op}, x, y, z]
 13. base.name           -> [{:selector}, base, {name}]
 ```
 
-List syntax encodes proper lists, using simple lisp translation `[a, b, c] -> ^2[a, ^2[b, ^2[c, ^]]]`.
+List syntax encodes proper lists, using simple lisp translation `[a, b, c] -> ^2[a, ^2[b, ^2[c, ^0]]]`.
 
 Note that the resulting tree is fully inert by itself, it isn't executed until it comes into executable position, see [v0
 execution rules](#v0-cesk).
@@ -168,13 +166,13 @@ could have any amount of children if proper list encoding is used.
 There are following node types:
 
 1. `delta0`
-    + Represents single `^` without children, a leaf
-    + Pith: `^`
+    + Represents `^0` without children, a leaf
+    + Pith: `^0`
 2. `delta1`
-    + Represents single `^` with a child, a stem
+    + Represents `^1` with a child, a stem
     + Pith: `^1[x]`
 3. `delta2`
-    + Represents single `^` with 2 children, a fork
+    + Represents `^2` with 2 children, a fork
     + Pith: `^2[x, y]`
 TODO: add more
     
