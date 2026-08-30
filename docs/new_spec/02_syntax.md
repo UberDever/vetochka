@@ -26,8 +26,7 @@ trivia       ::= trivia_no_nl | t_nl | line_comment | line_continue
 ```ebnf
 string_literal  ::= "{" balanced_utf8_bytes "}"
 integer_literal ::= [1-9][0-9]* | "0"
-delta_literal   ::= "^0"
-literal         ::= string_literal | integer_literal | delta_literal
+literal         ::= string_literal | integer_literal
 
 identifier ::= identifier_start identifier_continue*
 identifier_start ::= [a-zA-Z_]
@@ -36,15 +35,21 @@ identifier_continue ::= [a-zA-Z0-9_]
   | "!" | "&" | "|"
 
 special_dollar ::= "$"
+special_tilde  ::= "~"
 
-operator ::= operator_char+
+operator_run ::= operator_char+
 operator_char ::= "=" | "+" | "-" | "*" | "/" | "%" | "<" | ">"
                 | "!" | "&" | "|" | ":"
 ```
 
-`do` and `end` are reserved block words. `$` is a distinct special token, a quasiidentifier. It can be considered a single built-in identifier across the whole system. `:` by itself is punctuation, not an operator.
-Operators must be whitespace-separated; otherwise operator characters continue an
-identifier.
+`do` and `end` are reserved block words. `$` is a distinct special token, a quasiidentifier. It can be considered a single built-in identifier across the whole system. `~` is a distinct special token, the nyad sigil; it is not an operator and heads only the nyad form below. A lone `:` is punctuation, not an operator; multi-character operators may contain `:` (e.g. `::`).
+
+An operator run is classified by adjacency; trivia breaks gluing:
+
+1. glued to a preceding identifier: continues that identifier;
+2. glued to a preceding literal, `)`, or `]`: syntax error;
+3. otherwise, glued to its right neighbor: `op_prefix`;
+4. otherwise: `op_infix`.
 
 `balanced_utf8_bytes` permits balanced braces without escape syntax. The exact
 scanner algorithm is implementation detail.
@@ -59,7 +64,7 @@ A physical newline becomes virtual `;` iff:
 
 Layout-active contexts: source and bare `do ... end` blocks.
 
-Layout-inactive contexts: `(...)`, `[...]`, `@[...]`, `^1[]`, `^2[]`.
+Layout-inactive contexts: `(...)`, `[...]`, `@[...]`, `~[...]`.
 
 Expression-ending tokens: literal, identifier, `$`, `)`, `]`, `end`.
 
@@ -74,20 +79,19 @@ expression ::= annotation? infix_expression
 
 annotation ::= "@[" comma_list "]"
 
-infix_expression ::= prefix_expression (operator prefix_expression)*
-prefix_expression ::= prefix_operator* postfix_expression
+infix_expression ::= prefix_expression (op_infix prefix_expression)*
+prefix_expression ::= op_prefix* postfix_expression
 
 postfix_expression ::= primary tight_postfix* loose_postfix*
 
 primary ::= literal
           | identifier
           | special_dollar
-          | fixed_delta
+          | nyad
           | "[" comma_list? "]"
           | "(" expression ")"
 
-fixed_delta ::= "^1[" expression "]"
-                | "^2[" expression "," expression "]"
+nyad ::= "~" "[" ( expression ( "," expression )? )? "]"
 
 tight_postfix ::= "." identifier
                 | "(" comma_list? ")"
@@ -103,23 +107,21 @@ label ::= identifier | "do" | "end"
 
 argument_expression ::= annotation? infix_expression_tight
 infix_expression_tight ::= prefix_expression_tight
-                           (operator prefix_expression_tight)*
-prefix_expression_tight ::= prefix_operator* postfix_expression_tight
+                           (op_infix prefix_expression_tight)*
+prefix_expression_tight ::= op_prefix* postfix_expression_tight
 postfix_expression_tight ::= primary tight_postfix*
-
-prefix_operator ::= "!" | "-" | "~" | "*" | "&"
 
 block_list ::= expression (";" expression)* ";"?
 comma_list ::= expression ("," expression)* ","?
 ```
 
-`f()` is equivalent to `f(^0)`.
+`f()` is equivalent to `f(~[])`.
 
 A bare `do ... end` is block argument syntax. `do:` and `end:` are also allowed as labels.
 
 `$` participates in postfix application exactly as an identifier callee would; it is only lexically special.
 
-Fixed arity `^1[x]` and `^2[x, y]` encode exact stem or fork and avoid unnecessary application. `^0(x)` is three nodes: application with lhs `^0` and rhs `x`; `^1[x]` is two nodes with `^1` root and `x` lhs.
+`~` sigil is used to encode exact stem or fork and avoid unnecessary application. `~[](x)` is three nodes: application with lhs `~[]` and rhs `x`; `~[x]` is two nodes with `~[]` nyad root and `x` lhs. Hence, `~[]` is a leaf, `~[x]` an exact stem, `~[x, y]` an exact fork; `~[x, y, z]` is a syntax error.
 
 # Intensionality
 
@@ -133,20 +135,20 @@ In the current notation they can be considered strict binary nodes with position
 ```text
 1. x                    -> [{:id}, {x}]
 2. $                    -> [{:id}, {$}]
-3. [x, y]               -> ^2[ [{:id}, {x}], ^2[ [{:id}, {y}], ^0 ] ]
+3. [x, y]               -> ~[ [{:id}, {x}], ~[ [{:id}, {y}], ~[] ] ]
 4. (expr)               -> [{:group}, expr]
 5. f(x, y)              -> {@} ({@} f x) y
 6. f label: expr        -> {@} f [{:label}, {label}, expr]
 7. f do a; b end        -> {@} f [{:block}, a, b]
-8. @[a, b] expr         -> [{:annot}, ^2[a, ^2[b, ^0]], expr]
-9. f[x, y]              -> {@} f ^2[x, ^2[y, ^0]],
+8. @[a, b] expr         -> [{:annot}, ~[a, ~[b, ~[]]], expr]
+9. f[x, y]              -> {@} f ~[x, ~[y, ~[]]],
 10. f{bytes}            -> {@} f {bytes}
 11. prefix-op expr      -> [{:prefix}, {op}, expr]
-12. x op y op z         -> [{:infix}, {op}, x, y, z]
+12. x op y op z         -> [{:infix}, {op}, x, y, z]  ;; mixed operator chains are allowed; analyzed at vf stages
 13. base.name           -> [{:selector}, base, {name}]
 ```
 
-List syntax encodes proper lists, using simple lisp translation `[a, b, c] -> ^2[a, ^2[b, ^2[c, ^0]]]`.
+List syntax encodes proper lists, using simple lisp translation `[a, b, c] -> ~[a, ~[b, ~[c, ~[]]]]`.
 
 Note that the resulting tree is fully inert by itself, it isn't executed until it comes into executable position, see [v0
 execution rules](#v0-cesk).
@@ -165,15 +167,15 @@ could have any amount of children if proper list encoding is used.
 
 There are following node types:
 
-1. `delta0`
-    + Represents `^0` without children, a leaf
-    + Pith: `^0`
-2. `delta1`
-    + Represents `^1` with a child, a stem
-    + Pith: `^1[x]`
-3. `delta2`
-    + Represents `^2` with 2 children, a fork
-    + Pith: `^2[x, y]`
+1. `nyad0`
+    + Represents `~[]` without children, a leaf
+    + Pith: `~[]`
+2. `nyad1`
+    + Represents `~[x]` with a child, a stem
+    + Pith: `~[x]`
+3. `nyad2`
+    + Represents `~[x, y]` with 2 children, a fork
+    + Pith: `~[x, y]`
 TODO: add more
     
 
