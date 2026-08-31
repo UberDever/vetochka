@@ -98,7 +98,7 @@ primary ::= literal
 
 nyad ::= "~" "[" ( expression ( "," expression )? )? "]"
 
-opcode ::= special_dollar ( g_lbracket comma_list "]" | labeled_expression )
+opcode ::= special_dollar labeled_expression
 
 tight_postfix ::= g_dot identifier
                 | g_lparen comma_list? ")"

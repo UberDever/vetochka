@@ -110,3 +110,17 @@ Cost accepted: `x` NL `do a end` = two statements, not an error; user rule of
 thumb — to split intentionally write `do` NL `... end` or `if:` NL `do...end`.
 Note: `f do a end` and `f(do a end)` lower identically ({@} f block-datum);
 call parens are application, not a group, so no `[{:group}]` wrapper.
+
+## Standing candidate: paren-statements (2026-08-30, deferred to corpus)
+
+Proposal: `(a; b)` as statement sequence lowering to `[{:block}, ...]`, drop
+`do end`. Needs: layout-active parens; `(a)` group erased, `(a;)`/`(a; b)`
+block (trailing `;` disambiguates, mirrors trailing comma). Deletes: two
+reserved words, block_argument, layout special case. Loses: loose trailing
+block `f do ... end` (best DSL shape; application shapes 5 -> 4), `do:`/`end:`
+labels, vsystem imperative skin. Rule-count roughly unchanged.
+Ruling: deferred — bootstrap corpus in current grammar decides.
+
+Gluing question re-asked and held: R1 stays; spacious DSL heads use labels
+(`let x: 2 y: 4 in: (...)` is legal today), glued forms are the mechanical
+layer.
