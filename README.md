@@ -10,21 +10,22 @@ The research question is whether a small reflective term system can serve as bot
 
 # Why?
 
-I always struggled to keep my C consistent, since I'm a somewhat sloppy person.
-I know C guys develop their own style and hack stuff together, but I want to go to other
-direction -- invent a set of conventions (mainly for a particular project) that could be
-inforced by metaprogramming utility. At the same time, I realized that C would benefit from
+I always struggled to keep my C consistent, since I'm a somewhat a sloppy person.
+I know C guys develop their own style and hack stuff together, but I want to go to the other
+direction -- invent a set of conventions (mainly for a particular project) which could be
+enforced by the metaprogramming utility. At the same time, I realized that C would benefit from a
 new frontend that is explicitly designed for metaprogramming, analysis and flexibility.
+That's how this project's direction emerged.
 
 My goals:
-1. Keep C a usual boring explicit language 
-2. Soften it's edges, close the room for certain types of errors, make scaling less painful, make code more manageable and increase its analysis potential 
-3. Keep integration with existing C stuff: same compiler, same debugger, same ABI, just a different frontend 
-4. Research the space for metaprogramming via a niche calculus and imperative system's language 
+1. Keep C a usual boring explicit language
+2. Soften it's edges, close the room for certain types of errors, make scaling less painful, make code more manageable and increase its analysis potential
+3. Keep integration with existing C stuff: same compiler, same debugger, same ABI, just a different frontend
+4. Research the space for metaprogramming via a niche calculus and imperative system's language
 5. Write compiler and tooling code
 
 This is why there is a big project development log and little actual documentation. Below
-are main points that describe project development across years. 
+are main points that describe project development across years.
 
 1. I read original papers and made myself acquainted with the book and notation
     * sometime in winter 2024
