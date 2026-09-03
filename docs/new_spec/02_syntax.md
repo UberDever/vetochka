@@ -136,6 +136,8 @@ Spacing before a loose postfix is immaterial (`$fn:` and `$ fn:` are the same). 
 
 ## Rewrite rules
 
+TODO: metadata list after the node type: `[{node}, [version, line, file, ...], ...payload]`.
+
 To support intensionality, syntax above is lowered into simpler terms, representable by the same syntax — with one
 exception: `{@}` marks application and isn't part of the syntax, only notation for the cells to come: `f(x) -> {@} f x`.
 

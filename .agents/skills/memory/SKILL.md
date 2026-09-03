@@ -27,17 +27,22 @@ a disposable cache — never treat it as the data.
 
    ```markdown
    ## <topic> (HH:MM)
-   - Decision: <what was decided and why>
-   - Rejected: <alternatives and why not>
+   - Decision (user): <what was decided and why>
+   - Rejected (user+agent): <alternatives and why not>
    - Open: <questions left unresolved>
    ```
 
-2. Only durable knowledge: decisions, rationale, constraints discovered, gotchas.
+2. Mark provenance on every claim, as in the `dialogue` skill: `(user)` — the
+   user ruled or stated it; `(agent)` — assistant finding or proposal, not yet
+   ruled; `(user+agent)` — jointly developed and confirmed. Where it sharpens a
+   claim, also tag its kind: `[fact]`, `[assumption]`, `[preference]`,
+   `[direction]` (stated as a lean, not a hard ruling).
+3. Only durable knowledge: decisions, rationale, constraints discovered, gotchas.
    No play-by-play, no code listings (reference files/commits instead).
-3. Contradicts an earlier entry? Do not delete old one; mark it
+4. Contradicts an earlier entry? Do not delete old one; mark it
    `~~superseded~~ by <today's entry>` in place.
-4. Note is genuinely cross-project (would help in any repo)? Propose moving it to
+5. Note is genuinely cross-project (would help in any repo)? Propose moving it to
    the commons memory (`~/dev/agents/.memsearch/memory/`, indexed with
    `--collection commons`) instead, leaving a one-line pointer here. Ask first.
-5. Re-index: `memsearch index .memsearch/memory/`.
-6. Remind the user to commit the memory file with the related changes.
+6. Re-index: `memsearch index .memsearch/memory/`.
+7. Remind the user to commit the memory file with the related changes.

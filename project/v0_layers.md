@@ -1,6 +1,11 @@
 # v0 Layered Design (restated)
 
-Status: authoritative snapshot, updated 10.07.2026. Where this conflicts with
+Status: OBSOLETE where it contradicts `.memsearch/memory/2026-08-30.md` and
+`dialogue/binders.md` — notably: Layer 3 specialization (no specialize stage
+exists; names live to runtime, die by env lookup), `LOCAL`, the closed-term
+discipline, `do!`/`{fn}` spellings, and Layer 4 `{specialize}`.
+
+Previous status: authoritative snapshot, updated 10.07.2026. Where this conflicts with
 [`v0_cesk_draft.md`](../.memsearch/memory/v0_cesk_draft.md), this wins. Layer 5 not yet restated.
 Decision history lives in [project history](../.memsearch/memory/project_history.md).
 
