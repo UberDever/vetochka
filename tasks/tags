@@ -1,0 +1,14 @@
+epic, Groups related tasks; sub-items that are not tasks live in the epic's items.md
+encoding, Cell representation and byte encoding
+reducer, The C implementation in reducer/
+opcode, Opcode shape, tagging, natives
+syntax, Lexer, grammar, lowering, literals
+binders, Scopes, modules, let, binders, recursion
+machine, The v0 executing machine (CESK)
+host, Host rim, bootstrap, exec, host API
+framing, Motivation and target languages (vmeta, vsystem)
+spec, Tracked by a reference in docs/new_spec
+process, How the project itself is run
+experiment, Exploratory run; content is hypothesis, not ruling
+rejected, Closed because the idea was rejected
+log, Historical development log

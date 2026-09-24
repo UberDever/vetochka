@@ -1,11 +1,17 @@
+## Artifacts
+
+- Two kinds of artifacts. `docs/` holds user-facing docs: mostly correct, developed further.
+  `tasks/` holds everything about the development process, tracked with tatr (`tatr` skill).
+- Each task folder has `TASK.md` plus its artifacts: session notes, dialogues, drafts, experiments.
+  Epics are tagged `epic`; sub-items that are not tasks on their own go in the epic's `items.md`.
+- Docs and code reference tasks by ID instead of carrying TODOs.
+
 ## Memory discipline
 
-- Project memory lives in `.memsearch/memory/` (dated markdown, git-tracked).
-  Search it (`memsearch search "<query>"`) at the start of any design discussion or
-  when past decisions might be relevant. Treat memory as hint, not fact — verify
-  against real code before acting on remembered claims.
+- Search `tasks/` and `docs/` (`memsearch search "<query>"`) at the start of any design
+  discussion or when past decisions might be relevant. Treat results as hint, not fact —
+  verify against real code before acting on remembered claims.
 - At the end of substantive sessions, distill: append decisions made, alternatives
-  rejected (and why), and open questions to `.memsearch/memory/YYYY-MM-DD.md`,
-  then run `memsearch index .memsearch/memory/`. The `memory` skill has the exact
-  procedure.
-- Never delete memory entries; supersede them ("~~X~~ superseded by Y, see <date>").
+  rejected (and why), and open questions to a dated note in the task the session followed,
+  then run `memsearch index tasks/ docs/`.
+- Never delete entries; supersede them ("~~X~~ superseded by Y, see <date>").
