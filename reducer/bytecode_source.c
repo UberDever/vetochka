@@ -96,7 +96,7 @@ static size_t new_tagged(
   return new_node2(self, cells_new_delta2(), new_static_bytes(self, tag), result);
 }
 
-// TODO: abstract this later and use VM info for that
+// task 20260614-140231: abstract this later and use VM info for that
 static size_t new_op_fn(bytecode_source_encoder_t* self) {
   cells_node_type_t type = {.value = CELLS_NODE_TYPE_OP_FN0};
   return new_node0(self, cells_new_node(type));

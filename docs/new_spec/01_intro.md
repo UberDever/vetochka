@@ -43,6 +43,6 @@ Shoulders for this language:
 - ML
 - Scheme
 
-TODO: explain each and every one, make a source link, link each to a particular vetochka level
+[task 20260805-162237](../../tasks/20260805-162237/TASK.md): explain each and every one, make a source link, link each to a particular vetochka level
 
 \newpage

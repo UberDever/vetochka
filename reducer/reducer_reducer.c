@@ -232,7 +232,7 @@ error_t reducer_step(struct reducer_t* reducer) {
           err = cells_dereference_node(reducer->cells, &z_i, &z);
           ERR_CHECK("");
 
-          // TODO(v0-l5): This generic arity dispatch is semantically wrong for APPLY
+          // task 20260718-175927: This generic arity dispatch is semantically wrong for APPLY
           // and other non-delta cells. Rule 3 must request the argument's triage
           // view; if its top node is APPLY, CESK must evaluate it and resume Rule 3
           // through a continuation. Do not classify APPLY as a fork by storage arity.
