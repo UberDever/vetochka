@@ -20,7 +20,7 @@
 - [x] 20260215-122341 Lexer and parser for textual bytecode in the interpreter
 - [x] 20260215-122342 Bytecode dumping
 - [x] 20260216-130542 Application by cell adjacency
-- [ ] 20260217-074816 Understand the triage calculus before adding semantics
+- [x] 20260217-074816 Understand the triage calculus before adding semantics
 - [x] 20260614-121150 Revisit byte encoding
 - [ ] 20260614-140231 Abstract opcode node creation in the source encoder
 - [ ] 20260718-175927 Rule 3 dispatches on storage arity, wrong for APPLY
