@@ -15,3 +15,8 @@
   rejected (and why), and open questions to a dated note in the task the session followed,
   then run `memsearch index tasks/ docs/`.
 - Never delete entries; supersede them ("~~X~~ superseded by Y, see <date>").
+
+## Notation
+
+- Don't invent notation when an existing one suffices for the explanation. Use vf syntax
+  (the shared Vetochka syntax in `docs/new_spec/02_syntax.md`) generally, including lowered terms.
