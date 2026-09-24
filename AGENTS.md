@@ -5,6 +5,8 @@
 - Each task folder has `TASK.md` plus its artifacts: session notes, dialogues, drafts, experiments.
   Epics are tagged `epic`; sub-items that are not tasks on their own go in the epic's `items.md`.
 - Docs and code reference tasks by ID instead of carrying TODOs.
+- A task belongs to the epic of the concept it defines, not to the spec page that mentions it.
+  The spec reads top to bottom, so a page may mention concepts defined elsewhere.
 
 ## Memory discipline
 
