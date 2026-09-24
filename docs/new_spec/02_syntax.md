@@ -153,7 +153,7 @@ exception: `{@}` marks application and isn't part of the syntax, only notation f
 9. f[x, y]              -> {@} f ~[x, ~[y, ~[]]],
 10. f{bytes}            -> {@} f {bytes}
 11. prefix-op expr      -> [{:prefix}, {op}, expr]
-12. x op y op z         -> [{:infix}, {op}, x, y, z]  ;; mixed operator chains are allowed; analyzed at vf stages
+12. x op1 y op2 z       -> [{:infix}, [{op1}, {op2}], x, y, z] ;; these are analyzed at vf stages;
 13. base.name           -> [{:selector}, base, {name}]
 ```
 

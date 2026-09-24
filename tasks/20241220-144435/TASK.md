@@ -24,5 +24,6 @@
 - [x] 20260601-084008 do-blocks as standalone expressions
 - [x] 20260606-141936 Newline-based semicolon insertion
 - [ ] 20260805-162238 Complete the node type and pith list
-- [ ] 20260831-155152 Paren-statements candidate
+- [x] 20260831-155152 Paren-statements candidate
 - [ ] 20260903-085028 Metadata list in lowered nodes
+- [x] 20260924-092637 Lowering of mixed infix chains
