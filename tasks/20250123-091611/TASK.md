@@ -18,4 +18,5 @@
 ## Tasks
 
 - [x] 20260201-183607 Inspect natives and opcodes from the calculus
-- [ ] 20260209-162003 Revive tagging: how get_type encodes its tag
+- [ ] 20260209-162003 Tag structure for node kinds
+- [ ] 20260924-111836 K-V lists as a language concept

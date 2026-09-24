@@ -136,28 +136,29 @@ Spacing before a loose postfix is immaterial (`$fn:` and `$ fn:` are the same). 
 
 ## Rewrite rules
 
-[task 20260903-085028](../../tasks/20260903-085028/TASK.md): metadata list after the node type: `[{node}, [version, line, file, ...], ...payload]`.
+Every lowered node carries `meta` right after its tag: `[{node}, meta, ...payload]`. `meta` is a k-v list; it contains some fields,
+depending on the node. Exact fields: [task 20260903-085028](../../tasks/20260903-085028/TASK.md).
 
 To support intensionality, syntax above is lowered into simpler terms, representable by the same syntax — with one
 exception: `{@}` marks application and isn't part of the syntax, only notation for the cells to come: `f(x) -> {@} f x`.
 
 ```text
-1. x                    -> [{:id}, {x}]
-2. $                    -> [{:id}, {$}]  ;; opcode head, never alone
+1. x                    -> [{:id}, meta, {x}]
+2. $                    -> [{:id}, meta, {$}]  ;; opcode head, never alone
 3. [a, b]               -> ~[a, ~[b, ~[]]]
 4. (entry)              -> entry  ;; parens are purely syntactic, erased
 5. f(x, y)              -> {@} ({@} f x) y
-6. label: expr          -> [{:label}, {label}, expr]
-7. do a; b end          -> [{:block}, a, b]
-8. @[a, b] expr         -> [{:annot}, ~[a, ~[b, ~[]]], expr]
+6. label: expr          -> [{:label}, meta, {label}, expr]
+7. do a; b end          -> [{:block}, meta, a, b]
+8. @[a, b] expr         -> [{:annot}, meta, ~[a, ~[b, ~[]]], expr]
 9. f[x, y]              -> {@} f ~[x, ~[y, ~[]]],
 10. f{bytes}            -> {@} f {bytes}
-11. prefix-op expr      -> [{:prefix}, {op}, expr]
-12. x op1 y op2 z       -> [{:infix}, [{op1}, {op2}], x, y, z] ;; these are analyzed at vf stages;
-13. base.name           -> [{:selector}, base, {name}]
+11. prefix-op expr      -> [{:prefix}, meta, {op}, expr]
+12. x op1 y op2 z       -> [{:infix}, meta, [{op1}, {op2}], x, y, z] ;; these are analyzed at vf stages;
+13. base.name           -> [{:selector}, meta, base, {name}]
 ```
 
-A loose postfix lowers as plain application of its datum: `f x: 1 -> {@} f [{:label}, {x}, 1]`.
+A loose postfix lowers as plain application of its datum: `f x: 1 -> {@} f [{:label}, meta, {x}, 1]`.
 
 Note that the resulting tree is fully inert by itself, it isn't executed until it comes into executable position, see [v0
 execution rules](#v0-cesk).

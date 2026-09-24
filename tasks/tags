@@ -13,3 +13,4 @@ project, Repository, build and tooling
 experiment, Exploratory run; content is hypothesis, not ruling
 rejected, Closed because the idea was rejected
 log, Historical development log
+optimization, Speedups and storage choices that must not change meaning

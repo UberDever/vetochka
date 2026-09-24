@@ -1,4 +1,4 @@
-# Revive tagging: how get_type encodes its tag
+# Tag structure for node kinds
 
 - STATUS: OPEN
 - PRIORITY: 100
@@ -6,4 +6,54 @@
 - EPIC: 20250123-091611
 
 - (user, 2026-02-04) `get_type` returns a tagged `^ int <value>`. How `int` itself is encoded is unknown, and it is part of the ABI.
-- (agent) [assumption] Piths may make this moot. Not ruled.
+- ~~(agent) [assumption] Piths may make this moot. Not ruled.~~ rejected by the user's ruling below.
+- Decision (user, 2026-09-24): this task is about the tag structure itself. Piths are only one way to inspect that structure, so they are out of scope here.
+- Open: the structure of tags, including how the kind marker itself (the `int` above) is encoded.
+- (user, 2026-09-24) Framing, not ruled: "Every node is typed" (spec, Cells) is about scope. Tag only really special nodes, like native integers, as rewrite rules already tag syntax nodes. The same tags serve as a convention for later user-defined datatypes, observed like TypeScript's `typeof`.
+- (user, 2026-09-24) This is value metadata. Guess: a simple k-v list with fields like `tag`. Consult other dynamic languages first.
+- [fact] Rewrite rules already head lowered syntax with a tag: `[{:id}, {x}]`, `[{:label}, {label}, expr]`, `[{:block}, ...]`.
+- Related: metadata list task 20260903-085028 (`[{node}, [version, line, file, ...], ...payload]`).
+- (agent, 2026-09-24) Survey from general knowledge, not checked against sources: primitive kinds live in header or pointer tag bits everywhere (Lua, Erlang, Python, JS, Lisps). User datatypes differ: Erlang records are tuples headed by an atom; Lua attaches a k-v metatable with a `__name` field; Clojure keeps a k-v metadata map apart from type and out of equality.
+- Open: is `tag` one field of a value's metadata list, or separate from metadata and part of identity?
+- [fact] Tree book (Jay 2021, `docs/smart/tree_book.pdf`): programs are binary trees in normal form, "already data structures", so no quotation is needed (ch. 1, 3). The only split is programs versus computations with pending applications; quotation of computations is not definable (ch. 6).
+- [fact] Tree book 5.4: tagging is `tag{t, f} x = f x` and `getTag(tag{t, f}) = t`. A tag doesn't change behaviour but is recoverable by inspection, for comments, names or types. It is a convention over plain trees: nothing marks a tree as tagged.
+- [fact] Vetochka records: no language-level quote (2026-07-11); "everything in the language is data, executable constructs included" (user, 2026-08-30); application exists only in machine control, while data carries `{@}` markers (user, 2026-08-30).
+- (user, 2026-09-24) Metadata is data about data: what you need to inspect a value, not to use it through functions. Some nodes should have it. Concern: if only some nodes have metadata, a node can't be inspected reliably without first knowing its kind.
+- ~~Decision (user, 2026-09-24): assume every node carries some metadata, possibly empty.~~ superseded later the same evening, see below.
+- Open (user, 2026-09-24): inspection should show metadata, so every pith would include it by default. That suggests two layers, language and representation, where language-level metadata need not be stored in the node itself. Debatable: it may break the hermetic principle ("As above, so below").
+- Deferred (user, 2026-09-24): value identity is a runtime topic, not discussed now.
+- [fact] R7RS (`docs/smart/r7rs.pdf`, 1.1, 3.2, 5.5): types are associated with values; built-in types are disjoint and known only through predicates such as `pair?` and `number?`; `define-record-type` is generative, each use makes a new type distinct from all others. The standard has no way to read a value's type or attach metadata.
+- Proposal (user, 2026-09-24): values follow the existing head convention, `[{:value}, [meta...], ...]`. What counts as a value is the user's decision; numbers and strings are values, other things are already marked by their head.
+- (agent) Challenge: closures and in-flight opcodes are values by the 2026-08-30 rulings, and their env is hidden, so they can't be plain lists. Primitives such as integers sit below the convention and still need their own kind tag.
+- (agent) Challenge: a convention over lists is forgeable. Any list headed by `{:value}` looks like a value, the same weakness as `getTag` in the tree book.
+- (agent) Challenge: a generic `{:value}` head says nothing about the kind, so the kind moves into `meta`. A kind-named head such as `{:int}` would carry it directly, like `{:id}` and `{:label}` do.
+- (agent) For the proposal: it has the same shape as the ruled metadata list for lowered nodes, `[{node}, [version, line, file, ...], ...payload]`, and stored metadata keeps the hermetic principle.
+- (user, 2026-09-24) Replies: closures can carry a head like `{:closure}` too. A tag can be an interned string (future). Forgery is accepted: a forged value is yours to use. `{:value}` is just a category; reading `meta` second doesn't change intent. Syntax and user data unify via metadata.
+- Open (user, 2026-09-24): which kinds get a first-class head (like `{:closure}`) and which go under a category. An optimization question, like core opcode shorthand versus `$ns: {namespace} op: {opcode}`.
+- Decision (user, 2026-09-24): interning tags is only a hidden speedup.
+- Decision (user, 2026-09-24): a string starting with `:` in head position is a tag designator. Storage may omit stored string tags as tree compression; that concern affects only Rule 3.
+- Decision (user, 2026-09-24): built-in kinds have their own tags, and they carry `meta` too.
+- ~~(agent) you can't forge a closure~~ corrected (user, 2026-09-24): a closure is forged the usual way, by definition and application. In principle anything can be forged; not everything by composing lists.
+- Decision (user, 2026-09-24): every lowered node carries `meta`, a k-v list with some fields depending on the node. Applied to the rewrite rules in `docs/new_spec/02_syntax.md`.
+- Follow-up: first-class heads are an optimization question, task 20260924-105828.
+- Decision (user, 2026-09-24): basic structures carry no metadata and are known by their structure: lists, nyads, applications. Special nodes are distinguished from them by a tag and carry `meta`. Byte strings carry meaning, so they need a `meta` slot.
+- (user, 2026-09-24) This is a subtyping relation: tagged nodes refine the basic structures.
+- (agent) Challenge: the subtyping is structural only. A tagged node is a list, so list operations see its tag and `meta` as ordinary elements. Jay's tags are invisible to application; these are not.
+- (agent) [fact] The spec has `integer_literal` in the grammar but no rewrite rule for literals, so neither integers nor strings have a lowered shape yet.
+- Decision (user, 2026-09-24): the list leak is accepted. Skipping heads would be wanted, but Jay's tags hide themselves only from application, not from structure, so this is not solved for lists as such.
+- (agent) Reading, not ruled: integers are basic because an integer's structure is its meaning. Bytes are not: the rewrite rules use the same byte-string node as tag designator `{:id}`, name `{x}`, operator `{op}` and literal `{bytes}`, so the bytes alone don't say what they mean.
+- Decision (user, 2026-09-24): Vetochka follows triage: only structure is operated on. Some nodes must still be opaque real-world handles: primitives, and other values and functions.
+- Decision (user, 2026-09-24): opaque nodes are distinguished structurally by the tag first in their list. Integers get `{:i64}` too, regardless of provenance.
+- (user, 2026-09-24) A list is recognized by structure; a proper list ends with `~[]`.
+- (agent) Challenge: the tag `{:i64}` is a byte string, and byte strings are opaque and tagged too. Observing a tag as a tagged list recurses. Something must bottom out in pure structure, for example the tree book's natural numbers and char lists (the July bytes-lens candidate).
+- (agent) Challenge: by the spec's encoding a list cell is `~[x, rest]`, so its left child is the element, not a leaf. Any fork looks like a list cell; only walking to `~[]` confirms a proper list.
+- Decision (user, 2026-09-24): storage and observation may differ; the pith is the bridge. This is the hermetic principle in action.
+- Decision (user, 2026-09-24): general values such as i64 and strings are leaves. They don't recurse on themselves.
+- (agent) Challenge: Rule 3 sees every leaf as the same `~[]`. If opaque values observe as leaves, `{:i64}` and `{:bytes}` look identical to Rule 3, so comparing tags needs a native operation.
+- [fact] R7RS 6.4: a list is the empty list or a pair whose cdr is a list; `list?` walks to check it and returns false for improper and circular lists. There is no runtime list type separate from pairs.
+- Decision (user, 2026-09-24): native equality for tags is inevitable, since Vetochka has certain kinds of values.
+- [fact] Tree book 3.7, 4.7, 5.5: Jay has no native ints or strings. A number n is `K^n` applied to a leaf; bits are 0 and 1; bytes are eight-tuples of bits; strings are lists of bytes. So 0, nil and the empty string are all the same leaf, and nothing tells them apart. Types are separate trees tagged onto terms, e.g. a leaf applied to the string "Nat", compared structurally.
+- Decision (user, 2026-09-24): a `list?` predicate that walks, as in Scheme. Treat everything as plain trees for now.
+- (user, 2026-09-24) The subtype lattice bottoms out in the basic shapes such as leaf.
+
+- Context (user): decided on the evening of 2026-09-24 while the user was drunk. Review sober.
