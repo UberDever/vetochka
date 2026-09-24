@@ -17,7 +17,7 @@
 - [x] 20260201-183606 Bytecode VM with DP register and ENV stack
 - [x] 20260201-183608 Tree as a byte stream with inline payload
 - [x] 20260209-185016 Free list in cells for gc
-- [ ] 20260215-122341 Lexer and parser for textual bytecode in the interpreter
+- [x] 20260215-122341 Lexer and parser for textual bytecode in the interpreter
 - [x] 20260215-122342 Bytecode dumping
 - [x] 20260216-130542 Application by cell adjacency
 - [ ] 20260217-074816 Understand the triage calculus before adding semantics
