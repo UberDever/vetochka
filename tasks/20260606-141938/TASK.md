@@ -2,8 +2,8 @@
 
 - STATUS: OPEN
 - PRIORITY: 100
-- TAGS: reducer
-- EPIC: 20241225-125809
+- TAGS: project
 
-- (user, 2026-06-06) Idea: move the implementation from zig to C plus Lua.
+- (user, 2026-06-06) Idea: move the implementation from zig to C plus Lua, dropping zig.
 - [fact] The build still uses `build.zig`. No decision recorded.
+- Context (user): decided on the evening of 2026-09-24 while the user was drunk. Review sober.

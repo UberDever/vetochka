@@ -21,7 +21,6 @@
 - [x] 20260215-122342 Bytecode dumping
 - [x] 20260216-130542 Application by cell adjacency
 - [ ] 20260217-074816 Understand the triage calculus before adding semantics
-- [ ] 20260606-141938 Migrate implementation to C plus Lua
 - [x] 20260614-121150 Revisit byte encoding
 - [ ] 20260614-140231 Abstract opcode node creation in the source encoder
 - [ ] 20260718-175927 Rule 3 dispatches on storage arity, wrong for APPLY

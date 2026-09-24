@@ -14,3 +14,4 @@
 - Deferred: resolve `docs/smart/*.pdf` (remove or link). Decision (user, 2026-09-24): keep for now, likely remove later.
 - Deferred: permissive carve-out for examples users copy into their programs.
 - Deferred: a runtime-library exception if the compiler ever copies its own code into output.
+- Context (user): decided on the evening of 2026-09-24 while the user was drunk. Review sober.

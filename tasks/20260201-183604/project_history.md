@@ -199,7 +199,7 @@ It greatly improves performance and space-efficiency.
 - ❌ (and below) To be able to represent more than expressions (and be somewhat performant), VM introduces its own bytecode, stack and registers
 - Currently, Bytecode operates on `DP` register and `K` stack
 - `DP` register is the `index` of currently reduced/reducing term; It is used as current `data pointer`
-- `ENV` stack is TODO
+- `ENV` stack is ~~TODO~~ discarded, see task 20260201-183606
 - Bytecode instructions:
     * `PUT <node>`: put `node` at current `DP` in `cells`; put `DP` in `reduce stack`; shift `DP` to next vacant cell; a `node` is any of the nodes described above
     * `APPLY`: put `REDUCE` marker in `reduce stack`
@@ -312,7 +312,7 @@ for any term `t` that is known statically, I have its corresponding location
   * payload (discovered by intrinsic `get_payload` which provides tagged value) 
 - Also, for symmetry there must be `set_type` and `set_payload` intrinsics to construct
     arbitrary native nodes out of triage-calculus encoded tagged values; for symmetry
-- ⬜ revive the tagging, what is the status? And so: `get_type` returns tagged `^ int <value>`, but how `int` is encoded? And more: seems like it is a part of an ABI now.
+- ~~⬜~~ discarded, see task 20260209-162003: revive the tagging, what is the status? And so: `get_type` returns tagged `^ int <value>`, but how `int` is encoded? And more: seems like it is a part of an ABI now.
 - Chat-gpt forced me to consider this, and this is quite the point, I should enforce it here: 
   * Programs are trusted; native call payloads are forgeable; safety is the responsibility of the embedding
   * `set_type` may change the interpretation of an existing payload without validation; doing so is unsafe and may crash or call arbitrary native code
@@ -364,7 +364,7 @@ match ending `}...}`
 - beggining `s` is inseparable from `{}`, so curlies could still be used
 - no escapes in the string literals are allowed
 ---
-- ⬜ numbers are follow, ints and floats and bunch. I'd expected this to be a problem, but currently
+- ~~⬜~~ discarded, see task 20260212-163430: numbers are follow, ints and floats and bunch. I'd expected this to be a problem, but currently
     we are only interested in the string of digits for 64bit ints; so I need to
     make them as extensible as strings
 - intrinsics, being the opcodes `lambda, seq` and others can be encoded verbatim
@@ -404,7 +404,7 @@ See [`artifacts/vetochka_lambda_example.md`](../20250123-091611/vetochka_lambda_
     done using this syntax. Currently, I think this is sufficien enough, to encode anything non-trivial in somewhat concise and pleasant to look at manner
 - There is a subset of this syntax that I will call "canonical", strictly in a sense that
     it will be used as minimal syntax to represent stuff. It will contain literals desugared, won't contain comments and all applications will be explicit. This is needed for bytecode dumping and persistance
-- ⬜ For future: implement this lexer+parser in the interpreter (module `bytecode`)
+- ~~⬜~~ discarded, see task 20260215-122341: For future: implement this lexer+parser in the interpreter (module `bytecode`)
 - ✅ For future: implement bytecode dumping
 
 ### 16.02.2026
@@ -414,7 +414,7 @@ See [`artifacts/vetochka_lambda_example.md`](../20250123-091611/vetochka_lambda_
 - So, yeah, it is certain that I'll need some sugar for lists since writing `(^ a (^ b (^ c ^)))` or `: ^ a : ^ b : ^ c ^` is very cumbersome and lame. Since I don't want to be bothered with the details right now, let's say that `s[]` is a sugar for this kind of lists.
 - Therefore, the `{}` and `[]` is free for something more important, maybe just alias it to `()` to be able to "hint meaning"? Idk, sounds interesting, but maybe it's a bad idea
 - With analogy to strings: lists `s[]` can be used to express more sophisticated datastructures, like map `hashmap s[ s[s{foo1} s{bar}] s[s{foo2} s{baz}] s[s{foo3} s{qux}}]]`
-- ⬜ Or maybe it is better to remove `s` prefix entirely? Then, you'll have something like
+- ~~⬜~~ discarded, see task 20260216-100019: Or maybe it is better to remove `s` prefix entirely? Then, you'll have something like
     `hashmap [ [{foo} {bar}] [{foo2} {baz}] [{foo3} {qux}] ]`. Looks more readable. Then,
     `{}` strings are **always** valid utf-8 bytes and `[]` lists are **always** nil-terminated
     proper lists. Ints like `i64` then can be encoded by designated opcodes like `.i64` that
@@ -430,7 +430,7 @@ See [`artifacts/vetochka_word_count_example.md`](../20241220-144435/vetochka_wor
     + Reducer doesn't know anything about lambdas and such, this is another level -> problem solved
 
 ### 17.02.2026
-- ⬜ There is no free cake. Meaning, I need to make sense of triage calculus first and **then** introduce new semantics,
+- ~~⬜~~ discarded, see task 20260217-074816: There is no free cake. Meaning, I need to make sense of triage calculus first and **then** introduce new semantics,
     which means that its time to stop dreaming. All my ideas are good stuff, but they will be reevaluated under the knowledge of the calculus itself.
 - I will implement the calculus part of the reducer and write tests that I've described in the old version. Then, I'll methodically, one by one, will introduce encodings for the things I need **and** maybe encode them as opcodes. This is sane, after all to use opcodes is to make interpretation faster, not to cheat.
 - Syntax holds, mutability (conceptually) also holds. Sequencing, lambda and a bunch must be reimplemented in the triage calculus itself. Architecture is solid and encoding is decent. Some adjustments as new literals can be added. Bytecode handling also is decent.
@@ -633,7 +633,7 @@ expressions, every which of them has a separate beginning token
 ### 04.06.2026
 - on modules: need to separate module discovery from the semantic effect on VM
 - VM state: reducer, environment (immutable frames with rebinding, persistent scope graphs), underlying special forms
-- ⬜ somewhere here should be ideas about box for mutability
+- ~~⬜~~ discarded, see task 20260604-111747: somewhere here should be ideas about box for mutability
 - on special forms: it is a part of VM (but designed explicitly to be separate from VM state to be semantically swappable) that defines known symbols == opcodes; e.g. `def`, `print`, `return`, `let` and others; my thinking is that there are a couple of groups for these kinds of forms like "directives", "imperative core", "functional core" and something else
 - on currying: it is good to be explicit about currying and we do that, except for `stuff: ... end` block form; idea: just make block list a separate construct
 ```
@@ -675,7 +675,7 @@ This way a `do a;b;c end` block is just a syntax sugar for `[do:,a,b,c]` or some
     (generate proper opcodes with arity+eagerness, already cells) => execution
 - this resolution knows about module root, entrypoint, builtins; so basically we
     involve only scoping system on this step
-- ⬜ migrate to C+lua (unmigrate from zig???!??!?!?!)
+- ~~⬜~~ discarded, see task 20260606-141938: migrate to C+lua (unmigrate from zig???!??!?!?!)
 
 ### 06.06.2026
 - ✅ better to state function arity in two ways / or a single way only:
@@ -795,9 +795,9 @@ APPLY(SOME_OPCODE1(x), y)
     `{form}` receives `f(f)` unevaluated, callee position forces it; a definition is
     `{form}(rec)` wrapping a `{fn}`; mutual recursion binds a function list through one `rec`;
     verified in call-by-name stand-in. Delay mechanisms per layer: waiting (L0), `{form}` (v0)
-- ⬜ pending: restate machine layer (state components, suspension/forcing, spine, GRAB,
+- ~~⬜~~ discarded, see task 20260711-131257: pending: restate machine layer (state components, suspension/forcing, spine, GRAB,
     evaluation-order commitments) into the snapshot doc
-- ⬜ pending ruling: `do ... end` sequencing. Two candidates: (A) pure sugar — desugar to
+- ~~⬜~~ discarded, see task 20260711-131258: pending ruling: `do ... end` sequencing. Two candidates: (A) pure sugar — desugar to
     bind-discard chains `{$}({fn}[_] rest) s1` (no machine rules, but closure alloc + dummy
     frame per statement at runtime); (B) body is a `{:do}` statement list executed by the
     machine via a BLOCK continuation frame (matches draft `{fn}/3` protocol, cheap, but needs
@@ -809,7 +809,7 @@ APPLY(SOME_OPCODE1(x), y)
     where `_` is an ordinary (unreferenced) identifier, not special syntax. NOTE: the
     binder-chain lowering used in the 09.07 tail-call trace was assistant extrapolation,
     not a prior ruling
-- ⬜ pending ruling: proper tail calls as semantic guarantee. Discussed, not yet recorded:
+- ~~⬜~~ discarded, see task 20260711-131259: pending ruling: proper tail calls as semantic guarantee. Discussed, not yet recorded:
     frames arise only when a sub-result is needed (F1 eager closure arg, F2 eager native arg,
     F3 triage shape demand); all other transitions replace control, so tail calls hold by
     construction; sequencing via `{fn}` block lowering is PTC-trivial (no seq opcode by design);

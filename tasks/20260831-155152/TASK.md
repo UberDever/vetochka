@@ -10,3 +10,4 @@
 - Rejected (user, 2026-09-24): no paren-statements. `do ... end` stays the block form. R1 gluing stays.
 - Follow-up: the grouping question became task 20260924-092637.
 - Details: labels-kv.md in the syntax epic.
+- Context (user): decided on the evening of 2026-09-24 while the user was drunk. Review sober.

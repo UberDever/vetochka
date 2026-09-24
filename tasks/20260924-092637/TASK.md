@@ -10,3 +10,4 @@
 - [fact] Parens already keep grouping apart: `(a + b) * c` has the lowered `a + b` as one operand, while `a + b * c` is one flat chain.
 - Decision (user, 2026-09-24, spec rule 12): `x op1 y op2 z -> [{:infix}, [{op1}, {op2}], x, y, z]`. Operators go in a list; operands stay flat. vf stages analyze them.
 - Background: paren-statements task 20260831-155152, closed the same day.
+- Context (user): decided on the evening of 2026-09-24 while the user was drunk. Review sober.
