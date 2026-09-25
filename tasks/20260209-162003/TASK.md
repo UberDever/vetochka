@@ -36,7 +36,7 @@
 - ~~(agent) you can't forge a closure~~ corrected (user, 2026-09-24): a closure is forged the usual way, by definition and application. In principle anything can be forged; not everything by composing lists.
 - Decision (user, 2026-09-24): every lowered node carries `meta`, a k-v list with some fields depending on the node. Applied to the rewrite rules in `docs/new_spec/02_syntax.md`.
 - Follow-up: first-class heads are an optimization question, task 20260924-105828.
-- Decision (user, 2026-09-24): basic structures carry no metadata and are known by their structure: lists, nyads, applications. Special nodes are distinguished from them by a tag and carry `meta`. Byte strings carry meaning, so they need a `meta` slot.
+- ~~Decision (user, 2026-09-24): basic structures carry no metadata and are known by their structure: lists, nyads, applications. Special nodes are distinguished from them by a tag and carry `meta`. Byte strings carry meaning, so they need a `meta` slot.~~ partly superseded below: applications carry `meta`; byte strings don't.
 - (user, 2026-09-24) This is a subtyping relation: tagged nodes refine the basic structures.
 - (agent) Challenge: the subtyping is structural only. A tagged node is a list, so list operations see its tag and `meta` as ordinary elements. Jay's tags are invisible to application; these are not.
 - (agent) [fact] The spec has `integer_literal` in the grammar but no rewrite rule for literals, so neither integers nor strings have a lowered shape yet.
@@ -55,5 +55,8 @@
 - [fact] Tree book 3.7, 4.7, 5.5: Jay has no native ints or strings. A number n is `K^n` applied to a leaf; bits are 0 and 1; bytes are eight-tuples of bits; strings are lists of bytes. So 0, nil and the empty string are all the same leaf, and nothing tells them apart. Types are separate trees tagged onto terms, e.g. a leaf applied to the string "Nat", compared structurally.
 - Decision (user, 2026-09-24): a `list?` predicate that walks, as in Scheme. Treat everything as plain trees for now.
 - (user, 2026-09-24) The subtype lattice bottoms out in the basic shapes such as leaf.
-
+- Decision (user, 2026-09-24): applications carry `meta`: `[{@}, meta, ...]`. (agent) Consistent with the head rule: `{@}` already heads the node.
+- Decision (user, 2026-09-24): byte strings carry no `meta`. Their meaning comes from the surrounding node, e.g. `{x}` inside `[{:id}, meta, {x}]`.
+- Decision (user, 2026-09-24): piths are runtime semantics (Rule 3 and CESK), separate from node generation.
+- [fact] Tree book 5.4: `tag{t, f} = d{t}(d{f}(KK))`; applying it reduces through `K (f x) (t x)` to `f x`, so the tag is dropped on application. Only programs (normal forms) are tagged. Tagged fixpoints need the tag inside (`Y2t`). Triage's rule 2 places arguments differently, so the construction would need re-deriving.
 - Context (user): decided on the evening of 2026-09-24 while the user was drunk. Review sober.
