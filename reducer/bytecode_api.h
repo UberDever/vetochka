@@ -23,9 +23,17 @@ MUH_PUBLIC size_t bytecode_new_node2(
     size_t right);
 MUH_PUBLIC error_t bytecode_tree_builder_build(
     struct bytecode_tree_builder_t* builder, struct cells_t* cells, size_t* index_out);
+// Options for lowering a parsed source tree into cells.
+struct bytecode_source_options_t {
+  // Fill `meta` with the node's source position (`[line: n, col: n]`) instead of `~[]`.
+  bool source_meta;
+};
+
+// Lower `source` by the rewrite rules of docs/new_spec/02_syntax.md.
 MUH_PUBLIC error_t bytecode_source_encode(
     span_cbyte_t text,
     const struct source_tree_t* source,
+    struct bytecode_source_options_t options,
     struct cells_t* cells,
     size_t* index_out);
 

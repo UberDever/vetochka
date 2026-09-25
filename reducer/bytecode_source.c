@@ -7,12 +7,17 @@
 #include <stddef.h>
 #include <string.h>
 
+// Lowering of a parsed source tree into inert terms, following the rewrite rules of
+// docs/new_spec/02_syntax.md. Every tagged node is `[{:tag}, meta, ...payload]`;
+// applications are data too: `[{@}, meta, f, x]`. Lists, nyads and literals carry no meta.
+
 #define BYTECODE_NO_NODE SIZE_MAX
 
 typedef struct bytecode_source_encoder_t {
   span_cbyte_t text;
   const struct source_tree_t* source;
   struct bytecode_tree_builder_t* builder;
+  bool source_meta;
 } bytecode_source_encoder_t;
 
 static error_t encode_node(bytecode_source_encoder_t* self, size_t index, size_t* out);
@@ -30,9 +35,15 @@ static size_t source_child(bytecode_source_encoder_t* self, size_t index, size_t
   return child;
 }
 
+static bool source_is_token(bytecode_source_encoder_t* self, size_t index) {
+  const u8 type = source_node(self, index).type.value;
+  return type == SOURCE_NODE_TYPE_TOKEN || type == SOURCE_NODE_TYPE_OP_PREFIX
+         || type == SOURCE_NODE_TYPE_OP_INFIX;
+}
+
 static bool source_token_span(bytecode_source_encoder_t* self, size_t index, span_cbyte_t* out) {
   struct source_node_t node = source_node(self, index);
-  if (node.type.value != SOURCE_NODE_TYPE_TOKEN || node.token.begin > node.token.end
+  if (!source_is_token(self, index) || node.token.begin > node.token.end
       || node.token.end > self->text.len) {
     return false;
   }
@@ -50,57 +61,92 @@ static bool source_token_eq(bytecode_source_encoder_t* self, size_t index, const
          && memcmp(token.data, text, len) == 0;
 }
 
-static size_t new_node0(bytecode_source_encoder_t* self, struct cells_node_t node) {
-  return bytecode_new_node0(self->builder, node);
+// ---- term construction
+
+static size_t new_nyad0(bytecode_source_encoder_t* self) {
+  return bytecode_new_node0(self->builder, cells_new_delta0());
 }
 
-static size_t new_node2(
-    bytecode_source_encoder_t* self, struct cells_node_t node, size_t left, size_t right) {
-  return bytecode_new_node2(self->builder, node, left, right);
+static size_t new_nyad1(bytecode_source_encoder_t* self, size_t x) {
+  return bytecode_new_node1(self->builder, cells_new_delta1(), x);
 }
 
-static size_t new_delta(bytecode_source_encoder_t* self) {
-  return new_node0(self, cells_new_delta0());
+static size_t new_nyad2(bytecode_source_encoder_t* self, size_t x, size_t y) {
+  return bytecode_new_node2(self->builder, cells_new_delta2(), x, y);
 }
 
 static size_t new_i64(bytecode_source_encoder_t* self, i64 value) {
-  return new_node0(self, cells_new_value0f(value));
+  return bytecode_new_node0(self->builder, cells_new_value0f(value));
 }
 
 static size_t new_bytes(bytecode_source_encoder_t* self, const byte* data, size_t len) {
   span_byte_t payload = {.data = (byte*)data, .len = len};
-  return new_node0(self, cells_new_value0v(payload));
+  return bytecode_new_node0(self->builder, cells_new_value0v(payload));
 }
 
 static size_t new_static_bytes(bytecode_source_encoder_t* self, const char* text) {
   return new_bytes(self, (const byte*)text, strlen(text));
 }
 
-static size_t new_apply(bytecode_source_encoder_t* self, size_t lhs, size_t rhs) {
-  cells_node_type_t type = {.value = CELLS_NODE_TYPE_APPLY};
-  return new_node2(self, cells_new_node(type), lhs, rhs);
+static size_t new_span_bytes(bytecode_source_encoder_t* self, span_cbyte_t span) {
+  return new_bytes(self, span.data, span.len);
 }
 
+// [a, b] -> ~[a, ~[b, ~[]]]
 static size_t new_list(bytecode_source_encoder_t* self, const size_t* items, size_t count) {
-  size_t result = new_delta(self);
+  size_t result = new_nyad0(self);
   while (count != 0) {
     count--;
-    result = new_node2(self, cells_new_delta2(), items[count], result);
+    result = new_nyad2(self, items[count], result);
   }
   return result;
 }
 
-static size_t new_tagged(
-    bytecode_source_encoder_t* self, const char* tag, const size_t* fields, size_t field_count) {
-  size_t result = new_list(self, fields, field_count);
-  return new_node2(self, cells_new_delta2(), new_static_bytes(self, tag), result);
+// `[line: n, col: n]` when source positions are requested; `~[]` otherwise.
+// Entries of a meta list carry empty meta themselves, so meta never recurses.
+static size_t new_meta(bytecode_source_encoder_t* self, size_t source_index) {
+  if (!self->source_meta) { return new_nyad0(self); }
+  struct source_token_t token = source_node(self, source_index).token;
+  size_t line[] = {
+      new_static_bytes(self, ":label"),
+      new_nyad0(self),
+      new_static_bytes(self, "line"),
+      new_i64(self, (i64)token.line)};
+  size_t col[] = {
+      new_static_bytes(self, ":label"),
+      new_nyad0(self),
+      new_static_bytes(self, "col"),
+      new_i64(self, (i64)token.col)};
+  size_t entries[] = {new_list(self, line, 4), new_list(self, col, 4)};
+  return new_list(self, entries, 2);
 }
 
-// task 20260614-140231: abstract this later and use VM info for that
-static size_t new_op_fn(bytecode_source_encoder_t* self) {
-  cells_node_type_t type = {.value = CELLS_NODE_TYPE_OP_FN0};
-  return new_node0(self, cells_new_node(type));
+// [{tag}, meta, ...fields]
+static size_t new_tagged(
+    bytecode_source_encoder_t* self,
+    const char* tag,
+    size_t source_index,
+    const size_t* fields,
+    size_t count) {
+  size_t* items = NULL;
+  stbds_arrput(items, new_static_bytes(self, tag));
+  stbds_arrput(items, new_meta(self, source_index));
+  for (size_t i = 0; i < count; i++) {
+    stbds_arrput(items, fields[i]);
+  }
+  size_t result = new_list(self, items, stbds_arrlenu(items));
+  stbds_arrfree(items);
+  return result;
 }
+
+// f(x) -> {@} f x, as data: [{@}, meta, f, x]
+static size_t new_application(
+    bytecode_source_encoder_t* self, size_t source_index, size_t f, size_t x) {
+  size_t fields[] = {f, x};
+  return new_tagged(self, "@", source_index, fields, 2);
+}
+
+// ---- lowering
 
 static error_t parse_i64(span_cbyte_t token, i64* out) {
   if (token.len == 0 || out == NULL) { return ERROR_GENERIC; }
@@ -109,30 +155,17 @@ static error_t parse_i64(span_cbyte_t token, i64* out) {
     byte c = token.data[i];
     if (c < '0' || c > '9') { return ERROR_GENERIC; }
     i64 digit = (i64)(c - '0');
-    if (value > (INTPTR_MAX - digit) / 10) { return ERROR_OVERFLOW; }
+    if (value > (INT64_MAX - digit) / 10) { return ERROR_OVERFLOW; }
     value = value * 10 + digit;
   }
   *out = value;
   return ERROR_SUCCESS;
 }
 
-static bool primary_is_opcode(bytecode_source_encoder_t* self, size_t index) {
-  size_t token = source_child(self, index, 0);
-  return token != BYTECODE_NO_NODE && source_token_eq(self, token, "{fn}");
-}
-
-static error_t encode_token(
-    bytecode_source_encoder_t* self, size_t index, bool opcode_callee, size_t* out) {
+// Literals lower to themselves; `x -> [{:id}, meta, {x}]`; `$ -> [{:id}, meta, {$}]`.
+static error_t encode_token(bytecode_source_encoder_t* self, size_t index, size_t* out) {
   span_cbyte_t token = {0};
-  if (!source_token_span(self, index, &token)) { return ERROR_GENERIC; }
-  if (token.len == 1 && token.data[0] == '^') {
-    *out = new_delta(self);
-    return ERROR_SUCCESS;
-  }
-  if (token.len == 2 && token.data[0] == 0xce && token.data[1] == 0x94) {
-    *out = new_delta(self);
-    return ERROR_SUCCESS;
-  }
+  if (!source_token_span(self, index, &token) || token.len == 0) { return ERROR_GENERIC; }
   if (token.data[0] >= '0' && token.data[0] <= '9') {
     i64 value = 0;
     error_t err = parse_i64(token, &value);
@@ -140,258 +173,210 @@ static error_t encode_token(
     *out = new_i64(self, value);
     return ERROR_SUCCESS;
   }
-  if (token.len >= 2 && token.data[0] == '{' && token.data[token.len - 1] == '}') {
-    if (opcode_callee && token.len == 4 && memcmp(token.data, "{fn}", 4) == 0) {
-      *out = new_op_fn(self);
-      return ERROR_SUCCESS;
-    }
+  if (token.data[0] == '{') {
     *out = new_bytes(self, token.data + 1, token.len - 2);
     return ERROR_SUCCESS;
   }
-  size_t fields[] = {new_bytes(self, token.data, token.len)};
-  *out = new_tagged(self, ":id", fields, 1);
+  size_t fields[] = {new_span_bytes(self, token)};
+  *out = new_tagged(self, ":id", index, fields, 1);
   return ERROR_SUCCESS;
 }
 
-static error_t encode_annotation_value(bytecode_source_encoder_t* self, size_t index, size_t* out) {
+// Encode every non-token child (entries of a comma or block list).
+static error_t encode_entries(bytecode_source_encoder_t* self, size_t index, size_t** out_items) {
+  if (index == BYTECODE_NO_NODE) { return ERROR_SUCCESS; }
   for (size_t child = source_node(self, index).child_index; child != BYTECODE_NO_NODE;
        child = source_node(self, child).next_index) {
-    if (source_node(self, child).type.value == SOURCE_NODE_TYPE_EXPRESSION) {
-      return encode_node(self, child, out);
-    }
-  }
-  return ERROR_GENERIC;
-}
-
-static error_t encode_expression_like(
-    bytecode_source_encoder_t* self, size_t index, u8 body_type, size_t* out) {
-  size_t annotation = BYTECODE_NO_NODE;
-  size_t body = BYTECODE_NO_NODE;
-  for (size_t child = source_node(self, index).child_index; child != BYTECODE_NO_NODE;
-       child = source_node(self, child).next_index) {
-    u8 type = source_node(self, child).type.value;
-    if (type == SOURCE_NODE_TYPE_ANNOTATION) { annotation = child; }
-    if (type == body_type) { body = child; }
-  }
-  if (body == BYTECODE_NO_NODE) { return ERROR_GENERIC; }
-  error_t err = encode_node(self, body, out);
-  if (err != ERROR_SUCCESS || annotation == BYTECODE_NO_NODE) { return err; }
-  size_t annotation_value = 0;
-  err = encode_annotation_value(self, annotation, &annotation_value);
-  if (err != ERROR_SUCCESS) { return err; }
-  size_t fields[] = {annotation_value, *out};
-  *out = new_tagged(self, ":annot", fields, 2);
-  return ERROR_SUCCESS;
-}
-
-static error_t encode_block(bytecode_source_encoder_t* self, size_t index, size_t* out) {
-  size_t* items = NULL;
-  error_t err = ERROR_SUCCESS;
-  for (size_t child = source_node(self, index).child_index; child != BYTECODE_NO_NODE;
-       child = source_node(self, child).next_index) {
-    if (source_node(self, child).type.value != SOURCE_NODE_TYPE_EXPRESSION) { continue; }
+    if (source_is_token(self, child)) { continue; }
     size_t item = 0;
-    err = encode_node(self, child, &item);
-    if (err != ERROR_SUCCESS) { goto done; }
-    stbds_arrput(items, item);
+    error_t err = encode_node(self, child, &item);
+    if (err != ERROR_SUCCESS) { return err; }
+    stbds_arrput(*out_items, item);
   }
-  *out = new_tagged(self, ":block", items, stbds_arrlenu(items));
+  return ERROR_SUCCESS;
+}
 
-done:
+// First child of `index` that is not a token, or BYTECODE_NO_NODE.
+static size_t first_non_token(bytecode_source_encoder_t* self, size_t index) {
+  for (size_t child = source_node(self, index).child_index; child != BYTECODE_NO_NODE;
+       child = source_node(self, child).next_index) {
+    if (!source_is_token(self, child)) { return child; }
+  }
+  return BYTECODE_NO_NODE;
+}
+
+// [a, b] and the payload of f[a, b]
+static error_t encode_list(bytecode_source_encoder_t* self, size_t comma_list, size_t* out) {
+  size_t* items = NULL;
+  error_t err = encode_entries(self, comma_list, &items);
+  if (err == ERROR_SUCCESS) { *out = new_list(self, items, stbds_arrlenu(items)); }
   stbds_arrfree(items);
   return err;
 }
 
-static error_t encode_comma_items(
-    bytecode_source_encoder_t* self, size_t index, size_t** out_items) {
-  error_t err = ERROR_SUCCESS;
-  for (size_t child = source_node(self, index).child_index; child != BYTECODE_NO_NODE;
-       child = source_node(self, child).next_index) {
-    if (source_node(self, child).type.value != SOURCE_NODE_TYPE_EXPRESSION) { continue; }
-    size_t item = 0;
-    err = encode_node(self, child, &item);
-    if (err != ERROR_SUCCESS) { return err; }
-    stbds_arrput(*out_items, item);
+// do a; b end -> [{:block}, meta, a, b]
+static error_t encode_block(
+    bytecode_source_encoder_t* self, size_t source_index, size_t block_list, size_t* out) {
+  size_t* items = NULL;
+  error_t err = encode_entries(self, block_list, &items);
+  if (err == ERROR_SUCCESS) {
+    *out = new_tagged(self, ":block", source_index, items, stbds_arrlenu(items));
   }
+  stbds_arrfree(items);
   return err;
 }
 
-static error_t encode_primary(
-    bytecode_source_encoder_t* self, size_t index, bool opcode_callee, size_t* out) {
-  size_t first = source_child(self, index, 0);
-  if (first == BYTECODE_NO_NODE) { return ERROR_GENERIC; }
-  struct source_node_t first_node = source_node(self, first);
-  if (first_node.type.value == SOURCE_NODE_TYPE_TOKEN) {
-    size_t second = source_child(self, index, 1);
-    if (source_token_eq(self, first, "[") && second != BYTECODE_NO_NODE) {
-      size_t* items = NULL;
-      error_t err = encode_comma_items(self, second, &items);
-      if (err == ERROR_SUCCESS) { *out = new_tagged(self, ":list", items, stbds_arrlenu(items)); }
-      stbds_arrfree(items);
-      return err;
+// ~[], ~[x], ~[x, y]
+static error_t encode_nyad(bytecode_source_encoder_t* self, size_t index, size_t* out) {
+  size_t* items = NULL;
+  error_t err = encode_entries(self, index, &items);
+  if (err == ERROR_SUCCESS) {
+    switch (stbds_arrlenu(items)) {
+      case 0: *out = new_nyad0(self); break;
+      case 1: *out = new_nyad1(self, items[0]); break;
+      case 2: *out = new_nyad2(self, items[0], items[1]); break;
+      default: err = ERROR_GENERIC; break;
     }
-    if (source_token_eq(self, first, "(") && second != BYTECODE_NO_NODE) {
-      error_t err = encode_node(self, second, out);
-      if (err != ERROR_SUCCESS) { return err; }
-      size_t fields[] = {*out};
-      *out = new_tagged(self, ":group", fields, 1);
-      return ERROR_SUCCESS;
-    }
-    return encode_token(self, first, opcode_callee, out);
   }
-  return encode_node(self, first, out);
+  stbds_arrfree(items);
+  return err;
 }
 
-static bool postfix_starts_application(bytecode_source_encoder_t* self, size_t index) {
-  struct source_node_t node = source_node(self, index);
-  if (node.type.value == SOURCE_NODE_TYPE_LOOSE_POSTFIX) { return true; }
+// label: expr -> [{:label}, meta, {label}, expr]
+static error_t encode_labeled(bytecode_source_encoder_t* self, size_t index, size_t* out) {
+  size_t name = source_child(self, index, 0);
+  size_t argument = source_child(self, index, 2);
+  span_cbyte_t name_token = {0};
+  if (argument == BYTECODE_NO_NODE || !source_token_span(self, name, &name_token)) {
+    return ERROR_GENERIC;
+  }
+  size_t value = 0;
+  error_t err = encode_node(self, argument, &value);
+  if (err != ERROR_SUCCESS) { return err; }
+  size_t fields[] = {new_span_bytes(self, name_token), value};
+  *out = new_tagged(self, ":label", index, fields, 2);
+  return ERROR_SUCCESS;
+}
+
+// $fn: x -> {@} [{:id}, meta, {$}] [{:label}, meta, {fn}, x]
+static error_t encode_opcode(bytecode_source_encoder_t* self, size_t index, size_t* out) {
+  size_t dollar = source_child(self, index, 0);
+  size_t labeled = source_child(self, index, 1);
+  if (labeled == BYTECODE_NO_NODE) { return ERROR_GENERIC; }
+  size_t head = 0;
+  error_t err = encode_token(self, dollar, &head);
+  if (err != ERROR_SUCCESS) { return err; }
+  size_t datum = 0;
+  err = encode_node(self, labeled, &datum);
+  if (err != ERROR_SUCCESS) { return err; }
+  *out = new_application(self, index, head, datum);
+  return ERROR_SUCCESS;
+}
+
+static error_t encode_primary(bytecode_source_encoder_t* self, size_t index, size_t* out) {
   size_t first = source_child(self, index, 0);
-  return first != BYTECODE_NO_NODE && !source_token_eq(self, first, ".");
+  if (first == BYTECODE_NO_NODE) { return ERROR_GENERIC; }
+  if (source_node(self, first).type.value == SOURCE_NODE_TYPE_OPCODE) {
+    return encode_opcode(self, first, out);
+  }
+  if (source_token_eq(self, first, "[")) {
+    return encode_list(self, first_non_token(self, index), out);
+  }
+  if (source_token_eq(self, first, "(")) {
+    // (entry) -> entry: parens are purely syntactic.
+    return encode_node(self, first_non_token(self, index), out);
+  }
+  return encode_token(self, first, out);
 }
 
 static error_t encode_tight_postfix(
     bytecode_source_encoder_t* self, size_t index, size_t base, size_t* out) {
   size_t first = source_child(self, index, 0);
+  size_t second = source_child(self, index, 1);
   if (first == BYTECODE_NO_NODE) { return ERROR_GENERIC; }
 
+  // base.name -> [{:selector}, meta, base, {name}]
   if (source_token_eq(self, first, ".")) {
-    size_t name = source_child(self, index, 1);
-    span_cbyte_t token = {0};
-    if (name == BYTECODE_NO_NODE || !source_token_span(self, name, &token)) {
+    span_cbyte_t name = {0};
+    if (second == BYTECODE_NO_NODE || !source_token_span(self, second, &name)) {
       return ERROR_GENERIC;
     }
-    size_t fields[] = {base, new_bytes(self, token.data, token.len)};
-    *out = new_tagged(self, ":selector", fields, 2);
+    size_t fields[] = {base, new_span_bytes(self, name)};
+    *out = new_tagged(self, ":selector", index, fields, 2);
     return ERROR_SUCCESS;
   }
 
+  // f(x, y) -> {@} ({@} f x) y; f() == f(~[])
   if (source_token_eq(self, first, "(")) {
-    size_t args = source_child(self, index, 1);
-    if (args == BYTECODE_NO_NODE) { return ERROR_GENERIC; }
-    if (source_node(self, args).type.value == SOURCE_NODE_TYPE_IMPLICIT_DELTA) {
-      *out = new_apply(self, base, new_delta(self));
+    if (second == BYTECODE_NO_NODE) { return ERROR_GENERIC; }
+    if (source_node(self, second).type.value == SOURCE_NODE_TYPE_IMPLICIT_NYAD) {
+      *out = new_application(self, index, base, new_nyad0(self));
       return ERROR_SUCCESS;
     }
     size_t* items = NULL;
-    error_t err = encode_comma_items(self, args, &items);
+    error_t err = encode_entries(self, second, &items);
     if (err == ERROR_SUCCESS) {
       *out = base;
       for (size_t i = 0; i < stbds_arrlenu(items); i++) {
-        *out = new_apply(self, *out, items[i]);
+        *out = new_application(self, index, *out, items[i]);
       }
     }
     stbds_arrfree(items);
     return err;
   }
 
+  // f[x, y] -> {@} f ~[x, ~[y, ~[]]]
   if (source_token_eq(self, first, "[")) {
-    size_t args = source_child(self, index, 1);
-    size_t* items = NULL;
-    error_t err = encode_comma_items(self, args, &items);
-    if (err == ERROR_SUCCESS) {
-      size_t argument = new_tagged(self, ":list", items, stbds_arrlenu(items));
-      *out = new_apply(self, base, argument);
-    }
-    stbds_arrfree(items);
-    return err;
+    size_t argument = 0;
+    error_t err = encode_list(self, first_non_token(self, index), &argument);
+    if (err != ERROR_SUCCESS) { return err; }
+    *out = new_application(self, index, base, argument);
+    return ERROR_SUCCESS;
   }
 
-  span_cbyte_t token = {0};
-  if (!source_token_span(self, first, &token) || token.len < 2 || token.data[0] != '{'
-      || token.data[token.len - 1] != '}') {
-    return ERROR_GENERIC;
-  }
-  size_t argument = new_bytes(self, token.data + 1, token.len - 2);
-  *out = new_apply(self, base, argument);
-  return ERROR_SUCCESS;
-}
-
-static error_t encode_block_argument(bytecode_source_encoder_t* self, size_t index, size_t* out) {
-  for (size_t child = source_node(self, index).child_index; child != BYTECODE_NO_NODE;
-       child = source_node(self, child).next_index) {
-    if (source_node(self, child).type.value == SOURCE_NODE_TYPE_BLOCK_LIST) {
-      return encode_block(self, child, out);
-    }
-  }
-  size_t fields[] = {0};
-  *out = new_tagged(self, ":block", fields, 0);
-  return ERROR_SUCCESS;
-}
-
-static error_t encode_labeled_argument(bytecode_source_encoder_t* self, size_t index, size_t* out) {
-  size_t name = source_child(self, index, 0);
-  size_t argument = source_child(self, index, 2);
-  span_cbyte_t name_token = {0};
-  if (name == BYTECODE_NO_NODE || argument == BYTECODE_NO_NODE
-      || !source_token_span(self, name, &name_token)) {
-    return ERROR_GENERIC;
-  }
-  size_t value = 0;
-  error_t err = encode_node(self, argument, &value);
-  if (err != ERROR_SUCCESS) { return err; }
-  size_t fields[] = {new_bytes(self, name_token.data, name_token.len), value};
-  *out = new_tagged(self, ":label", fields, 2);
-  return ERROR_SUCCESS;
-}
-
-static error_t encode_loose_postfix(
-    bytecode_source_encoder_t* self, size_t index, size_t base, size_t* out) {
-  size_t argument_node = source_child(self, index, 0);
-  if (argument_node == BYTECODE_NO_NODE) { return ERROR_GENERIC; }
+  // f{bytes} -> {@} f {bytes}
   size_t argument = 0;
-  u8 type = source_node(self, argument_node).type.value;
-  error_t err = type == SOURCE_NODE_TYPE_BLOCK_ARGUMENT
-                    ? encode_block_argument(self, argument_node, &argument)
-                    : encode_labeled_argument(self, argument_node, &argument);
+  error_t err = encode_token(self, first, &argument);
   if (err != ERROR_SUCCESS) { return err; }
-  *out = new_apply(self, base, argument);
+  *out = new_application(self, index, base, argument);
   return ERROR_SUCCESS;
 }
 
+// primary tight_postfix* loose_postfix*; a loose postfix is plain application of its datum.
 static error_t encode_postfix(bytecode_source_encoder_t* self, size_t index, size_t* out) {
   size_t primary = source_child(self, index, 0);
   if (primary == BYTECODE_NO_NODE) { return ERROR_GENERIC; }
-  size_t first_postfix = source_node(self, primary).next_index;
-  bool opcode_callee = first_postfix != BYTECODE_NO_NODE
-                       && postfix_starts_application(self, first_postfix)
-                       && primary_is_opcode(self, primary);
-  error_t err = encode_primary(self, primary, opcode_callee, out);
+  error_t err = encode_node(self, primary, out);
   if (err != ERROR_SUCCESS) { return err; }
 
-  for (size_t child = first_postfix; child != BYTECODE_NO_NODE;
+  for (size_t child = source_node(self, primary).next_index; child != BYTECODE_NO_NODE;
        child = source_node(self, child).next_index) {
     u8 type = source_node(self, child).type.value;
     if (type == SOURCE_NODE_TYPE_TIGHT_POSTFIX) {
       err = encode_tight_postfix(self, child, *out, out);
     } else if (type == SOURCE_NODE_TYPE_LOOSE_POSTFIX) {
-      err = encode_loose_postfix(self, child, *out, out);
+      size_t datum = 0;
+      err = encode_node(self, source_child(self, child, 0), &datum);
+      if (err == ERROR_SUCCESS) { *out = new_application(self, child, *out, datum); }
     } else {
-      return ERROR_GENERIC;
+      err = ERROR_GENERIC;
     }
     if (err != ERROR_SUCCESS) { return err; }
   }
   return ERROR_SUCCESS;
 }
 
+// prefix-op expr -> [{:prefix}, meta, {op}, expr]
 static error_t encode_prefix(bytecode_source_encoder_t* self, size_t index, size_t* out) {
-  size_t* operators = NULL;
-  size_t operand = BYTECODE_NO_NODE;
-  for (size_t child = source_node(self, index).child_index; child != BYTECODE_NO_NODE;
-       child = source_node(self, child).next_index) {
-    if (source_node(self, child).type.value == SOURCE_NODE_TYPE_TOKEN) {
-      stbds_arrput(operators, child);
-    } else {
-      operand = child;
-    }
-  }
-  if (operand == BYTECODE_NO_NODE) {
-    stbds_arrfree(operators);
-    return ERROR_GENERIC;
-  }
+  size_t operand = first_non_token(self, index);
+  if (operand == BYTECODE_NO_NODE) { return ERROR_GENERIC; }
   error_t err = encode_node(self, operand, out);
-  if (err != ERROR_SUCCESS) {
-    stbds_arrfree(operators);
-    return err;
+  if (err != ERROR_SUCCESS) { return err; }
+
+  size_t* operators = NULL;
+  for (size_t child = source_node(self, index).child_index; child != operand;
+       child = source_node(self, child).next_index) {
+    stbds_arrput(operators, child);
   }
   for (size_t i = stbds_arrlenu(operators); i != 0; i--) {
     span_cbyte_t token = {0};
@@ -399,96 +384,90 @@ static error_t encode_prefix(bytecode_source_encoder_t* self, size_t index, size
       err = ERROR_GENERIC;
       break;
     }
-    size_t fields[] = {new_bytes(self, token.data, token.len), *out};
-    *out = new_tagged(self, ":prefix", fields, 2);
+    size_t fields[] = {new_span_bytes(self, token), *out};
+    *out = new_tagged(self, ":prefix", index, fields, 2);
   }
   stbds_arrfree(operators);
   return err;
 }
 
+// x op1 y op2 z -> [{:infix}, meta, [{op1}, {op2}], x, y, z]
 static error_t encode_infix(bytecode_source_encoder_t* self, size_t index, size_t* out) {
   size_t first = source_child(self, index, 0);
   if (first == BYTECODE_NO_NODE) { return ERROR_GENERIC; }
-  size_t first_operand = 0;
-  error_t err = encode_node(self, first, &first_operand);
-  if (err != ERROR_SUCCESS) { return err; }
-
-  size_t operator_node = source_node(self, first).next_index;
-  if (operator_node == BYTECODE_NO_NODE) {
-    *out = first_operand;
-    return ERROR_SUCCESS;
+  if (source_node(self, first).next_index == BYTECODE_NO_NODE) {
+    return encode_node(self, first, out);
   }
-  span_cbyte_t operator_token = {0};
-  if (!source_token_span(self, operator_node, &operator_token)) { return ERROR_GENERIC; }
 
+  size_t* operators = NULL;
   size_t* fields = NULL;
-  stbds_arrput(fields, new_bytes(self, operator_token.data, operator_token.len));
-  stbds_arrput(fields, first_operand);
-  for (size_t op = operator_node; op != BYTECODE_NO_NODE;) {
+  error_t err = ERROR_SUCCESS;
+  stbds_arrput(fields, 0); // operator list, filled below
+  for (size_t child = first; child != BYTECODE_NO_NODE;
+       child = source_node(self, child).next_index) {
     span_cbyte_t token = {0};
-    if (!source_token_span(self, op, &token) || token.len != operator_token.len
-        || memcmp(token.data, operator_token.data, token.len) != 0) {
-      err = ERROR_GENERIC;
-      goto done;
-    }
-    size_t operand_node = source_node(self, op).next_index;
-    if (operand_node == BYTECODE_NO_NODE) {
-      err = ERROR_GENERIC;
-      goto done;
+    if (source_token_span(self, child, &token)) {
+      stbds_arrput(operators, new_span_bytes(self, token));
+      continue;
     }
     size_t operand = 0;
-    err = encode_node(self, operand_node, &operand);
+    err = encode_node(self, child, &operand);
     if (err != ERROR_SUCCESS) { goto done; }
     stbds_arrput(fields, operand);
-    op = source_node(self, operand_node).next_index;
   }
-  *out = new_tagged(self, ":infix", fields, stbds_arrlenu(fields));
+  fields[0] = new_list(self, operators, stbds_arrlenu(operators));
+  *out = new_tagged(self, ":infix", index, fields, stbds_arrlenu(fields));
 
 done:
+  stbds_arrfree(operators);
   stbds_arrfree(fields);
   return err;
 }
 
-static error_t encode_source(bytecode_source_encoder_t* self, size_t index, size_t* out) {
+// annotation? infix; @[a, b] expr -> [{:annot}, meta, ~[a, ~[b, ~[]]], expr]
+static error_t encode_expression(bytecode_source_encoder_t* self, size_t index, size_t* out) {
+  size_t annotation = BYTECODE_NO_NODE;
+  size_t body = BYTECODE_NO_NODE;
   for (size_t child = source_node(self, index).child_index; child != BYTECODE_NO_NODE;
        child = source_node(self, child).next_index) {
-    if (source_node(self, child).type.value == SOURCE_NODE_TYPE_BLOCK_LIST) {
-      return encode_block(self, child, out);
+    if (source_node(self, child).type.value == SOURCE_NODE_TYPE_ANNOTATION) {
+      annotation = child;
+    } else {
+      body = child;
     }
   }
-  size_t fields[] = {0};
-  *out = new_tagged(self, ":block", fields, 0);
+  if (body == BYTECODE_NO_NODE) { return ERROR_GENERIC; }
+  error_t err = encode_node(self, body, out);
+  if (err != ERROR_SUCCESS || annotation == BYTECODE_NO_NODE) { return err; }
+  size_t annotations = 0;
+  err = encode_list(self, first_non_token(self, annotation), &annotations);
+  if (err != ERROR_SUCCESS) { return err; }
+  size_t fields[] = {annotations, *out};
+  *out = new_tagged(self, ":annot", index, fields, 2);
   return ERROR_SUCCESS;
 }
 
 static error_t encode_node(bytecode_source_encoder_t* self, size_t index, size_t* out) {
   if (index >= source_tree_get_count(self->source) || out == NULL) { return ERROR_OUT_OF_BOUNDS; }
   switch (source_node(self, index).type.value) {
-    case SOURCE_NODE_TYPE_SOURCE: return encode_source(self, index, out);
-    case SOURCE_NODE_TYPE_BLOCK_LIST: return encode_block(self, index, out);
+    case SOURCE_NODE_TYPE_SOURCE:
+    case SOURCE_NODE_TYPE_BLOCK_ARGUMENT:
+      return encode_block(self, index, first_non_token(self, index), out);
+    case SOURCE_NODE_TYPE_BLOCK_LIST: return encode_block(self, index, index, out);
     case SOURCE_NODE_TYPE_EXPRESSION:
-      return encode_expression_like(self, index, SOURCE_NODE_TYPE_INFIX_EXPRESSION, out);
-    case SOURCE_NODE_TYPE_ARGUMENT_EXPRESSION:
-      return encode_expression_like(self, index, SOURCE_NODE_TYPE_INFIX_EXPRESSION_TIGHT, out);
-    case SOURCE_NODE_TYPE_ANNOTATION: return encode_annotation_value(self, index, out);
+    case SOURCE_NODE_TYPE_ARGUMENT_EXPRESSION: return encode_expression(self, index, out);
     case SOURCE_NODE_TYPE_INFIX_EXPRESSION:
     case SOURCE_NODE_TYPE_INFIX_EXPRESSION_TIGHT: return encode_infix(self, index, out);
     case SOURCE_NODE_TYPE_PREFIX_EXPRESSION:
     case SOURCE_NODE_TYPE_PREFIX_EXPRESSION_TIGHT: return encode_prefix(self, index, out);
     case SOURCE_NODE_TYPE_POSTFIX_EXPRESSION:
     case SOURCE_NODE_TYPE_POSTFIX_EXPRESSION_TIGHT: return encode_postfix(self, index, out);
-    case SOURCE_NODE_TYPE_PRIMARY: return encode_primary(self, index, false, out);
-    case SOURCE_NODE_TYPE_COMMA_LIST: {
-      size_t* items = NULL;
-      error_t err = encode_comma_items(self, index, &items);
-      if (err == ERROR_SUCCESS) { *out = new_tagged(self, ":list", items, stbds_arrlenu(items)); }
-      stbds_arrfree(items);
-      return err;
-    }
-    case SOURCE_NODE_TYPE_BLOCK_ARGUMENT: return encode_block_argument(self, index, out);
-    case SOURCE_NODE_TYPE_LABELED_ARGUMENT: return encode_labeled_argument(self, index, out);
-    case SOURCE_NODE_TYPE_TOKEN: return encode_token(self, index, false, out);
-    case SOURCE_NODE_TYPE_IMPLICIT_DELTA: *out = new_delta(self); return ERROR_SUCCESS;
+    case SOURCE_NODE_TYPE_PRIMARY: return encode_primary(self, index, out);
+    case SOURCE_NODE_TYPE_NYAD: return encode_nyad(self, index, out);
+    case SOURCE_NODE_TYPE_OPCODE: return encode_opcode(self, index, out);
+    case SOURCE_NODE_TYPE_LABELED_EXPRESSION: return encode_labeled(self, index, out);
+    case SOURCE_NODE_TYPE_IMPLICIT_NYAD: *out = new_nyad0(self); return ERROR_SUCCESS;
+    case SOURCE_NODE_TYPE_TOKEN: return encode_token(self, index, out);
     default: return ERROR_GENERIC;
   }
 }
@@ -496,6 +475,7 @@ static error_t encode_node(bytecode_source_encoder_t* self, size_t index, size_t
 error_t bytecode_source_encode(
     span_cbyte_t text,
     const struct source_tree_t* source,
+    struct bytecode_source_options_t options,
     struct cells_t* cells,
     size_t* index_out) {
   if (source == NULL || cells == NULL || index_out == NULL
@@ -511,6 +491,7 @@ error_t bytecode_source_encode(
       .text = text,
       .source = source,
       .builder = builder,
+      .source_meta = options.source_meta,
   };
   size_t root = 0;
   err = encode_node(&encoder, 0, &root);

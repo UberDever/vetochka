@@ -27,3 +27,5 @@
 - [x] 20260831-155152 Paren-statements candidate
 - [ ] 20260903-085028 Metadata list in lowered nodes
 - [x] 20260924-092637 Lowering of mixed infix chains
+- [x] 20260924-120458 Bring the parser up to date with the spec
+- [ ] 20260924-123410 Unicode identifiers

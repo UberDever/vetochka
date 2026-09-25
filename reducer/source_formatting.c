@@ -43,6 +43,11 @@ static size_t cstr_len(const char* s) {
   return n;
 }
 
+static bool node_is_token(struct source_node_t node) {
+  return node.type.value == SOURCE_NODE_TYPE_TOKEN || node.type.value == SOURCE_NODE_TYPE_OP_PREFIX
+         || node.type.value == SOURCE_NODE_TYPE_OP_INFIX;
+}
+
 static bool token_empty(struct source_token_t token) {
   return token.begin == token.end;
 }
@@ -63,31 +68,6 @@ static bool token_eq(span_cbyte_t text, struct source_token_t token, const char*
 static bool token_is_newline(span_cbyte_t text, struct source_token_t token) {
   return token.begin < token.end && token.begin < text.len
          && (text.data[token.begin] == '\n' || text.data[token.begin] == '\r');
-}
-
-static bool token_is_operatorish(span_cbyte_t text, struct source_token_t token) {
-  if (token_empty(token) || token.begin >= text.len || token_eq(text, token, "@[")
-      || token_eq(text, token, ":")) {
-    return false;
-  }
-  for (size_t i = token.begin; i < token.end && i < text.len; ++i) {
-    switch (text.data[i]) {
-      case '=':
-      case '+':
-      case '-':
-      case '*':
-      case '/':
-      case '%':
-      case '<':
-      case '>':
-      case '!':
-      case '&':
-      case '|':
-      case ':': break;
-      default: return false;
-    }
-  }
-  return true;
 }
 
 static error_t fmt_token_raw(fmt_t* fmt, span_cbyte_t text, struct source_token_t token) {
@@ -134,7 +114,7 @@ static size_t sexpr_flat_len(span_cbyte_t text, const struct source_tree_t* tree
   if (index >= source_tree_get_count(tree)) { return 0; }
   const struct source_node_t node = source_tree_get_node(tree, index);
   size_t len = 2 + cstr_len(source_node_type_t_str(node.type));
-  if (node.type.value == SOURCE_NODE_TYPE_TOKEN) { len += 1 + token_escaped_len(text, node.token); }
+  if (node_is_token(node)) { len += 1 + token_escaped_len(text, node.token); }
   for (size_t child = node.child_index; child != TREE_NO_NODE;
        child = source_tree_get_node(tree, child).next_index) {
     len += 1 + sexpr_flat_len(text, tree, child);
@@ -152,7 +132,7 @@ static error_t sexpr_node(
     if (err != ERROR_SUCCESS) { return err; }
     err = fmt_text(fmt, source_node_type_t_str(node.type));
     if (err != ERROR_SUCCESS) { return err; }
-    if (node.type.value == SOURCE_NODE_TYPE_TOKEN) {
+    if (node_is_token(node)) {
       err = fmt_byte(fmt, ' ');
       if (err != ERROR_SUCCESS) { return err; }
       err = fmt_token_escaped(fmt, text, node.token);
@@ -172,7 +152,7 @@ static error_t sexpr_node(
   if (err != ERROR_SUCCESS) { return err; }
   err = fmt_text(fmt, source_node_type_t_str(node.type));
   if (err != ERROR_SUCCESS) { return err; }
-  if (node.type.value == SOURCE_NODE_TYPE_TOKEN) {
+  if (node_is_token(node)) {
     err = fmt_byte(fmt, ' ');
     if (err != ERROR_SUCCESS) { return err; }
     err = fmt_token_escaped(fmt, text, node.token);
@@ -229,7 +209,8 @@ static error_t canon_maybe_break(canon_t* c, size_t next_len) {
   return ERROR_SUCCESS;
 }
 
-static error_t canon_token(canon_t* c, span_cbyte_t text, struct source_token_t token) {
+static error_t canon_token(canon_t* c, span_cbyte_t text, struct source_node_t node) {
+  const struct source_token_t token = node.token;
   if (token_empty(token)) { return ERROR_SUCCESS; }
   const bool semicolon = token_eq(text, token, ";") || token_is_newline(text, token);
   const size_t len = semicolon ? 1 : token_len(text, token);
@@ -264,7 +245,17 @@ static error_t canon_token(canon_t* c, span_cbyte_t text, struct source_token_t 
         || (token.begin < token.end && token.begin < text.len && text.data[token.begin] == '{');
     return ERROR_SUCCESS;
   }
-  if (token_is_operatorish(text, token)) {
+  if (node.type.value == SOURCE_NODE_TYPE_OP_PREFIX || token_eq(text, token, "$")) {
+    // A prefix operator must stay glued to its operand; `$` heads its label.
+    error_t err = canon_space(c);
+    if (err != ERROR_SUCCESS) { return err; }
+    err = canon_maybe_break(c, len + 1);
+    if (err != ERROR_SUCCESS) { return err; }
+    err = fmt_token_raw(&c->fmt, text, token);
+    c->need_space = false;
+    return err;
+  }
+  if (node.type.value == SOURCE_NODE_TYPE_OP_INFIX) {
     error_t err = canon_space(c);
     if (err != ERROR_SUCCESS) { return err; }
     err = canon_maybe_break(c, len + 1);
@@ -291,7 +282,7 @@ static error_t canon_node(
     canon_t* c, span_cbyte_t text, const struct source_tree_t* tree, size_t index) {
   if (index >= source_tree_get_count(tree)) { return ERROR_OUT_OF_BOUNDS; }
   const struct source_node_t node = source_tree_get_node(tree, index);
-  if (node.type.value == SOURCE_NODE_TYPE_TOKEN) { return canon_token(c, text, node.token); }
+  if (node_is_token(node)) { return canon_token(c, text, node); }
   for (size_t child = node.child_index; child != TREE_NO_NODE;
        child = source_tree_get_node(tree, child).next_index) {
     error_t err = canon_node(c, text, tree, child);

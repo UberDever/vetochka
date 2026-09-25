@@ -39,7 +39,7 @@ special_tilde  ::= "~"
 
 operator_run ::= operator_char+
 operator_char ::= "=" | "+" | "-" | "*" | "/" | "%" | "<" | ">"
-                | "!" | "&" | "|" | ":"
+                | "!" | "&" | "|" | ":" | "^"
 ```
 
 `do` and `end` are reserved block words. `$` and `~` are special tokens; each heads only its grammar form. A lone `:` is punctuation, not an operator; operators may contain `:` (e.g. `::`).

@@ -17,7 +17,7 @@
   X(P, TIGHT_POSTFIX, 9, "tight-postfix")                                                          \
   X(P, LOOSE_POSTFIX, 10, "loose-postfix")                                                         \
   X(P, BLOCK_ARGUMENT, 11, "block-argument")                                                       \
-  X(P, LABELED_ARGUMENT, 12, "labeled-argument")                                                   \
+  X(P, LABELED_EXPRESSION, 12, "labeled-expression")                                               \
   X(P, ARGUMENT_EXPRESSION, 13, "argument-expression")                                             \
   X(P, INFIX_EXPRESSION_TIGHT, 14, "infix-expression-tight")                                       \
   X(P, PREFIX_EXPRESSION_TIGHT, 15, "prefix-expression-tight")                                     \
@@ -25,7 +25,11 @@
   X(P, PRIMARY, 17, "primary")                                                                     \
   X(P, COMMA_LIST, 18, "comma-list")                                                               \
   X(P, TOKEN, 19, "token")                                                                         \
-  X(P, IMPLICIT_DELTA, 20, "implicit-delta")
+  X(P, IMPLICIT_NYAD, 20, "implicit-nyad")                                                         \
+  X(P, NYAD, 21, "nyad")                                                                           \
+  X(P, OPCODE, 22, "opcode")                                                                       \
+  X(P, OP_PREFIX, 23, "op-prefix")                                                                 \
+  X(P, OP_INFIX, 24, "op-infix")
 
 DECL_TYPED_ENUM(source_node_type_t, u8, SOURCE_NODE_TYPE, SOURCE_NODE_TYPE_ITEMS)
 
