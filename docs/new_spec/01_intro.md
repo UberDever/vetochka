@@ -2,7 +2,7 @@
 
 ## Why?
 
-Usually, when you present a new lanuguage, they ask you why would you do that. My answer: multiple reasons.
+Usually, when you present a new language, they ask you why would you do that. My answer: multiple reasons.
 
 Here they are, one by one:
 
@@ -16,9 +16,9 @@ exercise it in the real programming language
 Thus, the idea for `Vetochka` was born: a new language, characterised by the following statements:
 
 1. Syntax is very expressive and yet simple enough to analyze and construct
-2. Reflecion is built in the language as one of its main pillars: unified term representation and a rule for their introspection
+2. Reflection is built in the language as one of its main pillars: unified term representation and a rule for their introspection
 3. Language can build itself without quotation, what `tree-calculus` refers to as *intensionality*
-4. There's an executable subset of a language (called futher `v0`), that allows to compute terms and inspect them, and
+4. There's an executable subset of a language (called further `v0`), that allows to compute terms and inspect them, and
 is used as a layer to build compilers/interpreters for other languages (called further `vf`)
 5. Since the syntax is inert and yet expressive, and since there is a `v0` subset that allows to compute and inspect
 arbitrary terms, it is possible to write any compiler in `v0` from this syntax `vf` to any other language
@@ -44,5 +44,9 @@ Shoulders for this language:
 - Scheme
 
 [task 20260805-162237](../../tasks/20260805-162237/TASK.md): explain each and every one, make a source link, link each to a particular vetochka level
+
+If there is a single phrase that describes the core language spirit, it is this:
+
+> As above, so below
 
 \newpage

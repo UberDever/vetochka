@@ -1,7 +1,5 @@
 # Syntax
 
-> As above, so below
-
 ## Source text and trivia
 
 Source text is UTF-8.
@@ -42,7 +40,7 @@ operator_char ::= "=" | "+" | "-" | "*" | "/" | "%" | "<" | ">"
                 | "!" | "&" | "|" | ":" | "^"
 ```
 
-`do` and `end` are reserved block words. `$` and `~` are special tokens; each heads only its grammar form. A lone `:` is punctuation, not an operator; operators may contain `:` (e.g. `::`).
+`do` and `end` are reserved block words. `$` and `~` are special tokens; each heads only its grammar form. We exclude a lone `:`: it is punctuation, not an operator, and operators may contain `:` (e.g. `::`).
 
 An operator run is classified by adjacency; trivia breaks gluing:
 
@@ -57,7 +55,7 @@ Delimiters split the same way, glued or free. Glued means stuck to the end of an
 3. lone `:` stuck to a label word: `g_colon`; free lone `:`: error.
 
 `balanced_utf8_bytes` permits balanced braces without escape syntax. The exact
-scanner algorithm is implementation detail.
+scanner algorithm is an implementation detail.
 
 ## Automatic semicolon insertion
 
@@ -109,8 +107,7 @@ loose_postfix ::= block_argument | labeled_expression
 
 block_argument ::= "do" block_list? "end"
 
-labeled_expression ::= label g_colon argument_expression
-label ::= identifier | "do" | "end"
+labeled_expression ::= identifier g_colon argument_expression
 
 argument_expression ::= annotation? infix_expression_tight
 infix_expression_tight ::= prefix_expression_tight
@@ -136,35 +133,38 @@ Spacing before a loose postfix is immaterial (`$fn:` and `$ fn:` are the same). 
 
 ## Rewrite rules
 
-Every lowered node carries `meta` right after its tag: `[{node}, meta, ...payload]`. `meta` is a k-v list; it contains some fields,
-depending on the node. Exact fields: [task 20260903-085028](../../tasks/20260903-085028/TASK.md).
+To support intensionality, syntax above is lowered into simpler terms, representable by the same syntax. For the same reason,
+applications are also represented as data, using `{@}` string as a head. 
 
-To support intensionality, syntax above is lowered into simpler terms, representable by the same syntax — with one
-exception: `{@}` marks application and isn't part of the syntax, only notation for the cells to come: `f(x) -> {@} f x`.
+Every kind of an AST subtree is represented in a unified way:
+`[{some-tag}, <meta>, ...payload]`. Exceptions are the structuring nodes themselves: namely nyads and, consequently, lists and k-v lists.
+Literals: [task 20260926-053139](../../tasks/20260926-053139/TASK.md).
+
+`meta`: [task 20260903-085028](../../tasks/20260903-085028/TASK.md).
 
 ```text
 1. x                    -> [{:id}, meta, {x}]
-2. $                    -> [{:id}, meta, {$}]  ;; opcode head, never alone
+2. $fn: x               -> [{@}, meta, [{:id}, meta, {$}],
+                            [{:label}, meta, {fn}, x]]
 3. [a, b]               -> ~[a, ~[b, ~[]]]
 4. (entry)              -> entry  ;; parens are purely syntactic, erased
-5. f(x, y)              -> {@} ({@} f x) y
+5. f(x, y)              -> [{@}, meta1, [{@}, meta2, f, x], y]
 6. label: expr          -> [{:label}, meta, {label}, expr]
 7. do a; b end          -> [{:block}, meta, a, b]
 8. @[a, b] expr         -> [{:annot}, meta, ~[a, ~[b, ~[]]], expr]
-9. f[x, y]              -> {@} f ~[x, ~[y, ~[]]],
-10. f{bytes}            -> {@} f {bytes}
+9. f[x, y]              -> [{@}, meta, f, ~[x, ~[y, ~[]]]]
+10. f{bytes}            -> [{@}, meta, f, {bytes}]
 11. prefix-op expr      -> [{:prefix}, meta, {op}, expr]
-12. x op1 y op2 z       -> [{:infix}, meta, [{op1}, {op2}], x, y, z] ;; these are analyzed at vf stages;
+12. x op1 y op2 z       -> [{:infix}, meta, [{op1}, {op2}], x, y, z]
 13. base.name           -> [{:selector}, meta, base, {name}]
 ```
 
-A loose postfix lowers as plain application of its datum: `f x: 1 -> {@} f [{:label}, meta, {x}, 1]`.
+A bare `$` does not parse. Infix chains, mixed operators included, are analyzed at vf stages.
+
+A loose postfix lowers as plain application of its datum, i.e. `f x: 1 -> [{@}, meta, f, [{:label}, meta, {x}, 1]]`.
 
 Note that the resulting tree is fully inert by itself, it isn't executed until it comes into executable position, see [v0
 execution rules](#v0-cesk).
-
-Preserving application marker nodes allows to construct and inspect arbitrary application trees without the need for their
-execution.
 
 # Representation
 
@@ -186,16 +186,17 @@ There are following node types:
 3. `nyad2`
     + Represents `~[x, y]` with 2 children, a fork
     + Pith: `~[x, y]`
+
 [task 20260805-162238](../../tasks/20260805-162238/TASK.md): add more
-    
+
 
 `Pith` is a "view" into the node that is generated on demand when the node enters
  [`rule 3` family rule of `v0`](#triage-calculus). On more detail see [pith section](#pith).
 
 ## Pith
 
-Pith are essential internals of a node that are introspectable by `rule 3`. 
-They are dual, meaning: if there's an observable pith of a certain node, a pith constructed in a same way from scratch
+Piths are essential internals of a node that are introspectable by `rule 3`. 
+They are dual, meaning: if there's an observable pith of a certain node, a pith constructed in the same way from scratch
 represents such node. This allows for intensionality not only for `tree-calculus` level of `v0`, but also for other runtime
 entities, such as opcodes.
 
