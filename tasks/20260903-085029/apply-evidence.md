@@ -55,7 +55,7 @@ Newest first within each part.
 
 ## Gaps
 
-- The spec's "only notation for the cells to come" predates 2026-08-30, when `{@}` became data.
+- ~~The spec's "only notation for the cells to come" predates 2026-08-30, when `{@}` became data.~~ closed (user, 2026-09-26): the spec now shows applications as `[{@}, meta, f, x]` data.
   (agent, 2026-08-30, unruled) its "not part of the language" status dissolves into an ordinary
   inert node type.
 - Pith of an un-executed `{@}` datum: open (task 20260805-162238).
