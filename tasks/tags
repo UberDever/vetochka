@@ -1,4 +1,3 @@
-epic, Groups related tasks; sub-items that are not tasks live in the epic's items.md
 encoding, Cell representation and byte encoding
 reducer, The C implementation in reducer/
 opcode, Opcode shape, tagging, natives

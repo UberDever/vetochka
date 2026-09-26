@@ -3,6 +3,8 @@
 - STATUS: CLOSED
 - PRIORITY: 100
 - TAGS: process
+- KIND: TASK
+- PARENT: 20260926-050132
 
 - Decision (user, 2026-09-24): code is GPL-3.0-or-later (`LICENSE`).
 - Decision (user, 2026-09-24): docs and design records, including AI output, are CC BY 4.0 (`LICENSE-DOCS`); it is public knowledge.

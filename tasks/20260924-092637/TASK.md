@@ -3,7 +3,8 @@
 - STATUS: CLOSED
 - PRIORITY: 100
 - TAGS: syntax, spec
-- EPIC: 20241220-144435
+- KIND: TASK
+- PARENT: 20241220-144435
 
 - [fact] Rewrite rule 12 in `docs/new_spec/02_syntax.md` shows a single operator: `x op y op z -> [{:infix}, {op}, x, y, z]`. It doesn't say how a chain with different operators lowers.
 - Decision (user, 2026-09-24): operators in a chain may differ. Without parens the whole chain is flat, in one list.

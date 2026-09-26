@@ -4,10 +4,17 @@
   `tasks/` holds everything about the development process, tracked with tatr (`tatr` skill).
   `archive/` holds process artifacts whose content is captured in tasks or superseded.
 - Each task folder has `TASK.md` plus its artifacts: session notes, dialogues, drafts, experiments.
-  Epics are tagged `epic`; sub-items that are not tasks on their own go in the epic's `items.md`.
+  Records form a tree, Intent → Initiative → Task, linked only by `PARENT` (`tatr` skill).
+  Each claim lives in one record; others reference its ID. Sub-items that are not records of
+  their own go in the parent's `items.md`.
 - Docs and code reference tasks by ID instead of carrying TODOs.
-- A task belongs to the epic of the concept it defines, not to the spec page that mentions it.
+- A record's parent is the record of the concept it defines, not the spec page that mentions it.
   The spec reads top to bottom, so a page may mention concepts defined elsewhere.
+
+## Spec
+
+- The user writes the spec (`docs/new_spec`); the agent makes targeted edits only, in plain English.
+- Spec text is concise and normative; reasoning and alternatives go into tasks.
 
 ## Archive
 

@@ -3,7 +3,8 @@
 - STATUS: OPEN
 - PRIORITY: 100
 - TAGS: binders, machine
-- EPIC: 20241225-140425
+- KIND: TASK
+- PARENT: 20241225-140425
 
 - Decision (user, 2026-08-30): the opcode that takes raw inputs is `$form`, in continuity with `{form}`. Callee-dependent raw arguments are accepted by design.
 - Open (user): its exact shape is subject to change.

@@ -3,7 +3,8 @@
 - STATUS: CLOSED
 - PRIORITY: 100
 - TAGS: syntax, rejected
-- EPIC: 20241220-144435
+- KIND: TASK
+- PARENT: 20241220-144435
 
 - Candidate: `(a; b)` as a block, dropping `do ... end`. It loses the loose trailing block `f do ... end`.
 - ~~Decision (user, 2026-08-30): deferred until a bootstrap corpus in the current grammar decides.~~ superseded by the 2026-09-24 ruling.

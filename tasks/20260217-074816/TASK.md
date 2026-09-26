@@ -3,7 +3,8 @@
 - STATUS: CLOSED
 - PRIORITY: 100
 - TAGS: encoding
-- EPIC: 20241225-125809
+- KIND: TASK
+- PARENT: 20260529-103914
 
 - Decision (user, 2026-02-17): implement and test the calculus part of the reducer first. Then add encodings one by one, with opcodes only as speedups.
 - [fact] (2026-06-13) The reducer implements calculus application, with tests.

@@ -3,7 +3,8 @@
 - STATUS: CLOSED
 - PRIORITY: 100
 - TAGS: experiment, spec
-- EPIC: 20260805-162236
+- KIND: TASK
+- PARENT: 20260926-050132
 
 - Experiment (user ruling, 2026-09-24): an agent allowed to imagine produced a whole-pipeline picture. Its content is hypothesis, not ruling.
 - Its spec edits were reverted. The diff is in archive/20260903-120000/experiment-2026-09-03-spec-edits.md.

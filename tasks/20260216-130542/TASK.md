@@ -3,7 +3,8 @@
 - STATUS: CLOSED
 - PRIORITY: 100
 - TAGS: encoding, rejected
-- EPIC: 20241225-125809
+- KIND: TASK
+- PARENT: 20241225-125809
 
 - (user, 2026-02-16) Two adjacent nodes in cells apply to each other, so the reduce stack needs no apply token.
 - Rejected (user): results of rules 2 and 3c can be scattered, so adjacency can't encode them.

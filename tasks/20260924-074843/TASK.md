@@ -3,6 +3,8 @@
 - STATUS: CLOSED
 - PRIORITY: 100
 - TAGS: process
+- KIND: TASK
+- PARENT: 20260926-050132
 
 - Decision (user): task tracking uses tatr. `docs/` holds user-facing docs; `tasks/` holds the record of design work.
 - Decision (user): tasks are the source of truth for design labour, as important as code. They state current knowledge, not migrated quotes.

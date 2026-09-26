@@ -3,7 +3,8 @@
 - STATUS: OPEN
 - PRIORITY: 100
 - TAGS: opcode
-- EPIC: 20250123-091611
+- KIND: TASK
+- PARENT: 20241220-144435
 
 - Direction (user, 2026-09-24): refine k-v lists into a language concept. They give optionality and free order. Metadata could be an optional k-v entry, present or absent, leaving the positional node well-formed.
 - (user, 2026-09-24) Restriction: k-v entries go after positionals, enforced by the parser.

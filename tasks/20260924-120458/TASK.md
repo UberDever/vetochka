@@ -3,7 +3,8 @@
 - STATUS: CLOSED
 - PRIORITY: 100
 - TAGS: syntax, reducer
-- EPIC: 20241220-144435
+- KIND: TASK
+- PARENT: 20241220-144435
 
 - (user, 2026-09-24) Syntax here means parsing: generating nodes. Inspection (Rule 3, CESK, piths) is a separate step and may stay open. Planned as a separate session.
 - [fact] Gaps in `reducer/` against `docs/new_spec/02_syntax.md`:

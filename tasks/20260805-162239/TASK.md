@@ -3,7 +3,8 @@
 - STATUS: CLOSED
 - PRIORITY: 100
 - TAGS: binders, experiment
-- EPIC: 20241225-140425
+- KIND: TASK
+- PARENT: 20241225-140425
 
 - Decision (user, 2026-07-29): lambda plus triage stays the computation model. Abstraction remains a recognizable runtime tree form.
 - Rejected: stack execution, rewriting, message passing or interaction nets as the universal model.

@@ -3,7 +3,8 @@
 - STATUS: OPEN
 - PRIORITY: 100
 - TAGS: binders, spec
-- EPIC: 20241225-140425
+- KIND: TASK
+- PARENT: 20241225-140425
 
 - Decision (user, 2026-08-30): one form, `let[clauses] do ... end`. The loose block ends it.
 - Clause kinds are infix operators: `=` binds, `<~` binds recursively, more can be added. Clauses lower to `[{:infix}, op, id, expr]`.
