@@ -9,7 +9,7 @@
 - (user, 2026-08-30) The user writes the spec; the agent makes targeted edits only, in plain English.
 - ~~(2026-08-07) explicit delta arity `^0`, `^1[x]`, `^2[x, y]`~~ superseded by nyads, 2026-08-30.
 - Spec references: `tatr ls :spec`.
-- Session notes: 2026-08-07.md, 2026-08-30.md.
+- Session notes: archive/20260807-120000/2026-08-07.md, 2026-08-30.md.
 
 ## Tasks
 

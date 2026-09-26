@@ -10,4 +10,6 @@
 - Open: its exact semantics in the spec.
 - Direction (user, 2026-09-24): `exec` follows a meta-ignoring principle. Turning `[{@}, meta, f, x]` into a machine application drops `meta`, as Jay's tags never change what a function does (tree book 5.4).
 - (agent) Refinement, not ruled: the rule covers all execution, `exec` and every opcode that reads raw syntax, since those nodes carry `meta` too. Wording: `meta` never changes what execution computes; reading it for diagnostics is allowed.
+- Evidence on `{@}` execution, inspection and forcing: apply-evidence.md (2026-09-25).
+- Decision (user, 2026-09-26): `exec` drives the computation one step at a time. Given the evaluation rules, one applicable rule is chosen and executed. No deep evaluation: the CESK rules define evaluation completely, with corner-case prose where needed, as with the grammar.
 - Context (user): decided on the evening of 2026-09-24 while the user was drunk. Review sober.

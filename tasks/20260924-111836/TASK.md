@@ -7,7 +7,7 @@
 
 - Direction (user, 2026-09-24): refine k-v lists into a language concept. They give optionality and free order. Metadata could be an optional k-v entry, present or absent, leaving the positional node well-formed.
 - (user, 2026-09-24) Restriction: k-v entries go after positionals, enforced by the parser.
-- [fact] Today labeled expressions are ordinary entries (C6, 2026-08-30): `[x: 2, y: 4]` is already a k-v list, and `label: expr` lowers to `[{:label}, meta, {label}, expr]`. Details: labels-kv.md in the syntax epic.
+- [fact] Today labeled expressions are ordinary entries (C6, 2026-08-30): `[x: 2, y: 4]` is already a k-v list, and `label: expr` lowers to `[{:label}, meta, {label}, expr]`. Details: archive/20260807-120000/labels-kv.md.
 - (agent) Challenge: blocks and lists may already contain labeled entries, so a trailing `meta:` entry can collide with payload. It needs a reserved key or tag.
 - (agent) Conflict: the spec now puts `meta` positionally after the tag. A trailing optional k-v entry would replace that.
 - (agent) Prior art, from general knowledge: Python keyword arguments (positionals first, parser-enforced), Elixir keyword lists (plain lists of pairs, sugar in last position), Lua tables (positional and keyed parts in one table), Common Lisp `&key` plists.

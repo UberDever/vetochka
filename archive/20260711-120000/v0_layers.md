@@ -6,8 +6,8 @@ exists; names live to runtime, die by env lookup), `LOCAL`, the closed-term
 discipline, `do!`/`{fn}` spellings, and Layer 4 `{specialize}`.
 
 Previous status: authoritative snapshot, updated 10.07.2026. Where this conflicts with
-[`v0_cesk_draft.md`](../20260529-103914/v0_cesk_draft.md), this wins. Layer 5 not yet restated.
-Decision history lives in [project history](../20260201-183604/project_history.md).
+[`v0_cesk_draft.md`](../20260613-120000/v0_cesk_draft.md), this wins. Layer 5 not yet restated.
+Decision history lives in [project history](../../tasks/20260201-183604/project_history.md).
 
 Claim labels used below: **implemented** describes current C code; **decided** is
 target semantics; **open** must not drive implementation yet.
@@ -201,4 +201,4 @@ Open: meaning of `LOCAL` at runtime; function values; strict/non-strict argument
 machine state; argument spine and GRAB; under/exact/over-application; continuations;
 evaluation order; effect duplication; exact function/opcode cell encoding.
 
-[`v0_cesk_draft.md`](../20260529-103914/v0_cesk_draft.md) provides candidates for these questions, not settled semantics.
+[`v0_cesk_draft.md`](../20260613-120000/v0_cesk_draft.md) provides candidates for these questions, not settled semantics.

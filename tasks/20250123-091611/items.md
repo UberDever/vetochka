@@ -8,4 +8,4 @@
 - 2026-03-24 (user): runtime ABI of tagged values, shared by parser, VM and programs.
 - 2026-06-04 (user): opcode as `[callable-tag, [cur, max arity], [curried args], impl]`.
 - 2026-06-11 (user): a byte-string literal in function position names a native.
-- Research notes: llm_research_on_opcode_shape.md, claude_opcode_do_research_2026-07-10.md.
+- Research notes: archive/20260322-120000/llm_research_on_opcode_shape.md, archive/20260322-120000/claude_opcode_do_research_2026-07-10.md.

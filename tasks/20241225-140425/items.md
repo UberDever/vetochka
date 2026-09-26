@@ -7,4 +7,4 @@
 - 2026-07-11 (user): `$f` one-argument and `$fn` multi-argument functions; `$f` later folded into `$fn`.
 - 2026-08-30 (user): identifier evaluation matrix, in identifier-context.md.
 - Examples: scope_syntax_example.md and the module_*.md files.
-- Dialogues: lexical-reference-models.md, identifier-context.md.
+- Dialogues: archive/20260717-120000/lexical-reference-models.md, identifier-context.md.

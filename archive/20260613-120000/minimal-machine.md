@@ -9,7 +9,7 @@ Pre-implementation: cheap to revise now, expensive after C implementation.
 
 ## Settled input
 
-- [`tasks/20260711-131255/v0_layers.md`](../20260711-131255/v0_layers.md) Layers 0–4 are authority.
+- [`tasks/20260711-131255/v0_layers.md`](../20260711-120000/v0_layers.md) Layers 0–4 are authority.
 - Machine owns executable application dispatch; triage rules are delta case.
 - No store or boxes.
 - ZINC-derived argument handling required while simple.

@@ -748,8 +748,8 @@ APPLY(SOME_OPCODE1(x), y)
 - `{fn}` is eager. `{form}` is lazy
 - `APPLY` is pending executable application. Delta/opcode values separately saturate
     through `TYPE0 -> TYPE1 -> TYPE2`, then dispatch by family.
-- Proposal (not approved yet): [`v0_cesk_draft.md`](../20260529-103914/v0_cesk_draft.md).
-- Basis review: [`v0_basis_review.md`](../20260529-103914/v0_basis_review.md).
+- Proposal (not approved yet): [`v0_cesk_draft.md`](../../archive/20260613-120000/v0_cesk_draft.md).
+- Basis review: [`v0_basis_review.md`](../../archive/20260613-120000/v0_basis_review.md).
 
 ### 17.06.2026
 - General opcode: `^ [opcode_payload]`
@@ -768,7 +768,7 @@ APPLY(SOME_OPCODE1(x), y)
 6. Add recursive/mutable binding cells only after immutable closures work end to end.
 
 ### 09.07.2026
-- context restoration session; produced snapshot doc [`tasks/20260711-131255/v0_layers.md`](../20260711-131255/v0_layers.md),
+- context restoration session; produced snapshot doc [`tasks/20260711-131255/v0_layers.md`](../../archive/20260711-120000/v0_layers.md),
     it wins over `v0_cesk_draft.md` on conflict; layer 5 (machine) not yet restated there
 - decisions made during restoration:
     * families over delta-encodings re-approved; supersedes 18.03.2026 magic-delta opcode encoding

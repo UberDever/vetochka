@@ -25,3 +25,4 @@
 - [x] 20260614-140231 Abstract opcode node creation in the source encoder
 - [ ] 20260718-175927 Rule 3 dispatches on storage arity, wrong for APPLY
 - [ ] 20260924-100255 Reword cells: runtime nodes with non-trivial piths
+- [ ] 20260925-134730 Cells revision

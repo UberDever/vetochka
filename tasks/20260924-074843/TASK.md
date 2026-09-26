@@ -14,4 +14,5 @@
 - Decision (user): the repo-local memory skill is removed. The tatr skill carries the task-as-memory rules.
 - Decision (user): built spec PDFs (`docs/*/output.pdf`) are gitignored.
 - Open: purge of the shared `memsearch_chunks` collection was blocked by permissions; the user runs it.
-- Details: 2026-09-24.md.
+- Details: archive/20260924-120000/2026-09-24.md.
+- Decision (user, 2026-09-26): a third artifact kind, `archive/`, for garbage-collected process notes; see AGENTS.md.

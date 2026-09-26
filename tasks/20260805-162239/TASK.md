@@ -9,4 +9,4 @@
 - Rejected: stack execution, rewriting, message passing or interaction nets as the universal model.
 - Open then: runtime shape of abstractions and captures, what piths expose, partial application, mutation.
 - This is the ancestor of the binder axiom (2026-08-30).
-- Details: basis-experiment.md.
+- Details: archive/20260717-120000/basis-experiment.md.
