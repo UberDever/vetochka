@@ -1,6 +1,6 @@
 # Current cells encoding (2026-09-25)
 
-Source: `reducer/cells_impl.h` (`CELLS_NODE_INFO_ITEMS`), `reducer/cells_api.h`, `reducer/cells_node.c`.
+Source: `public/cells/impl.h` (`CELLS_NODE_INFO_ITEMS`), `public/cells/api.h`, `public/cells/node.c`.
 The first byte selects the node: `(byte & mask) == code`. Mask/code/layout pairs are the bytecode ABI.
 
 | Type | First byte | Layout | Size | Arity | Payload | Used today |

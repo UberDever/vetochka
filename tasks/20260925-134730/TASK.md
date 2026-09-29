@@ -8,7 +8,7 @@
 
 - Goal (user, 2026-09-25): introduce an abstraction between cells (storage) and the in-language representation, mainly for piths.
 - Storage and observation may differ; piths bridge them (user, 2026-09-24): see 20260805-162238.
-- [fact] Current encoding: cells-encoding.md (from `reducer/cells_impl.h`, `cells_api.h`, `cells_node.c`).
+- [fact] Current encoding: cells-encoding.md (from `public/cells/impl.h`, `api.h`, `node.c`).
 - [fact] Cells still carry `OP_FN0..2` and `APPLY`, while the encoder no longer emits either: applications are `{@}` data since 2026-09-24.
 - (user, 2026-09-25) Wire bytes from `0x80` leave room for about 42 families in three arities, more for single-arity tags. Today's tags separate storage layouts: nyad, i64, bytes, some opcodes. Direction: tie tags to the semantic objects behind the language instead; `APPLY` and some opcodes already are.
 - Direction (user, 2026-09-25): as above, so below — executing requires an exactly shaped node. For example `{@} lhs: f rhs: x` rather than any list headed by `{@}`, so it pairs with the cell form `APPLY lhs: ref-to-f rhs: ref-or-inline-x`.
