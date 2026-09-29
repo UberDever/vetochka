@@ -5,8 +5,8 @@ on:
   pull_request:
   workflow_dispatch:
 
-# vetochka is built in its workspace: the workspace repo (vendored libraries) with vetochka and
-# muh-build checked out inside it, as in the workspace's README.
+# vetochka is built in a workspace: the entries of `mine` it needs, with vetochka and muh-build
+# checked out next to them, as the README says.
 jobs:
   zig:
     name: zig ${{ matrix.flags }}
@@ -17,7 +17,12 @@ jobs:
         flags: ["", "-Dsanitize=true"]
     steps:
       - uses: actions/checkout@v5
-        with: { repository: UberDever/vetochka-repo }
+        with:
+          repository: UberDever/mine
+          sparse-checkout: |
+            stb_ds-0.67
+            nob_da-3.8.2
+            arena
       - uses: actions/checkout@v5
         with: { path: vetochka }
       - uses: mlugg/setup-zig@v2
@@ -34,7 +39,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-        with: { repository: UberDever/vetochka-repo }
+        with:
+          repository: UberDever/mine
+          sparse-checkout: |
+            stb_ds-0.67
+            nob_da-3.8.2
+            arena
       - uses: actions/checkout@v5
         with: { path: vetochka }
       - uses: actions/checkout@v5

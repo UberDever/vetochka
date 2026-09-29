@@ -1,5 +1,5 @@
--- How to build vetochka in its workspace (~/dev/vetochka-repo): the header-only libraries it
--- includes, then vetochka itself.
+-- How to build vetochka: the libraries it vendors from `mine` (check them out next to vetochka, as
+-- the README shows), then vetochka itself.
 return {
     muh_build = "0.1",
     requires = {

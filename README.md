@@ -39,10 +39,28 @@ are main points that describe project development across years.
 
 # Trying it
 
-Currently, there are only tests written in zig. Language interpreter is also embeddable, so
-current design provides C headers + dynamicaly linked library to use in different applications.
+Vetochka is built with [muh-build](https://github.com/UberDever/muh-build), next to the libraries it
+vendors from [mine](https://github.com/UberDever/mine) (listed in `recipe.lua`). Put them side by side:
 
-To run zig tests: `zig build test-all`. There are also sanitized tests, to run them do `zig build test-all -Dsanitize=true`. Note that in this case I expect `gcc` to be installed in the system (currently only gcc was tested).
+```sh
+git clone --no-checkout git@github.com:UberDever/mine.git ws
+git -C ws sparse-checkout set stb_ds-0.67 nob_da-3.8.2 arena
+git -C ws checkout master
+git clone git@github.com:UberDever/vetochka.git ws/vetochka
+git clone git@github.com:UberDever/muh-build.git ws/muh-build
+printf '/vetochka\n/muh-build\n' >> ws/.git/info/exclude
+```
+
+Then build:
+
+```sh
+cd ws
+mkdir -p muh-build/build && cc -std=c99 -O2 -DLUA_USE_LINUX -o muh-build/build/lua muh-build/vendor/lua-5.5.1/*.c -lm -ldl
+muh-build/build/lua muh-build/scripts/cli.lua vetochka/recipe.lua
+```
+
+The tests are still written in Zig, until they move to Lua: `zig build test-all -Dworkspace=..` from
+`ws/vetochka`, and `-Dsanitize=true` for the sanitized run (it expects `gcc`).
 
 # License
 

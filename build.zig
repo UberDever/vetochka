@@ -28,8 +28,8 @@ comptime {
 
 // Temporary: muh-build builds vetochka now (recipe.lua); this file keeps the Zig tests running until
 // they are ported to Lua. Includes name their repo ("vetochka/public/cells/api.h"), so the compiler
-// searches the directory holding vetochka; the vendored headers live in the workspace, given by
-// -Dworkspace (default: ~/dev/vetochka-repo as seen from ~/dev/c/vetochka).
+// searches the directory holding vetochka; the vendored headers are entries of `mine` checked out in
+// the workspace, given by -Dworkspace (default: ~/dev/vetochka-repo as seen from ~/dev/c/vetochka).
 fn includeDirs(b: *std.Build) ![]const []const u8 {
     const root = try std.fs.cwd().realpathAlloc(b.allocator, ".");
     const parent = fs.path.dirname(root).?;
