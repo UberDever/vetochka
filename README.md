@@ -1,4 +1,4 @@
-[![Zig tests](https://github.com/UberDever/vetochka/actions/workflows/zig-test.yml/badge.svg)](https://github.com/UberDever/vetochka/actions/workflows/zig-test.yml)
+[![tests](https://github.com/UberDever/vetochka/actions/workflows/tests.yml/badge.svg)](https://github.com/UberDever/vetochka/actions/workflows/tests.yml)
 
 # What is Vetochka?
 
@@ -48,9 +48,7 @@ muh-build's README describes:
 lua muh-build/scripts/cli.lua vetochka/recipe.lua
 ```
 
-Tests are moving from Zig to Lua. The Lua ones run with the `vtest` program the build makes, as
-`tests/run.lua` says; the Zig ones with `zig build test-all -Dworkspace=..` from vetochka's
-directory, and `-Dsanitize=true` for the sanitized run (it expects `gcc`).
+Tests are written in Lua and run with the `vtest` program the build makes, as `tests/run.lua` says.
 
 # License
 

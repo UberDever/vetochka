@@ -1,4 +1,4 @@
--- Ported from tests/zig/test_bytecode.zig: source text lowered to cells, checked node by node.
+-- Ported from the former Zig test_bytecode.zig: source text lowered to cells, checked node by node.
 local check = ...
 local vetochka = require "vetochka"
 local T = vetochka.cells.type

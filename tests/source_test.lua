@@ -1,4 +1,4 @@
--- Ported from tests/zig/test_source.zig.
+-- Ported from the former Zig test_source.zig.
 local check = ...
 local vetochka = require "vetochka"
 

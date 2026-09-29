@@ -4,5 +4,3 @@ build/
 docs/*/output.pdf
 scratch.tree
 eval/config.h
-zig-out
-.zig-cache

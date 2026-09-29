@@ -1,4 +1,4 @@
--- Ported from tests/zig/test_reducer.zig: cell nodes, their encoding, and the reducer.
+-- Ported from the former Zig test_reducer.zig: cell nodes, their encoding, and the reducer.
 local check = ...
 local vetochka = require "vetochka"
 local C = vetochka.cells

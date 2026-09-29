@@ -1,0 +1,23 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+# vetochka is built in a workspace: mine, with vetochka and muh-build checked out inside it.
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with: { repository: UberDever/mine }
+      - uses: actions/checkout@v5
+        with: { path: vetochka }
+      - uses: actions/checkout@v5
+        with: { repository: UberDever/muh-build, path: muh-build }
+      - run: sudo apt-get update && sudo apt-get install -y lua5.4
+      - name: Build vetochka
+        run: lua5.4 muh-build/scripts/cli.lua vetochka/recipe.lua --log plain
+      - name: Lua tests, in debug mode (ASan, UBSan)
+        run: vetochka/build/bin/vtest vetochka/tests/run.lua vetochka/tests/*_test.lua
