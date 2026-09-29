@@ -39,28 +39,17 @@ are main points that describe project development across years.
 
 # Trying it
 
-Vetochka is built with [muh-build](https://github.com/UberDever/muh-build), next to the libraries it
-vendors from [mine](https://github.com/UberDever/mine) (listed in `recipe.lua`). Put them side by side:
+Vetochka is built with [muh-build](https://github.com/UberDever/muh-build). Make a directory holding
+the entries of [mine](https://github.com/UberDever/mine) that `recipe.lua` requires (mine's README
+shows how), and put vetochka and muh-build inside it. Then, from that directory, with a Lua as
+muh-build's README describes:
 
 ```sh
-git clone --no-checkout git@github.com:UberDever/mine.git ws
-git -C ws sparse-checkout set stb_ds-0.67 nob_da-3.8.2 arena
-git -C ws checkout master
-git clone git@github.com:UberDever/vetochka.git ws/vetochka
-git clone git@github.com:UberDever/muh-build.git ws/muh-build
-printf '/vetochka\n/muh-build\n' >> ws/.git/info/exclude
-```
-
-Then build:
-
-```sh
-cd ws
-mkdir -p muh-build/build && cc -std=c99 -O2 -DLUA_USE_LINUX -o muh-build/build/lua muh-build/vendor/lua-5.5.1/*.c -lm -ldl
-muh-build/build/lua muh-build/scripts/cli.lua vetochka/recipe.lua
+lua muh-build/scripts/cli.lua vetochka/recipe.lua
 ```
 
 The tests are still written in Zig, until they move to Lua: `zig build test-all -Dworkspace=..` from
-`ws/vetochka`, and `-Dsanitize=true` for the sanitized run (it expects `gcc`).
+vetochka's directory, and `-Dsanitize=true` for the sanitized run (it expects `gcc`).
 
 # License
 

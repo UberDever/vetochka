@@ -5,8 +5,7 @@ on:
   pull_request:
   workflow_dispatch:
 
-# vetochka is built in a workspace: the entries of `mine` it needs, with vetochka and muh-build
-# checked out next to them, as the README says.
+# vetochka is built in a workspace: mine, with vetochka and muh-build checked out inside it.
 jobs:
   zig:
     name: zig ${{ matrix.flags }}
@@ -17,12 +16,7 @@ jobs:
         flags: ["", "-Dsanitize=true"]
     steps:
       - uses: actions/checkout@v5
-        with:
-          repository: UberDever/mine
-          sparse-checkout: |
-            stb_ds-0.67
-            nob_da-3.8.2
-            arena
+        with: { repository: UberDever/mine }
       - uses: actions/checkout@v5
         with: { path: vetochka }
       - uses: mlugg/setup-zig@v2
@@ -39,17 +33,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-        with:
-          repository: UberDever/mine
-          sparse-checkout: |
-            stb_ds-0.67
-            nob_da-3.8.2
-            arena
+        with: { repository: UberDever/mine }
       - uses: actions/checkout@v5
         with: { path: vetochka }
       - uses: actions/checkout@v5
         with: { repository: UberDever/muh-build, path: muh-build }
-      - name: Build Lua
-        run: mkdir -p muh-build/build && cc -std=c99 -O2 -DLUA_USE_LINUX -o muh-build/build/lua muh-build/vendor/lua-5.5.1/*.c -lm -ldl
+      - run: sudo apt-get update && sudo apt-get install -y lua5.4
       - name: Build vetochka
-        run: muh-build/build/lua muh-build/scripts/cli.lua vetochka/recipe.lua --log plain
+        run: lua5.4 muh-build/scripts/cli.lua vetochka/recipe.lua --log plain

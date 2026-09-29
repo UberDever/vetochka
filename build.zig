@@ -37,8 +37,13 @@ fn includeDirs(b: *std.Build) ![]const []const u8 {
         try fs.path.resolve(b.allocator, &.{ parent, "..", "vetochka-repo" });
     var dirs = std.ArrayList([]const u8).empty;
     try dirs.append(b.allocator, parent);
-    for ([_]str{ "stb_ds-0.67", "nob_da-3.8.2", "arena" }) |repo| {
-        try dirs.append(b.allocator, try fs.path.join(b.allocator, &.{ workspace, repo }));
+    // every entry of the workspace: which ones vetochka uses is recipe.lua's business
+    var dir = try std.fs.openDirAbsolute(workspace, .{ .iterate = true });
+    defer dir.close();
+    var it = dir.iterate();
+    while (try it.next()) |entry| {
+        if (entry.kind != .directory or entry.name[0] == '.') continue;
+        try dirs.append(b.allocator, try fs.path.join(b.allocator, &.{ workspace, entry.name }));
     }
     return dirs.items;
 }
