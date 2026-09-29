@@ -25,7 +25,7 @@ return {
     muh_build = "0.1",
     mode      = "debug",
     -- link order: users before what they use (found from the objects' symbols)
-    packages  = { "reducer", "bytecode", "cells", "source", "allocator", "domain", "headeronly" },
+    packages  = { "binding", "reducer", "bytecode", "cells", "source", "allocator", "domain", "headeronly" },
 
     compile_cmd = function(out, src, extra_args, m)
         return command("clang", COMMON, MODES[m.mode].cflags, extra_args, "-MMD", "-MF", out .. ".d", "-c", src, "-o", out)

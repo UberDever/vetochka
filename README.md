@@ -48,8 +48,9 @@ muh-build's README describes:
 lua muh-build/scripts/cli.lua vetochka/recipe.lua
 ```
 
-The tests are still written in Zig, until they move to Lua: `zig build test-all -Dworkspace=..` from
-vetochka's directory, and `-Dsanitize=true` for the sanitized run (it expects `gcc`).
+Tests are moving from Zig to Lua. The Lua ones run with the `vtest` program the build makes, as
+`tests/run.lua` says; the Zig ones with `zig build test-all -Dworkspace=..` from vetochka's
+directory, and `-Dsanitize=true` for the sanitized run (it expects `gcc`).
 
 # License
 

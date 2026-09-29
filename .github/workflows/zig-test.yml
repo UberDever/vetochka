@@ -41,3 +41,5 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y lua5.4
       - name: Build vetochka
         run: lua5.4 muh-build/scripts/cli.lua vetochka/recipe.lua --log plain
+      - name: Lua tests
+        run: vetochka/build/bin/vtest vetochka/tests/run.lua vetochka/tests/*_test.lua
