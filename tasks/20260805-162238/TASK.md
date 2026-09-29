@@ -19,3 +19,4 @@
 - Decision (user, 2026-09-24): piths are runtime semantics (Rule 3 and CESK), separate from node generation.
 - Direction (user, 2026-09-25): piths are views into a node, a special reference with state. Rule 3 advances a pith, and it can be stored in a variable, keeping the view. Encoding (e.g. an i64) is secondary. (agent) This matches July LENS: inspection state, derived by Rule 3, unforgeable, non-callable.
 - Context (user): decided on the evening of 2026-09-24 while the user was drunk. Review sober.
+- Open (agent, 2026-09-26): the pith model Rule 3 works on: the node itself, or a view object Rule 3 advances. Needed by the machine core slice; decided in 20260926-091318.

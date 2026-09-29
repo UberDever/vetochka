@@ -14,3 +14,4 @@
 - Evidence on `{@}` execution, inspection and forcing: apply-evidence.md (2026-09-25).
 - Decision (user, 2026-09-26): `exec` drives the computation one step at a time. Given the evaluation rules, one applicable rule is chosen and executed. No deep evaluation: the CESK rules define evaluation completely, with corner-case prose where needed, as with the grammar.
 - Context (user): decided on the evening of 2026-09-24 while the user was drunk. Review sober.
+- Open (agent, 2026-09-26): who repeats the one-step `exec` until a value: the host, or a driver the spec defines. Decided in 20260926-091318.

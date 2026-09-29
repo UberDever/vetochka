@@ -15,3 +15,4 @@
 - Open: ZINC-style argument handling and the minimal machine state. See archive/20260613-120000/minimal-machine.md.
 - History: items.md.
 - Decision (user, 2026-09-25): Rule 3 never evaluates. Applications persist and Rule 3 observes them like any node (arity 2); identifier dereference is its only indirection, which is how programs use binders' non-locality with Rule 3. To inspect a result rather than the computation, bind it with `$fn` and inspect the identifier. This departs from treecalcul.us, where an application cannot reach a Rule 3 branch, and the spec should say so.
+- Plan to a working v0 (user+agent, 2026-09-26): 2026-09-26.md.
