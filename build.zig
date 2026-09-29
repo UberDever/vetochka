@@ -26,6 +26,22 @@ comptime {
     if (@sizeOf(isize) != 8) @compileError("need 64-bit pointers");
 }
 
+// Temporary: muh-build builds vetochka now (recipe.lua); this file keeps the Zig tests running until
+// they are ported to Lua. Includes name their repo ("vetochka/public/cells/api.h"), so the compiler
+// searches the directory holding vetochka, and the vendored headers live in the workspace
+// ~/dev/vetochka-repo, next to vetochka's view.
+fn includeDirs(b: *std.Build) ![]const []const u8 {
+    const root = try std.fs.cwd().realpathAlloc(b.allocator, ".");
+    const parent = fs.path.dirname(root).?;
+    const workspace = try fs.path.resolve(b.allocator, &.{ parent, "..", "vetochka-repo" });
+    var dirs = std.ArrayList([]const u8).empty;
+    try dirs.append(b.allocator, parent);
+    for ([_]str{ "stb_ds-0.67", "nob_da-3.8.2", "arena" }) |repo| {
+        try dirs.append(b.allocator, try fs.path.join(b.allocator, &.{ workspace, repo }));
+    }
+    return dirs.items;
+}
+
 const TestSuite = struct {
     b: *std.Build,
     c_core_dir: str,
@@ -62,7 +78,7 @@ const TestSuite = struct {
                 .optimize = self.optimize,
             }),
         });
-        test_exe.root_module.addIncludePath(self.b.path(self.c_core_dir));
+        for (try includeDirs(self.b)) |dir| test_exe.root_module.addIncludePath(.{ .cwd_relative = dir });
         test_exe.root_module.link_libc = true;
         test_exe.root_module.linkLibrary(dependOn);
         test_exe.step.dependOn(&dependOn.step);
@@ -99,15 +115,6 @@ const TestSuite = struct {
             try flags.appendSlice(self.b.allocator, &.{ "-g", "-fno-omit-frame-pointer", "-fsanitize=address", "-shared-libasan" });
             try flags.append(self.b.allocator, "-O0");
         }
-        const project_root = try std.fs.cwd().realpathAlloc(self.b.allocator, ".");
-        try flags.appendSlice(self.b.allocator, &.{
-            try std.fmt.allocPrint(self.b.allocator,
-                \\-DPROJECT_ROOT="{s}"
-            , .{try fs.path.join(self.b.allocator, &.{ project_root, self.c_core_dir })}),
-            try std.fmt.allocPrint(self.b.allocator,
-                \\-DPATH_SEP="{c}"
-            , .{std.fs.path.sep}),
-        });
         return flags;
     }
 };
@@ -125,30 +132,30 @@ pub fn build(b: *std.Build) !void {
     const sanitize = b.option(bool, "sanitize", "Enable ASan/UBSan-style flags") orelse false;
     const cc = b.option([]const u8, "cc", "C compiler for ASan discovery") orelse "gcc";
 
-    const c_core_dir = "reducer";
+    const c_core_dir = "tests/zig"; // where the Zig tests are
     var s = TestSuite.init(b, c_core_dir, target, optimize);
     defer s.deinit();
 
     const c_core_sources = &.{
-        b.pathJoin(&.{ c_core_dir, "vendor_stbds.c" }),
-        b.pathJoin(&.{ c_core_dir, "vendor_arena.c" }),
-        b.pathJoin(&.{ c_core_dir, "cells_cells.c" }),
-        b.pathJoin(&.{ c_core_dir, "cells_debug.c" }),
-        b.pathJoin(&.{ c_core_dir, "cells_node.c" }),
-        b.pathJoin(&.{ c_core_dir, "bytecode_tree.c" }),
-        b.pathJoin(&.{ c_core_dir, "bytecode_source.c" }),
-        b.pathJoin(&.{ c_core_dir, "reducer_reducer.c" }),
-        b.pathJoin(&.{ c_core_dir, "allocator_arena.c" }),
-        b.pathJoin(&.{ c_core_dir, "allocator_libc.c" }),
-        b.pathJoin(&.{ c_core_dir, "domain_array.c" }),
-        b.pathJoin(&.{ c_core_dir, "domain_debug.c" }),
-        b.pathJoin(&.{ c_core_dir, "source_tokenize.c" }),
-        b.pathJoin(&.{ c_core_dir, "source_ast.c" }),
-        b.pathJoin(&.{ c_core_dir, "source_formatting.c" }),
+        "internal/headeronly/stbds.c",
+        "internal/headeronly/arena.c",
+        "public/cells/cells.c",
+        "public/cells/debug.c",
+        "public/cells/node.c",
+        "public/bytecode/tree.c",
+        "public/bytecode/source.c",
+        "public/reducer/reducer.c",
+        "public/allocator/arena.c",
+        "public/allocator/libc.c",
+        "public/domain/array.c",
+        "public/domain/debug.c",
+        "public/source/tokenize.c",
+        "public/source/ast.c",
+        "public/source/formatting.c",
     };
 
     const lib = b.addLibrary(.{
-        .name = c_core_dir,
+        .name = "vetochka",
         .linkage = .dynamic,
         .root_module = b.createModule(.{
             .target = target,
@@ -194,7 +201,7 @@ pub fn build(b: *std.Build) !void {
     var flags = try s.makeCFlags(sanitize);
     defer flags.deinit(s.b.allocator);
 
-    lib.root_module.addIncludePath(b.path(c_core_dir));
+    for (try includeDirs(b)) |dir| lib.root_module.addIncludePath(.{ .cwd_relative = dir });
     lib.root_module.addCSourceFiles(.{ .files = c_core_sources, .flags = flags.items });
 
     if (sanitize) {
