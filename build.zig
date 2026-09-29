@@ -28,12 +28,13 @@ comptime {
 
 // Temporary: muh-build builds vetochka now (recipe.lua); this file keeps the Zig tests running until
 // they are ported to Lua. Includes name their repo ("vetochka/public/cells/api.h"), so the compiler
-// searches the directory holding vetochka, and the vendored headers live in the workspace
-// ~/dev/vetochka-repo, next to vetochka's view.
+// searches the directory holding vetochka; the vendored headers live in the workspace, given by
+// -Dworkspace (default: ~/dev/vetochka-repo as seen from ~/dev/c/vetochka).
 fn includeDirs(b: *std.Build) ![]const []const u8 {
     const root = try std.fs.cwd().realpathAlloc(b.allocator, ".");
     const parent = fs.path.dirname(root).?;
-    const workspace = try fs.path.resolve(b.allocator, &.{ parent, "..", "vetochka-repo" });
+    const workspace = b.option([]const u8, "workspace", "Directory holding the vendored libraries") orelse
+        try fs.path.resolve(b.allocator, &.{ parent, "..", "vetochka-repo" });
     var dirs = std.ArrayList([]const u8).empty;
     try dirs.append(b.allocator, parent);
     for ([_]str{ "stb_ds-0.67", "nob_da-3.8.2", "arena" }) |repo| {
@@ -45,6 +46,7 @@ fn includeDirs(b: *std.Build) ![]const []const u8 {
 const TestSuite = struct {
     b: *std.Build,
     c_core_dir: str,
+    include_dirs: []const []const u8 = &.{},
     target: std.Build.ResolvedTarget,
     optimize: std.builtin.OptimizeMode,
 
@@ -78,7 +80,7 @@ const TestSuite = struct {
                 .optimize = self.optimize,
             }),
         });
-        for (try includeDirs(self.b)) |dir| test_exe.root_module.addIncludePath(.{ .cwd_relative = dir });
+        for (self.include_dirs) |dir| test_exe.root_module.addIncludePath(.{ .cwd_relative = dir });
         test_exe.root_module.link_libc = true;
         test_exe.root_module.linkLibrary(dependOn);
         test_exe.step.dependOn(&dependOn.step);
@@ -135,6 +137,7 @@ pub fn build(b: *std.Build) !void {
     const c_core_dir = "tests/zig"; // where the Zig tests are
     var s = TestSuite.init(b, c_core_dir, target, optimize);
     defer s.deinit();
+    s.include_dirs = try includeDirs(b);
 
     const c_core_sources = &.{
         "internal/headeronly/stbds.c",
@@ -201,7 +204,7 @@ pub fn build(b: *std.Build) !void {
     var flags = try s.makeCFlags(sanitize);
     defer flags.deinit(s.b.allocator);
 
-    for (try includeDirs(b)) |dir| lib.root_module.addIncludePath(.{ .cwd_relative = dir });
+    for (s.include_dirs) |dir| lib.root_module.addIncludePath(.{ .cwd_relative = dir });
     lib.root_module.addCSourceFiles(.{ .files = c_core_sources, .flags = flags.items });
 
     if (sanitize) {

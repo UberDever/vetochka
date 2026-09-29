@@ -1,54 +1,45 @@
-name: Zig tests
+name: tests
 
 on:
   push:
   pull_request:
   workflow_dispatch:
 
+# vetochka is built in its workspace: the workspace repo (vendored libraries) with vetochka and
+# muh-build checked out inside it, as in the workspace's README.
 jobs:
-  test:
-    name: test
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        step:
-          - test-reducer
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Zig
-        uses: mlugg/setup-zig@v2
-        with:
-          version: 0.15.1
-
-      - name: Run tests
-        run: zig build ${{ matrix.step }} --summary all
-
-  test-sanitized:
-    name: test-sanitized
+  zig:
+    name: zig ${{ matrix.flags }}
     runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
-        step:
-          - test-reducer
-
+        flags: ["", "-Dsanitize=true"]
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Zig
-        uses: mlugg/setup-zig@v2
-        with:
-          version: 0.15.1
-
+      - uses: actions/checkout@v5
+        with: { repository: UberDever/vetochka-repo }
+      - uses: actions/checkout@v5
+        with: { path: vetochka }
+      - uses: mlugg/setup-zig@v2
+        with: { version: 0.15.1 }
       - name: Install GCC ASan runtime
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y gcc-11
-
+        if: matrix.flags != ''
+        run: sudo apt-get update && sudo apt-get install -y gcc-11
       - name: Run tests
-        run: zig build ${{ matrix.step }} -Dsanitize=true --summary all
+        working-directory: vetochka
+        run: zig build test-all -Dworkspace="$GITHUB_WORKSPACE" ${{ matrix.flags }} --summary all
+
+  muh-build:
+    name: muh-build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with: { repository: UberDever/vetochka-repo }
+      - uses: actions/checkout@v5
+        with: { path: vetochka }
+      - uses: actions/checkout@v5
+        with: { repository: UberDever/muh-build, path: muh-build }
+      - name: Build Lua
+        run: mkdir -p muh-build/build && cc -std=c99 -O2 -DLUA_USE_LINUX -o muh-build/build/lua muh-build/vendor/lua-5.5.1/*.c -lm -ldl
+      - name: Build vetochka
+        run: muh-build/build/lua muh-build/scripts/cli.lua vetochka/recipe.lua --log plain
