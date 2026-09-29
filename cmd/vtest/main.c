@@ -5,7 +5,7 @@
 
 #include "lauxlib.h"
 #include "lualib.h"
-#include "vetochka/public/binding/api.h"
+#include "vetochka/public/lua-binding/api.h"
 
 int main(int argc, char** argv) {
   if (argc < 2) {

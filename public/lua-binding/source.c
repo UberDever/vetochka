@@ -1,4 +1,4 @@
-#include "vetochka/public/binding/api.h"
+#include "vetochka/public/lua-binding/api.h"
 
 #include "lauxlib.h"
 #include "vetochka/public/allocator/api.h"
