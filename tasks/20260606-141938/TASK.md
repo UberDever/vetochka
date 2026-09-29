@@ -1,6 +1,6 @@
 # Migrate implementation to C plus Lua
 
-- STATUS: OPEN
+- STATUS: CLOSED
 - PRIORITY: 100
 - TAGS: project
 - KIND: TASK
@@ -42,3 +42,4 @@
 - [fact] (agent, 2026-09-29) Step 3 done: all 25 Zig tests ported to Lua (`tests/source_test.lua` 3, `tests/bytecode_test.lua` 16, `tests/reducer_test.lua` 6), 25/25 under ASan and UBSan; flipping one expectation per file fails exactly those tests. The binding mirrors the C API one to one (transient, for tests): `vetochka.cells` (types from the same X-macro as the C enum, projections, `new_*` constructors, `set_arity`, `create` giving a cells object with alloc, write, header, get, free, span, deref, left, right, build (the tree builder), reducer), the reducer object (push, step, result, has_result, reset, error), and `encode(text, {source_meta})`. Nodes are Lua tables `{type, size, ref | f | v}`. Two binding bugs found by the tests and fixed: node tables read through a relative stack index, and a tree builder leaked when `build` raised an error (it now lives in a userdata with `__gc`). The Zig tests still pass 25/25 until step 4 removes them.
 - (user, 2026-09-29) Run locally; do not push (the agent cannot without the user).
 - [fact] (agent, 2026-09-29) Step 4 done: Zig removed (`build.zig`, `tests/zig/`, `.zig-cache`, `zig-out`, their `.gitignore` lines); CI is one job, `tests.yml`: build with muh-build and run the Lua tests, in debug mode (ASan, UBSan). `.clangd` and `.clang-format`, left in `reducer/` by step 1, moved to the root. vetochka builds and tests with muh-build and Lua only.
+- Closed (user asked, 2026-09-29): done. vetochka builds with muh-build in a workspace of mine's entries (Lua included), its 25 tests are Lua, Zig is removed (4b0ff4c); verified from fresh clones of the three repos, and in CI before the Zig removal (run 36571553346: Lua 25/25, Zig 25/25).
