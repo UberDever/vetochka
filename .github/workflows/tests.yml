@@ -20,4 +20,4 @@ jobs:
       - name: Build vetochka
         run: lua5.4 muh-build/scripts/cli.lua vetochka/recipe.lua --log plain
       - name: Lua tests, in debug mode (ASan, UBSan)
-        run: vetochka/build/bin/vtest vetochka/tests/run.lua vetochka/tests/*_test.lua
+        run: build/vetochka@working-*/out/bin/vtest vetochka/tests/run.lua vetochka/tests/*_test.lua
