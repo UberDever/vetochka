@@ -1,18 +1,44 @@
-# v0 machine: CESK semantics
+# Specify and implement evaluation and the v0 machine
 
 - STATUS: OPEN
 - PRIORITY: 100
-- TAGS: machine
-- KIND: INITIATIVE
+- TAGS: machine, reducer, spec
+- KIND: TASK
 - PARENT: 20260926-050130
 
-- Decision (user, 2026-08-30): core evaluation is triage rules 0..3 exactly as in the spec, plus identifier handling. Branch-first, no implicit forcing.
-- (user, 2026-08-30) Timing comes from control position only. Rule 2 copies raw operands; duplicated effects are accepted.
-- (user, 2026-08-30) Rule 3 never evaluates `{@}` data. ~~A pending machine application in the operand is evaluated to expose its root shape.~~ superseded by the 2026-09-25 ruling: Rule 3 never evaluates.
-- (user, 2026-08-30) No specialize stage: opcodes apply until no applications remain. The machine runs `exec` on a value and doesn't walk `{@}` on its own.
-- (user, 2026-07-09) The machine owns all application dispatch, family first and arity second.
-- (agent, 2026-08-30) The July rule catalogue in `docs/spec/03_v0.md` is a usable CESK seed. `SHAPE-APPLY` survives only for pending control; `RESTORE-DELTA` is dead.
-- Open: ZINC-style argument handling and the minimal machine state. See archive/20260613-120000/minimal-machine.md.
-- History: items.md.
-- Decision (user, 2026-09-25): Rule 3 never evaluates. Applications persist and Rule 3 observes them like any node (arity 2); identifier dereference is its only indirection, which is how programs use binders' non-locality with Rule 3. To inspect a result rather than the computation, bind it with `$fn` and inspect the identifier. This departs from treecalcul.us, where an application cannot reach a Rule 3 branch, and the spec should say so.
-- Plan to a working v0 (user+agent, 2026-09-26): 2026-09-26.md.
+- Work (agent): define and implement the v0 evaluation rules, one-step host entry, and control machinery.
+- Done when (agent): matching rules and tests cover triage, identifiers, applications as data, sequencing, traps, and proper tail calls.
+
+## Evaluation contract
+
+- Decision (user, 2026-08-30): evaluation follows triage rules 0..3 plus identifier handling. The recorded direction is branch-first, without implicit forcing.
+- Decision (user, 2026-08-30): control position determines evaluation timing. Rule 2 copies raw operands. Duplicated effects are accepted.
+- Decision (user, 2026-09-25): Rule 3 never evaluates applications. It observes them as nodes, with arity 2.
+- Decision (user, 2026-09-25): a value can be finished while its branches contain application data. No recursive normalization is required.
+- Decision (user, 2026-09-25): identifier dereference is Rule 3's only indirection. Bind a computation's result before inspecting that result.
+- Qualification (agent): older rules that forced pending operands are superseded. Earlier callee-first drafts need reconciliation, not silent reuse.
+- Decision (user, 2026-08-30): there is no specialize stage. The machine does not autonomously traverse `{@}` data.
+- Decision (user, 2026-07-09): the machine owns application dispatch, first by family, then by arity.
+- Decision (user, 2026-08-30): statement sequences use a BLOCK frame. Sequencing is not merely syntax sugar.
+- Direction (user): push a frame only when a subresult is needed. Tail calls replace control rather than grow the machine stack.
+- Constraint (user): native C calls use trampolines, without machine re-entry from C.
+
+## Host entry and unresolved choices
+
+- Decision (user, 2026-09-26): `exec` chooses and executes one applicable rule. The CESK rules define evaluation without separate deep-evaluation behavior.
+- Direction (user): `exec` is a host-side entry and likely not directly available to programs.
+- Open (agent): whether the host or a specified driver repeats the step until a value.
+- Direction (user, 2026-09-24, pending review): converting `[{@}, meta, f, x]` to machine control ignores its metadata.
+- Open (agent): the scope of that principle, especially with versioned observation in 20260926-091318. A universal metadata-ignoring rule was not approved.
+- Open (agent): minimal machine state and ZINC-style argument handling. Older candidate mechanisms remain in the archive.
+- Recorded defect (agent): Rule 3 dispatches on storage arity in `public/reducer/reducer.c`. The replacement must use the agreed observable shape.
+- Evidence (agent): `apply-evidence.md` preserves the execution and inspection analysis. The historical July CESK catalogue is a starting point, not current authority.
+- Boundary (agent): 20260926-091318 owns representations and piths, 20241225-140425 owns binders, and 20250123-091611 owns native and host operations.
+
+## Delivery
+
+- Decision (user+agent, 2026-09-26): implement vertical slices with rules, C implementation, and tests together.
+- Rejected (user+agent): a long specification-only phase and a code-first phase that drifts from the agreed semantics.
+- Sequence (agent): `items.md` carries the approved order as steps within the consolidated tasks.
+
+- History (agent): `archive/20261020-000000/records.md` preserves the original records. Its SUMMARY maps former subjects to their current owners.

@@ -2,8 +2,20 @@
 
 - STATUS: OPEN
 - PRIORITY: 100
-- TAGS:
+- TAGS: machine
 - KIND: INTENT
 
-- Desired condition (user, 2026-09-26): new languages are defined by programs over a shared executable core, not by changing the core. Intro statements S4 and S5; S5's "any compiler to any language" is the aspiration, not a checkable condition.
-- Why (user): intro motives M3, M4, `docs/new_spec/01_intro.md`.
+- Desired condition (user, 2026-09-26): programs define new languages over a shared executable core without changing that core.
+- Why (user): the introduction's M3, M4, S4, and S5 motivate a reusable language substrate.
+- Qualification (user): “any compiler to any language” remains an aspiration, not a checkable completion condition.
+
+## Implementation basis
+
+- Completed work (agent, 2026-09-29): the project migrated to C, muh-build, and Lua tests. Zig removal is recorded in `4b0ff4c`.
+- Recorded evidence (agent): the migration reported 25 passing Lua tests and fresh-clone verification. No tests were rerun for the task rewrite.
+- Decision (user): deployment is library-first, with public C packages and shipped Lua bindings.
+- Decision (user, 2026-09-29): dependency repositories are siblings. `recipe.lua` owns dependency names. `mine` holds vendored libraries.
+- Decision (user, 2026-09-29): setup instructions belong in the relevant README. Do not duplicate dependency lists, add submodules, or invent a repository registry.
+- Direction (user): preserve a hermetic, self-sufficient development workflow. Historical build experiments remain in the archive.
+
+- History (agent): `archive/20261020-000000/records.md` preserves the original records. Its SUMMARY maps former subjects to their current owners.

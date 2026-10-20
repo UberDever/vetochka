@@ -1264,7 +1264,7 @@ inventory.
 ## II.14 vmeta — staging without quasiquote
 
 Generating one accessor per field, using nothing but the three escape intents
-from `tasks/20260830-165615/binders.md`:
+from `tasks/20241225-140425/binders.md`:
 
 ```vetochka
 let[

@@ -43,7 +43,7 @@ Shoulders for this language:
 - ML
 - Scheme
 
-[task 20260805-162237](../../tasks/20260805-162237/TASK.md): explain each and every one, make a source link, link each to a particular vetochka level
+[task 20260529-103915](../../tasks/20260529-103915/TASK.md): explain each and every one, make a source link, link each to a particular vetochka level
 
 If there is a single phrase that describes the core language spirit, it is this:
 

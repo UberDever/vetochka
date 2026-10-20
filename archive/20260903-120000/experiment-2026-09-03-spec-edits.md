@@ -104,5 +104,5 @@ index 6c0fc1b..a626661 100644
 +
  ## v0 CESK
  
- TODO: binder discipline — see `tasks/20260830-165615/binders.md`.
+ TODO: binder discipline — see `tasks/20241225-140425/binders.md`.
 ```

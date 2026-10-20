@@ -232,7 +232,7 @@ error_t reducer_step(struct reducer_t* reducer) {
           err = cells_dereference_node(reducer->cells, &z_i, &z);
           ERR_CHECK("");
 
-          // task 20260718-175927: This generic arity dispatch is semantically wrong for
+          // task 20260529-103914: This generic arity dispatch is semantically wrong for
           // non-delta cells. Rule 3 must request the argument's triage view (its pith)
           // and never evaluate it: an application is observed as a node of arity 2.
           switch (cells_node_type_get_arity(z.header.type)) {

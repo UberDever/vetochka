@@ -1,13 +1,13 @@
 # v0 Layered Design (restated)
 
-Status: OBSOLETE where it contradicts `tasks/20260805-162236/2026-08-30.md` and
-`tasks/20260830-165615/binders.md` — notably: Layer 3 specialization (no specialize stage
+Status: OBSOLETE where it contradicts `archive/20261020-000000/20260805-162236--2026-08-30.md` and
+`tasks/20241225-140425/binders.md` — notably: Layer 3 specialization (no specialize stage
 exists; names live to runtime, die by env lookup), `LOCAL`, the closed-term
 discipline, `do!`/`{fn}` spellings, and Layer 4 `{specialize}`.
 
 Previous status: authoritative snapshot, updated 10.07.2026. Where this conflicts with
 [`v0_cesk_draft.md`](../20260613-120000/v0_cesk_draft.md), this wins. Layer 5 not yet restated.
-Decision history lives in [project history](../../tasks/20260201-183604/project_history.md).
+Decision history lives in [project history](../../archive/20261020-000000/20260201-183604--project_history.md).
 
 Claim labels used below: **implemented** describes current C code; **decided** is
 target semantics; **open** must not drive implementation yet.

@@ -141,7 +141,7 @@ Inconsistencies found:
 
 Output:
 - Added separate `docs/spec/04_vf.md` for vf (`v*`) languages.
-- Moved outdated `docs/grammar.md` to `tasks/20241220-144435/grammar.md` as historical artifact.
+- Moved outdated `docs/grammar.md` to `archive/20261020-000000/20241220-144435--grammar.md` as historical artifact.
 
 Decision draft:
 - Use notation `v*`; prose name is **vf**.
@@ -360,7 +360,7 @@ Checked:
 
 Findings:
 - Old 17:20 memory entry still used "v-family" and old open questions; marked it superseded in `tasks/20260711-131255/2026-07-11.md` by 17:35 vf entry.
-- `docs/grammar.md` is intentionally deleted from docs and preserved at `tasks/20241220-144435/grammar.md`.
+- `docs/grammar.md` is intentionally deleted from docs and preserved at `archive/20261020-000000/20241220-144435--grammar.md`.
 - `docs/spec/03_v0.md` no longer contains `vstar` or in-file vf syntax section.
 - Remaining `OP_FN*` mentions are notes about current implementation artifacts only.
 

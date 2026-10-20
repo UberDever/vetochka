@@ -1,6 +1,6 @@
 # ADR 1: Adjacency-classified operator tokens
 
-Status: accepted
+Status: superseded by explicit grammar constraints, 2026-10-20. See `2026-10-20.md`.
 Date: 2026-08-30
 
 ## Context

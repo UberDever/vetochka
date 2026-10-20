@@ -5,5 +5,7 @@
 - TAGS: syntax
 - KIND: INTENT
 
-- Desired condition (user, 2026-09-26): one syntax that is expressive for people and trivial for programs to analyze and construct. Intro statement S1.
-- Why (user): intro motives M3, M4, `docs/new_spec/01_intro.md`.
+- Desired condition (user, 2026-09-26): one syntax is expressive for people and easy for programs to analyze and construct.
+- Why (user): the shared syntax supports the introduction's motives M3 and M4 and statement S1 in `docs/new_spec/01_intro.md`.
+
+- History (agent): `archive/20261020-000000/records.md` preserves the original records. Its SUMMARY maps former subjects to their current owners.

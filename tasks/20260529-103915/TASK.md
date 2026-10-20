@@ -5,9 +5,12 @@
 - TAGS: framing
 - KIND: INTENT
 
-- (user, 2026-05-28) A reflective, staged, C-emitting language. No language semantics leak into the generated C.
-- (user) Porosity is the motivation: stay porous to other systems like C, and reflectively porous inside. See porosity.md.
-- (user, 2026-08-30) Stack: v0 machine, then vmeta, then a vsystem compiler written in vmeta that emits ordinary C.
-- (user, 2026-08-30) Internal porosity exists at build time only; the emitted C carries external porosity. vsystem has no runtime reflection.
-- (user, 2026-08-30) An appliance is a language plus mandated passes. Disciplines like ownership become analysis libraries.
-- (user, 2026-08-30) The substrate is permissive; appliances restrict at their own compile step.
+- Desired condition (user, 2026-05-28): a reflective, staged frontend emits ordinary C without carrying language semantics into the output.
+- Why (user): preserve C's ability to interact with other systems while adding internal reflection during construction. See `porosity.md`.
+- Direction (user, 2026-08-30): the stack is v0, then vmeta, then a vsystem compiler written in vmeta.
+- Decision (user, 2026-08-30): internal porosity exists at build time. vsystem has no runtime reflection. Emitted C retains external porosity.
+- Direction (user, 2026-08-30): an appliance is a language with required passes. Analysis libraries can implement disciplines such as ownership.
+- Direction (user, 2026-08-30): the substrate is permissive. Appliances restrict it during their compile step.
+- Documentation work (agent): `items.md` retains the introduction work within this motivation.
+
+- History (agent): `archive/20261020-000000/records.md` preserves the original records. Its SUMMARY maps former subjects to their current owners.

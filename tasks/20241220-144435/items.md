@@ -1,14 +1,12 @@
-# Surface syntax and grammar: history
+# Syntax work
 
-- 2024-12-20: grammar.md, the first shared parser note. Historical.
-- 2026-02-12 (user): wisp-style syntax; `s{}` strings without escapes.
-- 2026-02-15 (user): lisp plus wisp; `<prefix>{contents}` literals.
-- 2026-02-16 (user): `s[]` list sugar.
-- 2026-05-28 (user): algol-style statement syntax inspired by elixir; no keywords besides `end` and labels; no precedence.
-- 2026-05-31 (user): labels, `~expr => :expr`.
-- 2026-06-11 (user): newline and ASI implementation guidance, in archive/20260613-120000/slop_field.md.
-- 2026-07-11 (user): shared syntax split from v0 and vf semantics.
-- ~~2026-08-07 (user): explicit delta arity `^0`, `^1[x]`, `^2[x, y]`~~ superseded by nyads `~[...]`, 2026-08-30.
-- 2026-08-30 (user): nyad rename, ADR 1, C6 and R1, block promotion, group erasure, `$` as a primary.
-- Examples: wisp_syntax_example.md, vetochka_word_count_example.md, newer_syntax.tree.md, vetochka_collections_vec.tree.md, vetochka_uniform.tree.md.
-- Dialogues: adr-1-operator-adjacency.md, archive/20260807-120000/prefix-infix-operators.md, archive/20260807-120000/labels-kv.md, archive/20260807-120000/Naming-a-node-nyad-2026-08-30.md.
+- [ ] Choose the Unicode identifier rule, then align the grammar, lexer, and tests.
+- [ ] Define extensible number syntax without expanding the initial numeric runtime beyond the agreed scope. Floating-point grammar is tracked in 20261020-103514.
+- [ ] Apply the literal and metadata decisions from 20260926-091318 to the encoder.
+- [ ] Decide formatter idempotence. If required, add a regression case and correct newline handling.
+- [ ] Check the recorded extra space before `...` and the handling of `#;` with inserted semicolons.
+- [ ] Keep annotation layout consistent: no special newline exception after `]`.
+- [ ] Implement annotation lowering according to the tagging decision in TASK.md, with the construction from 20260926-091318.
+- [ ] Verify source-location metadata: empty by default, with the agreed opt-in fields.
+
+Each item is work within this task. Completion requires evidence, not merely a decision to organize the work here.

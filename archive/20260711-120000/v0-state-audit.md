@@ -1,7 +1,7 @@
 # v0 state audit
 
 Status: reconstruction aid, not a semantic specification. Superseded in parts
-by `tasks/20260805-162236/2026-08-30.md`; notably `$f` "body specialized at
+by `archive/20261020-000000/20260805-162236--2026-08-30.md`; notably `$f` "body specialized at
 construction" now reads: body captured as a code closure at construction.
 
 This file separates mechanical repository evidence from direct user statements. It

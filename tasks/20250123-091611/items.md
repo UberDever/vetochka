@@ -1,11 +1,11 @@
-# Opcode and value tagging representation: history
+# Native and host work
 
-- 2025-01-23 (user): native tagging chosen over in-calculus tagging. Faster, but couples the calculus to the implementation.
-- 2026-02-04 (user): nodes are delta, value or opcode. `get_type`/`get_payload` and `set_type`/`set_payload`. Programs are trusted; payloads are forgeable.
-- 2026-02-10 (user): `call` opcode for natives.
-- 2026-02-22 (user): opcodes are tree values `^ [tag-magic opcode stuff...]`.
-- ~~2026-03-18 (LLM): magic native integer at a fixed position~~ superseded by families, 2026-07-09.
-- 2026-03-24 (user): runtime ABI of tagged values, shared by parser, VM and programs.
-- 2026-06-04 (user): opcode as `[callable-tag, [cur, max arity], [curried args], impl]`.
-- 2026-06-11 (user): a byte-string literal in function position names a native.
-- Research notes: archive/20260322-120000/llm_research_on_opcode_shape.md, archive/20260322-120000/claude_opcode_do_research_2026-07-10.md.
+- [ ] Implement designator recognition and the Continue/Dispatch/trap protocol, with malformed-form and saturation cases.
+- [ ] Specify input evaluation for each initial opcode and its observable in-flight state.
+- [ ] Specify and test i64 arithmetic, comparison, byte-string operations, and the agreed tag equality.
+- [ ] Use the machine trampoline contract for calls into native C.
+- [ ] Define the initial host services and recoverable-error data.
+- [ ] Connect `parse_term` to the shared parser and encoder.
+- [ ] Write a bootstrap v0 file that loads and runs a program.
+- [ ] Reconcile the proposed entrypoint in TASK.md with opcode syntax and semantics, shared syntax in 20241220-144435, and function parameters in 20241225-140425.
+- [ ] Run a hello-world file end to end, including observable output and failure handling.
