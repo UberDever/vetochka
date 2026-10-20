@@ -1,4 +1,42 @@
-# Syntax
+# Core syntax
+
+## Motivation and examples
+
+The purpose of the core syntax is to express fundamental terms of the language without
+sugar and shorthands. Conceptually, it can represent every feature `vetochka` has
+while still residing in the `triage-calculus` domain.
+
+This syntax can express only nyads and applications.
+
+Nyad is a trivial value, it could be compared to a type-theoretical `unit` in the sense that
+it doesn't bear any information by itself. Rather, the usefulness 
+of nyads comes from their composition -- they form a homogenous tree that is used to encode
+all programming language constructs you would imagine. The interaction of trees is described
+in later chapters.
+
+We would call a nyad a `leaf` when it has no children, a `stem` when it has one and a `fork` when it has two.
+A nyad can't hold more than two children.
+
+We've introduced only proper-list shorthand to this syntax, since it is core enough to
+get its own notation.
+
+```
+[]     == ~[]
+[x]    == ~[x, ~[]]
+[x, y] == ~[x, ~[y, ~[]]]
+...
+```
+
+Below are the examples of nyads and structures they form.
+
+```
+~[]; ;; a leaf
+~[~[], ~[]]; ;; a fork
+~[](~[]) ;; an application
+~[~[], ~[~[], ~[]]] ;; a proper list of two leafs, ending by a nil-like leaf nyad
+~[~[], ~[~[], ~[~[], ~[~[], ~[]]]]] ;; a number 4 using Peano-style encoding
+[[], [], [], []] ;; the same number, but using proper list notation explicitly
+```
 
 ## Source text and trivia
 
@@ -19,11 +57,44 @@ trivia       ::= trivia_no_nl | t_nl | line_comment | line_continue
 
 `#;` discards its following parsed expression.
 
+## Grammar
+
+We would use `NO_WS` token to represent "gluing" of tokens, i.e. no trivia could be contained between the two.
+
+```ebnf
+source ::= block_list? eof
+block_list ::= expression (";" expression)* ";"?
+comma_list ::= expression ("," expression)* ","?
+
+expression ::= postfix_expression
+postfix_expression ::= primary NO_WS "(" comma_list? ")"
+
+primary ::= 
+    nyad
+    | "[" comma_list? "]"
+    | "(" expression ")"
+
+nyad ::= "~" NO_WS "[" ( expression ( "," expression )? )? "]"
+```
+
+# General syntax
+
+## Motivation and examples
+
+This syntax unifies different `vetochka` dialects under a single convenience umbrella.
+It mainly consists of shorthands and sugar to simplify writing programs. However,
+it is also used to represent intent of the programmer more clearly. An integer
+or a key-value pair is clearer than a tree with a specific corresponding structure.
+
+General syntax strictly extends the core syntax, so every production below explicitly
+contains a core language production of the same name.
+
 ## Tokens
 
 ```ebnf
 string_literal  ::= "{" balanced_utf8_bytes "}"
 integer_literal ::= [1-9][0-9]* | "0"
+(* Floating-point syntax: task 20261020-103514. *)
 literal         ::= string_literal | integer_literal
 
 identifier ::= identifier_start identifier_continue*
@@ -32,15 +103,13 @@ identifier_continue ::= [a-zA-Z0-9_]
   | "?" | "'" | "+" | "-" | "*" | "/" | "%" | "<" | ">"
   | "!" | "&"
 
-special_dollar ::= "$"
-special_tilde  ::= "~"
-
 operator_run ::= operator_char+
 operator_char ::= "=" | "+" | "-" | "*" | "/" | "%" | "<" | ">"
                 | "!" | "&" | "|" | ":" | "^"
 ```
 
-`do` and `end` are reserved block words. `$` and `~` are special tokens; each heads only its grammar form. We exclude a lone `:`: it is punctuation, not an operator, and operators may contain `:` (e.g. `::`).
+Here, `do` and `end` are reserved block words. We exclude a lone `:`: 
+it is punctuation, not an operator, and operators may contain `:` (e.g. `::`).
 
 An operator run is classified by adjacency; trivia breaks gluing:
 
