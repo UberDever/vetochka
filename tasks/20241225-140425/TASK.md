@@ -30,6 +30,8 @@
 - Decision (user, 2026-08-30): let uses `let[clauses] do ... end`. `=` binds, `<~` binds recursively, and scope proceeds sequentially.
 - Decision (user, 2026-08-30): a list-shaped clause forms a simultaneous knot. `_ = expr` runs an effect. Clause blocks require parentheses.
 - Decision (user, 2026-08-30): `$form` accepts raw inputs. Its exact shape remains open.
+- Proposal (user, 2026-10-20): replace `$form` with explicit closure wrapping. A consumer can receive an ordinary closure value, inspect its body through the pith, or invoke it with its captured bindings. Check whether any raw-input requirement remains.
+- Finding (agent, 2026-10-20): `binders.md` uses a zero-parameter closure as a thunk, but `docs/new_spec/03_v0.md` says that an empty parameter list executes when its body arrives. Resolve this conflict; an unused parameter can defer saturation under the documented rule.
 - Decision (user): function arity is strict, without variadic parameter lists. Recursion is derived rather than a primitive `{rec}` form.
 - Boundary (agent): 20250123-091611 owns opcode dispatch. 20260529-103914 owns machine control, sequencing, and proper tail calls.
 - Evidence (agent): `binders.md` preserves the settled August direction. `identifier-context.md` is a working model, including dynamic declarators.
