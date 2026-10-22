@@ -119,6 +119,7 @@ x + -y                      ;; this parses as you expect it would
 ;; labeled expressions
 name: {Ada}
 result: x + y
+:x                         ;; omitted label name
 ;; a nested label requires grouping, because labels associate loosely
 outer: (inner: x)
 ;; labels are first-class, you can use them as argument/list entries
@@ -126,6 +127,7 @@ f([name: {Ada}, age: 22], count: 3)
 
 ;; you can also use labels and blocks for applications
 f x: 1 y: 2                 ;; smalltalk-esque
+f :x                        ;; equivalent to f(:x)
 f(x) option: y              ;; tight postfixes precede loose postfixes
 do x; y end                 ;; blocks are first-class and contain expressions
 f do x; y end               ;; you can also apply to them
@@ -226,7 +228,7 @@ expression ::= labeled_expression | block | tagged_expression
 
 block ::= "do" block_list? "end"
 
-labeled_expression ::= label_word NO_WS ":" argument_expression
+labeled_expression ::= (label_word NO_WS)? ":" argument_expression
 label_word ::= identifier | "do" | "end"
 
 tagged_expression ::= tag? (closure | infix<postfix_expression>)
@@ -241,7 +243,7 @@ closure_head ::= "\" NO_WS "[" identifier ("," identifier)* ","? "]"
 infix<P> ::= prefix<P> (WS operator_run WS prefix<P>)*
 prefix<P> ::= (operator_run NO_WS)* P
 
-postfix_expression ::= primary tight_postfix* loose_postfix*
+postfix_expression ::= primary tight_postfix* (WS loose_postfix)*
 postfix_expression_tight ::= primary tight_postfix*
 
 tight_postfix ::= NO_WS (
@@ -276,8 +278,8 @@ Tight postfixes associate left to right. Each attaches to the accumulated expres
 `- x`, `x -y`, `1-2`, and `f(x)-y` are syntax errors.
 Infix operators require trivia on both sides.
 
-Spacing before a loose postfix is immaterial. A labeled expression consumes the longest
-`argument_expression` as its payload; nesting requires parens: `x: (y: 1)`.
+A labeled expression consumes the longest
+`argument_expression` as its payload. Nesting requires parens: `x: (y: 1)`.
 
 ## Lowering
 
@@ -369,6 +371,7 @@ f{bytes}              => @[[native-string<:app-str>, <meta>]] <f>(<{bytes}>)
 
 ;; labels and labeled application
 foo: x                => @[[native-string<:label>, <meta>]] [native-string<foo>, <x>]
+:stuff                => @[[native-string<:label>, <meta>]] [~, <stuff>]
 f first: x second: y  => 
     @[[native-string<:app>, <meta>]] (
         @[[native-string<:app>, <meta>]] <f>(
