@@ -1,5 +1,6 @@
 # Value work
 
+- [ ] Specify basic value concepts using Scheme terminology (user, 2026-10-22): disjointness of types, external representations, storage model, and equivalence predicates. Cover `~`, `[]`, `{}`, and `0`, including native strings. Relate these concepts to application under rules 0–3 and closure reduction. Distinguish type recognition from payload validity, equivalence under application from equivalence under inspection, and conceptual storage from physical cell layout. State what native representations and reconstructed piths must preserve. Done when the language spec defines these concepts with examples, coordinated with evaluation task 20260529-103914 and syntax task 20241220-144435. Scope and Scheme comparison: `2026-10-22.md`.
 - [ ] Review the September 24 representation rulings and reconcile literal leaves, tagged forms, and designator strings.
 - [ ] Decide the pith model needed by the machine: direct node observation or a separate view.
 - [ ] Specify each initial kind: nyad, list, integer, bytes, application, identifier, closure, opcode state, native handle, and pith.

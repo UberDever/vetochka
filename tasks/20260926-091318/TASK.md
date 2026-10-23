@@ -53,6 +53,7 @@
 
 ## Exploration, not settled semantics
 
+- Research and open scope (agent, 2026-10-22): `2026-10-22.md` records the requested value-model work and a Scheme specification comparison. The corresponding TODO is in `items.md`; no value semantics were chosen by this research.
 - Hypotheses (user, 2026-10-19): values may be characterized by their relations. Structure, reduction, and effects are candidate categories.
 - Hypothesis (user): equality of relational profiles may imply identity. Such profiles need not be enumerable.
 - Hypothesis (user): pith reconstruction should reproduce useful observable relations without exposing implementation internals, such as closure environments.
