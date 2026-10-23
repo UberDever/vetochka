@@ -86,10 +86,15 @@ A `~` immediately followed by `[` starts a stem or fork, never a leaf.
 
 ## Motivation and examples
 
-This syntax unifies different `vetochka` notations under a single convenience umbrella.
+This syntax unifies different `vetochka` branches (called `vf`) under a single convenience umbrella.
 It mainly consists of shorthands and sugar to simplify writing programs. However,
 it is also used to represent intent of the programmer more clearly. An integer
 or a key-value pair is clearer than a tree of a specific corresponding structure.
+
+Please note: this syntax mostly is deliberately **not** executable. Some native
+operations and objects have their semantics (see [v0](TODO:)), but, aside from
+that, every construction is just a pure syntax sugar, the meaning of which
+assigned by the interpreter you write yourself.
 
 A bunch of examples:
 
@@ -291,7 +296,7 @@ primarily address native-side objects, like closures or numbers.
 
 Note that these lowered terms don't necessarily stored as-is during runtime. But
 from the standpoint of the language, you could be sure that these would behave exactly as
-their base syntax form does.
+their core syntax form does.
 
 ### Tagging
 
@@ -326,7 +331,7 @@ A well-formed tagged value always has a tag. No tag is just an empty proper list
 
 ### Rewrites
 
-To describe rewrites, we use the base syntax, with certain additions:
+To describe rewrites, we use the core syntax, with certain additions:
 - `<term>` for a source-term placeholder on the left and its recursively lowered form on the right
 - set of markers `native-*<...>` for machine-native values
 - shorthands for tagging operations, defined above
@@ -404,74 +409,7 @@ x + y * z             => @[[native-string<:infix>, <meta>]] [[native-string<+>, 
 \[x, y] body          => @[[native-string<:fn>, <meta>]] native-closure<>
 ```
 
-# Intensionality
-
-TODO: this goes to v0 as a pith/rule3 section, below is obsolete, don't read
-
-## Rewrite rules
-
-To support intensionality, syntax above is lowered into simpler terms, representable by the same syntax. For the same reason,
-applications are also represented as data, using `{@}` string as a head. 
-
-Every kind of an AST subtree is represented in a unified way:
-`[{some-tag}, <meta>, ...payload]`. Exceptions are the structuring nodes themselves: namely nyads and, consequently, lists and k-v lists.
-Literals: [task 20260926-053139](../../tasks/20260926-053139/TASK.md).
-
-`meta`: [task 20260903-085028](../../tasks/20260903-085028/TASK.md).
-
-```text
-1. x                    -> [{:id}, meta, {x}]
-2. [a, b]               -> ~[a, ~[b, ~[]]]
-3. (entry)              -> entry  ;; parens are purely syntactic, erased
-4. f(x, y)              -> [{@}, meta1, [{@}, meta2, f, x], y]
-5. label: expr          -> [{:label}, meta, {label}, expr]
-6. do a; b end          -> [{:block}, meta, a, b]
-7. f[x, y]              -> [{@}, meta, f, ~[x, ~[y, ~[]]]]
-8. f{bytes}             -> [{@}, meta, f, {bytes}]
-9. prefix-op expr       -> [{:prefix}, meta, {op}, expr]
-10. x op1 y op2 z       -> [{:infix}, meta, [{op1}, {op2}], x, y, z]
-11. base.name           -> [{:selector}, meta, base, {name}]
-```
-
-Infix chains, mixed operators included, are analyzed at vf stages.
-
-A loose postfix lowers as plain application of its datum, i.e. `f x: 1 -> [{@}, meta, f, [{:label}, meta, {x}, 1]]`.
-
-Note that the resulting tree is fully inert by itself, it isn't executed until it comes into executable position, see [v0
-execution rules](#v0-cesk).
-
-# Representation
-
-## Cells
-
-Cells are used to store compact tree-shaped data and make up a runtime system memory.
-
-Every node is typed (as opposed to `tree-calculus`) and has its arity: `0, 1 or 2`. Note that semantically a node
-could have any amount of children if proper list encoding is used.
-
-There are following node types:
-
-1. `nyad0`
-    + Represents `~[]` without children, a leaf
-    + Pith: `~[]`
-2. `nyad1`
-    + Represents `~[x]` with a child, a stem
-    + Pith: `~[x]`
-3. `nyad2`
-    + Represents `~[x, y]` with 2 children, a fork
-    + Pith: `~[x, y]`
-
-[task 20260805-162238](../../tasks/20260805-162238/TASK.md): add more
-
-
-`Pith` is a "view" into the node that is generated on demand when the node enters
- [`rule 3` family rule of `v0`](#triage-calculus). On more detail see [pith section](#pith).
-
-## Pith
-
-Piths are essential internals of a node that are introspectable by `rule 3`. 
-They are dual, meaning: if there's an observable pith of a certain node, a pith constructed in the same way from scratch
-represents such node. This allows for intensionality not only for `tree-calculus` level of `v0`, but also for other runtime
-entities, such as opcodes.
+Note that infix operators are deliberately non-associative, the interpreter must
+assign precedence and associativity themselves.
 
 \newpage
