@@ -365,38 +365,41 @@ x                     => @[[native-string<:id>, <meta>]] native-id<x>
 ;; instead is purely syntactical
 
 ;; parenthesized, list, and string application
-f()                   => @[[native-string<:app>, <meta>]] <f>(~)
+f()                   => @[[native-string<:app>, <meta>]] ~[<f>, ~]
 f(x, y)               => 
-    @[[native-string<:app>, <meta>]] (
-        @[[native-string<:app>, <meta>]] <f>(<x>)
-    )(<y>)
-f[]                   => @[[native-string<:app-list>, <meta>]] <f>(~)
-f[x, y]               => @[[native-string<:app-list>, <meta>]] <f>([<x>, <y>])
-f{bytes}              => @[[native-string<:app-str>, <meta>]] <f>(<{bytes}>)
+    @[[native-string<:app>, <meta>]] ~[
+        @[[native-string<:app>, <meta>]] ~[<f>, <x>],
+        <y>
+    ]
+f[]                   => @[[native-string<:app-list>, <meta>]] ~[<f>, ~]
+f[x, y]               => @[[native-string<:app-list>, <meta>]] ~[<f>, [<x>, <y>]]
+f{bytes}              => @[[native-string<:app-str>, <meta>]] ~[<f>, <{bytes}>]
 
 ;; labels and labeled application
 foo: x                => @[[native-string<:label>, <meta>]] [native-string<foo>, <x>]
 :stuff                => @[[native-string<:label>, <meta>]] [~, <stuff>]
 f first: x second: y  => 
-    @[[native-string<:app>, <meta>]] (
-        @[[native-string<:app>, <meta>]] <f>(
+    @[[native-string<:app>, <meta>]] ~[
+        @[[native-string<:app>, <meta>]] ~[
+            <f>,
             @[[native-string<:label>, <meta>]] [native-string<first>, <x>]
-        )
-    )(
+        ],
         @[[native-string<:label>, <meta>]] [native-string<second>, <y>]
-    )
+    ]
 ptr deref:~           =>
-    @[[native-string<:app>, <meta>]] <ptr>(
+    @[[native-string<:app>, <meta>]] ~[
+        <ptr>,
         @[[native-string<:label>, <meta>]] [native-string<deref>, ~]
-    )
+    ]
 
 ;; blocks and block application
 do end                => @[[native-string<:block>, <meta>]] []
 do x; y; end          => @[[native-string<:block>, <meta>]] [<x>, <y>]
 f do x; y end         => 
-    @[[native-string<:app-block>, <meta>]] <f>(
+    @[[native-string<:app-block>, <meta>]] ~[
+        <f>,
         @[[native-string<:block>, <meta>]] [<x>, <y>]
-    )
+    ]
 
 ;; operators
 !x                    => @[[native-string<:prefix>, <meta>]] [native-string<!>, <x>]

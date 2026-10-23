@@ -18,7 +18,7 @@
 - Decision (user, 2026-08-30): applications have five surface forms: `f(args)`, `f[list]`, `f{bytes}`, labeled application, and `f do end`.
 - Decision (user, spec): nyads use `~[]`, `~[x]`, and `~[x, y]`. Opcodes start with `$`. Annotations use `@[...]`.
 - Decision (user, 2026-08-30): labeled expressions are first-class. The parser imposes no operator precedence. vf interprets mixed infix chains.
-- Decision (user, spec): lowering produces inert terms with `{@}` for application. Grouping parentheses disappear.
+- Decision (user, spec): ~~lowering produces inert terms with `{@}` for application~~ superseded by tagged forks containing the recursively lowered function and operand (user, 2026-10-23). Grouping parentheses disappear.
 - Decision (user, 2026-07-11): there is no language-level quotation.
 - Decision (user, 2026-09-24): ASCII-only identifiers are an implementation limitation. The admitted Unicode characters remain open.
 - Direction (user): number syntax should be extensible, like string syntax. The initial implementation needs i64.
