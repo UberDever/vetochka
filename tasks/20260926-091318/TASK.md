@@ -53,6 +53,7 @@
 
 ## Exploration, not settled semantics
 
+- TODO direction (user, 2026-10-23): step back from Jay's direct tagging construction and assess a mechanism designed for Vetochka. `items.md` owns this assessment. Earlier Jay-style derivations remain evidence about that construction, not the selected design.
 - Proposal (user, 2026-10-23): represent parsed applications as tagged forks and interpret them in VM head position. `2026-10-23.md` records the model and the unresolved boundary between returning syntax and executing it.
 - Evidence (agent, 2026-10-23): `2026-10-23-application-inspection-transcript.md` preserves 40 original user and assistant messages from the September 25 and October 20 session JSONL files. It includes timestamps and source line numbers. The September exchange requires inspection without evaluation; the October exchange reopens the application representation and inspection mechanism.
 - Research and open scope (agent, 2026-10-22): `2026-10-22.md` records the requested value-model work and a Scheme specification comparison. The corresponding TODO is in `items.md`; no value semantics were chosen by this research.

@@ -9,7 +9,12 @@
 - Work (agent): define and implement the v0 evaluation rules, one-step host entry, and control machinery.
 - Done when (agent): matching rules and tests cover triage, identifiers, applications as data, sequencing, traps, and proper tail calls.
 
-## Evaluation contract
+## Current redesign direction
+
+- Direction (user, 2026-10-23): abandon triage as the evaluation basis and build from its principles. Remove rules 1 and 2. Retain the construction behavior of rule 0 and the structural inspection behavior of Rule 3, with suitable new names. Use lambda as the basis for evaluation.
+- Scope (agent): `items.md` owns the redesign work. The earlier contract below is historical input for review, not an instruction to implement the full triage evaluator. Coordinate bindings with 20241225-140425 and custom tagging with 20260926-091318.
+
+## Earlier evaluation contract
 
 - Decision (user, 2026-08-30): evaluation follows triage rules 0..3 plus identifier handling. The recorded direction is branch-first, without implicit forcing.
 - Decision (user, 2026-08-30): control position determines evaluation timing. Rule 2 copies raw operands. Duplicated effects are accepted.

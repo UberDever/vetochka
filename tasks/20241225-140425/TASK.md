@@ -27,6 +27,8 @@
 
 ## Forms and implementation
 
+- Proposal (user, 2026-10-23): assess A-normalization for explicit computation and binding, with tentative syntax `=[a: 12, b: f()] do ... end`. `items.md` owns the assessment. This proposal reopens the earlier let forms without choosing final syntax or binding semantics.
+- Evidence (agent, 2026-10-23): the earlier ANF/CESK explanation cited https://matt.might.net/articles/cesk-machines/ . The original assistant message is at JSONL line 156 in `/home/uberdever/.codex/sessions/2026/10/22/rollout-2026-10-22T16-34-20-01a163d1-dc05-7532-a66f-b1131a5d2482.jsonl`. The source was recovered from that session; it was not reassessed in this recording step.
 - Decision (user, 2026-08-30): let uses `let[clauses] do ... end`. `=` binds, `<~` binds recursively, and scope proceeds sequentially.
 - Decision (user, 2026-08-30): a list-shaped clause forms a simultaneous knot. `_ = expr` runs an effect. Clause blocks require parentheses.
 - Decision (user, 2026-08-30): `$form` accepts raw inputs. Its exact shape remains open.

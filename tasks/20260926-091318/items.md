@@ -7,7 +7,8 @@
 - [ ] Resolve metadata placement, payload grouping, k-v ordering, and the metadata inspection boundary.
 - [ ] Specify k-v collection semantics (user, 2026-10-20): plist, alist, map, or another model. Decide key equality, duplicate keys, ordering, missing-key behavior, and updates.
 - [ ] Specify observation versions, their runtime encoding, coexistence, and any role in behavior selection.
-- [ ] Explore annotation laws corresponding to `tag_apply` and `getTag_tag`. Separate them from dispatch semantics.
+- [ ] ~~Explore annotation laws corresponding to `tag_apply` and `getTag_tag`. Separate them from dispatch semantics.~~ Superseded by the custom-tagging assessment below (user, 2026-10-23).
+- [ ] Assess a Vetochka tagging mechanism instead of directly adopting Jay's construction (user, 2026-10-23). Application should ignore tags by construction. Tags should compose: the tentative example `@[a] @[b] x` would combine the annotations, approximately as `@[[a, b]] x`; the exact law and syntax remain open. Define how tagging interacts with structural inspection, currently called Rule 3. Coordinate with the evaluation redesign in 20260529-103914. Done when the tag representation, composition law, application behavior, and inspection behavior are specified and checked together.
 - [ ] Clarify reconstruction guarantees at binder boundaries with 20241225-140425 and at host boundaries with 20250123-091611.
 - [ ] Revise cell kinds and storage as required. Decide the fate of `APPLY`, `OP_FN0..2`, and dedicated native heads.
 - [ ] Replace stale Cells wording with the agreed runtime-node and pith model.
