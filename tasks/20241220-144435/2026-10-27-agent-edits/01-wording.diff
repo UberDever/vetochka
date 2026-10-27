@@ -1,0 +1,256 @@
+--- before/docs/new_spec/02_syntax.md
++++ after/docs/new_spec/02_syntax.md
+@@ -1,30 +1,28 @@
+ # The core
+ 
+-The purpose of this section is to lay down the fundamental syntactical blocks
+-that allow you to represent every feature `vetochka` has.
+-
+-At its core, language consists of tagged trees. These
+-are interpreted, passed around and introspected.
+-All trees are composed of a single element -- a nyad.
+-Nyad is a trivial value, it could be compared to a type-theoretical `unit` in the sense that
+-it doesn't bear any information by itself. Rather, the usefulness
+-of nyads comes from their ability to represent any homogenous binary tree.
+-This allows to encode all sorts of features, which are recognized by the interpreter
+-during execution. These trees are also easily forgeable by the same code
+-they represent.
+-
+-We would call a nyad a `leaf` when it has no children, a `stem` when it has one and a `fork` when it has two.
++This section defines the fundamental syntax used to represent every feature
++of `vetochka`.
++
++At its core, the language consists of tagged trees. Programs interpret,
++pass, and inspect these trees.
++All trees are built from nyads.
++A nyad carries no information by itself, much like the type-theoretical `unit`.
++Nyads can form any homogeneous binary tree.
++These trees encode language features that the interpreter recognizes during execution.
++Programs can also construct the trees that represent them.
++
++We call a nyad with no children a `leaf`.
++A nyad with one child is a `stem`, and a nyad with two children is a `fork`.
+ A nyad can't hold more than two children.
+ 
+-Here are some examples
++Here are some examples:
+ ```
+ ~           ;; a leaf
+ ~[~]        ;; a stem
+ ~[~[~], ~]  ;; a fork with one stem and a leaf
+ ```
+ 
+-We've also introduced a proper-list shorthand, since it is core enough to
+-get its own notation.
++Proper lists are fundamental enough to have their own shorthand:
+ 
+ ```vf
+ []     == ~
+@@ -35,15 +33,15 @@
+ 
+ We call this subset of syntax the core syntax.
+ 
+-Below are the examples of nyads and structures this syntax allows to express.
++Below are examples of nyads and structures that this syntax can express.
+ 
+ ```vf
+ ~; ;; a leaf
+ ~[~, ~]; ;; a fork
+-~[~, ~[~, ~]] ;; a proper list of two leafs, ending by a nil-like leaf nyad
++~[~, ~[~, ~]] ;; a proper list of two leaves, terminated by a leaf nyad
+ ~[~, ~[~, ~[~, ~[~, ~]]]] ;; a number 4 using Peano-style encoding
+ [[], [], [], []] ;; the same number, but using proper list notation explicitly
+-;; an example of encoding an application, using stubs to not dump 9000 nodes
++;; an application encoding, with stubs instead of thousands of nodes
+ ~[
+     [<app-tag>, ...],
+     ~[
+@@ -63,17 +61,16 @@
+ 
+ ## Motivation and examples
+ 
+-This syntax unifies different `vetochka` branches (called `vf`) under a single convenience umbrella.
+-It mainly consists of shorthands and sugar to simplify writing programs. However,
+-it is also used to represent intent of the programmer more clearly. An integer
+-or a key-value pair is clearer than a tree of a specific corresponding structure.
+-
+-Please note: this syntax mostly is deliberately **not** executable. Some native
+-operations and objects have their semantics (see [v0](TODO:)), but, aside from
+-that, every construction is just a pure syntax sugar, the meaning of which
+-assigned by the interpreter.
+-
+-A bunch of examples:
++This syntax provides a common notation for different `vetochka` branches (called `vf`).
++It mainly consists of shorthands and syntax sugar that simplify writing programs
++and express the programmer's intent more clearly.
++An integer or a key-value pair is clearer than its corresponding tree structure.
++
++Most of this syntax is deliberately **not** executable. Some native operations
++and objects have defined semantics (see [v0](TODO:)). Other constructs are syntax
++sugar whose meaning is assigned by the interpreter.
++
++Examples:
+ 
+ ```vf
+ ;; literals
+@@ -81,13 +78,13 @@
+ {outer {inner} text}        ;; balanced braces inside a string
+ {веточка}                   ;; UTF-8 string content
+ 
+-;; different forms in one list, note that the latter is an identifier also
++;; different forms in one list; empty? and x-y' are also identifiers
+ [1234, {text}, stuff1234, empty?, x-y']
+ 
+ ;; some applications
+ (f + g)(x)                  ;; an application of a grouped expression
+-f[x, y,]                    ;; equivalent to f([x, y])
+-f{bytes}                    ;; equivalent to f({bytes})
++f[x, y,]                    ;; list application; lowering preserves its distinct tag
++f{bytes}                    ;; string application; lowering preserves its distinct tag
+ (~)[x]                      ;; list application to a leaf, since ~[x] is a stem
+ 
+ ;; on operators
+@@ -96,7 +93,7 @@
+ ::x                         ;; a prefix form
+ x#|left|#+#|right|#y        ;; comments satisfy WS on both sides of +
+ -123                        ;; prefix application, not an integer literal with a sign
+-x + -y                      ;; this parses as you expect it would
++x + -y                      ;; an infix operator followed by a prefix expression
+ 
+ ;; labeled expressions
+ name: {Ada}
+@@ -184,11 +181,11 @@
+                 | "!" | "&" | "|" | ":" | "^" | "."
+ ```
+ 
+-Here, `do` and `end` are reserved block words. 
+-
+-We exclude a lone `:`: 
++Here, `do` and `end` are reserved block words.
++
++We exclude a lone `:`:
+ it is punctuation, not an operator, and operators may contain `:` (e.g. `::`).
+-We also exclude `...` since it's used as line continuation marker.
++We also exclude `...` because it is the line continuation marker.
+ 
+ Identifiers and operator runs consume the longest matching sequence of characters.
+ Thus, `x-y` is one identifier, and `!!x` starts with one operator run, `!!`.
+@@ -213,13 +210,13 @@
+ 
+ After insertion, virtual and written semicolons parse identically.
+ 
+-Note that since an inserted semicolon is a token, it does not satisfy `WS` marker.
++An inserted semicolon is a token, so it does not satisfy the `WS` marker.
+ 
+ ## Grammar
+ 
+-We would use `NO_WS` marker to represent "gluing" of tokens, i.e. no trivia could be contained between the two.
+-On the opposite, `WS` requires at least one trivia item. We use these markers to separate some productions,
+-for example an infix and prefix operators (see later sections).
++The `NO_WS` marker requires tokens to touch, with no trivia between them.
++Conversely, `WS` requires at least one trivia item.
++These markers distinguish productions such as infix and prefix operators.
+ 
+ ```ebnf
+ source ::= block_list? eof
+@@ -262,14 +259,14 @@
+           | "[" comma_list? "]"
+           | "(" expression ")"
+ 
+-nyad ::= "~" | "~" NO_WS "[" tagged_expression ( "," tagged_expression )? "]"
++nyad ::= "~" | "~" NO_WS "[" tagged_expression ( "," tagged_expression )? ","? "]"
+ untag ::= "@(" tagged_expression ")"
+ ```
+ 
+ Some clarifications:
+ 
+-We've used extended EBNF with parametrization. It simplifies rules and keeps the important destinction:
+-some productions associate tightly, some loosely.
++We use parameterized EBNF to simplify the rules while distinguishing
++productions that associate tightly from those that associate loosely.
+ 
+ A `~` immediately followed by `[` starts a stem or fork, never a leaf.
+ 
+@@ -287,43 +284,38 @@
+ 
+ ## Lowering
+ 
+-General syntax allows you to easily build programs, but to simplify their
+-inspection you probably would need a set of straightforward rules that
+-describe what exact shape every syntax-expressed tree takes. This is what
+-this lowering is for. The section descibes only
+-syntax-level transformations. There are also [piths](TODO:), which allow
+-you to inspect and build runtime-constructed objects beyond syntax. These
+-primarily address native-side objects, like closures or numbers.
+-
+-Note that these lowered terms don't necessarily stored as-is during runtime. But
+-from the standpoint of the language, you could be sure that these would behave exactly as
+-their core syntax form does.
++Lowering defines the exact tree structure of each syntax form so that programs
++can inspect it. This section describes only syntax-level transformations.
++[Piths](TODO:) also allow programs to inspect and construct runtime objects,
++primarily native objects such as closures and numbers.
++
++The runtime need not store lowered terms as literal trees.
++Their language-visible behavior must match their core syntax representation.
+ 
+ ### Lowering notation
+ 
+ To describe lowering, we use the core syntax, with certain additions:
++
+ - `<term>` for a source-term placeholder on the left and its recursively lowered form on the right
+-- set of markers `native-*<...>` for machine-native values
++- a set of markers `native-*<...>` for machine-native values
+ - proper lists instead of raw nyads where applicable
+ 
+ Child terms retain their own tags and source metadata. Native markers denote raw
+ machine-native values; they do not implicitly add tags.
+ 
+-Special term `<meta>` is used to describe syntactical metadata that
+-is spliced into the term's tag during parsing. It consists of the following
+-key-value pairs:
+-- a `line` with an `i64` describing term source code location; value of `0` could
+-be used to indicate that term is synthetic
+-- a `col` that describes the original source code column, behaves similar to `line` 
++The placeholder `<meta>` describes source metadata included in the term's tag
++during parsing. It consists of the following key-value pairs:
++
++- `line`: an `i64` giving the source line. A value of `0` can indicate a synthetic term.
++- `col`: the original source column. It follows the same convention as `line`.
+ 
+ ### On tagging
+ 
+-Every meaningful tree, aside from a purely structural one (e.g. a list),
+-is expected to be tagged. Tagging should be viewed as a protocol for
+-communication: you can tell the interpreter which trees mean what and
+-tell your inspector program what exactly you handed over.
+-
+-The main feature of tagging is that is doesn't affect the application
++Every meaningful tree, except a purely structural one such as a list,
++is expected to be tagged. Tags form a communication protocol:
++they tell interpreters and inspection programs what a tree represents.
++
++The main feature of tagging is that it doesn't affect the application
+ of terms. The following guarantees hold:
+ ```
+ @[m] v      == ~[m, v]
+@@ -345,8 +337,7 @@
+ []                    => ~
+ [<x>, <y>, <z>]       => ~[<x>, ~[<y>, ~[<z>, ~]]]
+ 
+-;; grouping isn't lowered into anything and
+-;; instead is purely syntactical
++;; grouping parentheses disappear during lowering
+ 
+ ;; parenthesized, list, and string application
+ f()                   => @[[native-string<:app>, <meta>]] ~[<f>, ~]
+@@ -396,7 +387,7 @@
+ \[x, y] body          => @[[native-string<:fn>, <meta>]] native-closure<>
+ ```
+ 
+-Note that infix operators are deliberately non-associative, the interpreter must
+-assign precedence and associativity themselves.
++The syntax deliberately assigns no precedence or associativity to infix operators.
++The interpreter must assign them.
+ 
+ \newpage

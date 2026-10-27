@@ -11,6 +11,10 @@
 
 ## Current basis
 
+- Change (agent, user request, 2026-10-27): simplify documented ASI around completion of the current statement-list expression. Parenthesized and bracketed contexts retain whitespace newlines; nested blocks have their own statement lists. `...` continues a complete expression. This replaces the per-header and per-triage-clause exceptions with a parser-aware rule. Parser implementation remains pending.
+- Decision (user, 2026-10-27): tags are arbitrary terms. Use list-valued tags in examples, without restricting the annotation header to list syntax. This supersedes the October 26 literal tag-list restriction and concatenation rule.
+- Update (user request, agent edit, 2026-10-26): `2026-10-26.md` records literal tag-list headers, the binding and triage grammar and lowering, and full-expression nyad children. Parser and runtime implementation remain pending.
+- Decision (user, 2026-10-26): permit trailing commas after the last child in stem and fork syntax. The documented nyad grammar now permits them. Parser implementation remains separate work.
 - Decision (user, spec): source is UTF-8. Comments use `;;`, nested `#| |#`, and `#;`. `...` continues a line.
 - Decision (user, spec): byte strings use balanced `{...}` without escapes. Integers currently use decimal notation. `do` and `end` are reserved.
 - Decision (user, 2026-08-30): ~~adjacency classifies operator runs~~ superseded by explicit grammar constraints (2026-10-20). Tight postfixes must touch their receiver. See `2026-10-20.md` and the historical `adr-1-operator-adjacency.md`.

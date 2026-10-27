@@ -11,8 +11,11 @@
 
 ## Current redesign direction
 
-- Direction (user, 2026-10-23): abandon triage as the evaluation basis and build from its principles. Remove rules 1 and 2. Retain the construction behavior of rule 0 and the structural inspection behavior of Rule 3, with suitable new names. Use lambda as the basis for evaluation.
+- Naming (user, 2026-10-27): call the `?(...)` operation triage. Its grammar production, native marker, tag designator, examples, and related task terminology use this name.
+- Decision (user, 2026-10-26): executing a nonempty block forces its entries in source order, discards intermediate results, and returns the last result. Constructing or returning the block as data does not execute its entries. This confirms the result policy, not a lowering through bindings or a dedicated block-frame implementation. Follow-up: `2026-10-26.md`.
+- Direction (user, 2026-10-23): ~~abandon triage as the evaluation basis and build from its principles. Remove rules 1 and 2. Retain the construction behavior of rule 0 and the structural inspection behavior of Rule 3, with suitable new names. Use lambda as the basis for evaluation.~~ Refined by the October 26 model in `2026-10-26.md`: primitive rule 0 is removed too. That note owns the lambda/tree model, proposed application-only reduction, and triage contract.
 - Scope (agent): `items.md` owns the redesign work. The earlier contract below is historical input for review, not an instruction to implement the full triage evaluator. Coordinate bindings with 20241225-140425 and custom tagging with 20260926-091318.
+- Research (agent, 2026-10-23): `2026-10-23-anf.md` relates the ANF grammar and machine in `docs/smart/essence-retro.pdf` to construction, triage, and the distinction between executable syntax and represented syntax. Its proposed adaptation remains unapproved.
 
 ## Earlier evaluation contract
 

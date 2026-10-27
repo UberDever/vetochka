@@ -1,0 +1,253 @@
+--- before/docs/new_spec/02_syntax.md
++++ after/docs/new_spec/02_syntax.md
+@@ -86,6 +86,7 @@
+ f[x, y,]                    ;; list application
+ f{bytes}                    ;; string application
+ (~)[x]                      ;; list application to a leaf, since ~[x] is a stem
++~[name: x, do y end,]        ;; nyad children can be labels or blocks
+ 
+ ;; on operators
+ x :: y                      ;; an infix form
+@@ -119,11 +120,20 @@
+ \[a, b, c] (a(c))(b(c))
+ \[x] \[y] x(y)
+ 
+-;; there are tags in the language, tags could be of any term
++;; bindings and structural inspection
++=[a: 12, b: f()] do use(a, b) end
++?(tree, lhs, rhs)
++do ~ end
++do lhs end
++do rhs end
++
++;; tag lists can contain arbitrary terms
+ @[{note}] x
+-@[[a: b, c: d]] foo            ;; if you need a list of kv values, you could have it
+-@[[]] foo                      ;; empty metadata
+-@[dangerous] 42 / 0            ;; could also assign to expressions
++@[a: b, c: d] foo              ;; labels as tag entries
++@[] foo                        ;; an empty tag list
++@[{outer}] @[{inner}] x         ;; tags compose in source order
++@[dangerous] 42 / 0            ;; tag an expression
++@[f(x)] y                      ;; an application tree as a tag entry
+ (\[foo] @(foo))(@[{stuff}] 42) ;; use a destructuring syntax
+ 
+ ;; some syntax niceties
+@@ -187,6 +197,9 @@
+ it is punctuation, not an operator, and operators may contain `:` (e.g. `::`).
+ We also exclude `...` because it is the line continuation marker.
+ 
++`=` immediately followed by `[` starts a binding form, rather than a prefix
++operator. `?` immediately followed by `(` starts an inspection form.
++
+ Identifiers and operator runs consume the longest matching sequence of characters.
+ Thus, `x-y` is one identifier, and `!!x` starts with one operator run, `!!`.
+ 
+@@ -200,11 +213,13 @@
+ 1. lexical context is layout-active;
+ 2. `...` does not suppress it;
+ 3. previous significant token can end an expression;
+-4. previous significant token does not close an annotation header or closure parameter list.
++4. previous significant token does not close an annotation header, closure parameter list,
++   binding header, inspection header, or either of the first two inspection clause blocks.
+ 
+ Layout-active contexts: source and bare `do ... end` blocks.
+ 
+-Layout-inactive contexts: `(...)`, `[...]`, `@[...]`, `@(...)`, `~[...]`, `\[...]`.
++Layout-inactive contexts: `(...)`, `[...]`, `@[...]`, `@(...)`, `~[...]`, `\[...]`,
++binding headers `=[...]`, and inspection headers `?(...)`.
+ 
+ Expression-ending tokens: literal, identifier, `~`, `)`, `]`, `end`.
+ 
+@@ -230,14 +245,21 @@
+ labeled_expression ::= (label_word NO_WS)? ":" argument_expression
+ label_word ::= identifier | "do" | "end"
+ 
+-tagged_expression ::= tag? (closure | infix<postfix_expression>)
+-tag ::= "@[" tagged_expression "]"
+-
+-argument_expression ::= tag? (closure_tight | infix<postfix_expression_tight>)
++tagged_expression ::= tag* (closure | infix<postfix_expression>)
++tag ::= "@[" comma_list? "]"
++
++argument_expression ::= tag* (closure_tight | infix<postfix_expression_tight>)
+ 
+ closure ::= closure_head expression
+ closure_tight ::= closure_head (block | argument_expression)
+ closure_head ::= "\" NO_WS "[" identifier ("," identifier)* ","? "]"
++
++binding ::= "=" NO_WS "[" binding_list? "]" WS block
++binding_list ::= binding_clause ("," binding_clause)* ","?
++binding_clause ::= identifier NO_WS ":" argument_expression
++
++inspection ::= "?" NO_WS "(" expression "," identifier "," identifier ","? ")"
++               WS block WS block WS block
+ 
+ infix<P> ::= prefix<P> (WS operator_run WS prefix<P>)*
+ prefix<P> ::= (operator_run NO_WS)* P
+@@ -256,10 +278,12 @@
+           | identifier
+           | nyad
+           | untag
++          | binding
++          | inspection
+           | "[" comma_list? "]"
+           | "(" expression ")"
+ 
+-nyad ::= "~" | "~" NO_WS "[" tagged_expression ( "," tagged_expression )? ","? "]"
++nyad ::= "~" | "~" NO_WS "[" expression ( "," expression )? ","? "]"
+ untag ::= "@(" tagged_expression ")"
+ ```
+ 
+@@ -281,6 +305,13 @@
+ 
+ A labeled expression consumes the longest
+ `argument_expression` as its payload. Nesting requires parens: `x: (y: 1)`.
++
++Nyad children accept the same expressions as list elements, including labels and blocks.
++Nyads still have at most two children.
++
++A binding form contains a header of named clauses followed by one body block.
++An inspection header contains the subject and two binder names.
++Its three blocks are the leaf, stem, and fork clauses, in that order.
+ 
+ ## Lowering
+ 
+@@ -300,6 +331,13 @@
+ - a set of markers `native-*<...>` for machine-native values
+ - proper lists instead of raw nyads where applicable
+ 
++`native-opcode<bind>` and `native-opcode<inspect>` denote the binding and inspection
++opcodes. Their applications carry the source terms as data. Their execution
++contracts belong to v0.
++
++In the binding schema, `<bindings>` denotes the clause sequence on the left
++and its recursively lowered proper list on the right. `<body>` denotes the body block.
++
+ Child terms retain their own tags and source metadata. Native markers denote raw
+ machine-native values; they do not implicitly add tags.
+ 
+@@ -315,11 +353,20 @@
+ is expected to be tagged. Tags form a communication protocol:
+ they tell interpreters and inspection programs what a tree represents.
+ 
++The brackets in `@[...]` contain a literal list of tag entries. Each entry can
++be any expression. A list-valued entry remains one entry rather than being flattened.
++Consecutive annotation headers concatenate their entry lists in source order.
++
+ The main feature of tagging is that it doesn't affect the application
+ of terms. The following guarantees hold:
++
++Here, `v` is an untagged payload, and `m` and `n` are arbitrary tag entries.
++
+ ```
+ @[m] v      == ~[[m], v]
++@[m, n] v   == ~[[m, n], v]
+ @[m] @[n] v == ~[[m, n], v]
++@[] v       == ~[[], v]
+ @(@[m] v)   => [[m], v]
+ (@[m] v)(x) => v(x)
+ ```
+@@ -329,9 +376,9 @@
+ ### Lowering rules
+ 
+ ```vf
+-1234                  => @[[native-string<:i64>, <meta>]] native-integer<1234>
+-{bytes}               => @[[native-string<:str>, <meta>]] native-string<bytes>
+-x                     => @[[native-string<:id>, <meta>]] native-id<x>
++1234                  => @[native-string<:i64>, <meta>] native-integer<1234>
++{bytes}               => @[native-string<:str>, <meta>] native-string<bytes>
++x                     => @[native-string<:id>, <meta>] native-id<x>
+ 
+ ~                     => ~
+ ~[<x>]                => ~[<x>]
+@@ -343,51 +390,65 @@
+ ;; grouping parentheses disappear during lowering
+ 
+ ;; parenthesized, list, and string application
+-f()                   => @[[native-string<:app>, <meta>]] ~[<f>, ~]
++f()                   => @[native-string<:app>, <meta>] ~[<f>, ~]
+ f(x, y)               => 
+-    @[[native-string<:app>, <meta>]] ~[
+-        @[[native-string<:app>, <meta>]] ~[<f>, <x>],
++    @[native-string<:app>, <meta>] ~[
++        @[native-string<:app>, <meta>] ~[<f>, <x>],
+         <y>
+     ]
+-f[]                   => @[[native-string<:app-list>, <meta>]] ~[<f>, ~]
+-f[x, y]               => @[[native-string<:app-list>, <meta>]] ~[<f>, [<x>, <y>]]
+-f{bytes}              => @[[native-string<:app-str>, <meta>]] ~[<f>, <{bytes}>]
++f[]                   => @[native-string<:app-list>, <meta>] ~[<f>, ~]
++f[x, y]               => @[native-string<:app-list>, <meta>] ~[<f>, [<x>, <y>]]
++f{bytes}              => @[native-string<:app-str>, <meta>] ~[<f>, <{bytes}>]
+ 
+ ;; labels and labeled application
+-foo: x                => @[[native-string<:label>, <meta>]] [native-string<foo>, <x>]
+-:stuff                => @[[native-string<:label>, <meta>]] [~, <stuff>]
++foo: x                => @[native-string<:label>, <meta>] [native-string<foo>, <x>]
++:stuff                => @[native-string<:label>, <meta>] [~, <stuff>]
+ f first: x second: y  => 
+-    @[[native-string<:app>, <meta>]] ~[
+-        @[[native-string<:app>, <meta>]] ~[
++    @[native-string<:app>, <meta>] ~[
++        @[native-string<:app>, <meta>] ~[
+             <f>,
+-            @[[native-string<:label>, <meta>]] [native-string<first>, <x>]
++            @[native-string<:label>, <meta>] [native-string<first>, <x>]
+         ],
+-        @[[native-string<:label>, <meta>]] [native-string<second>, <y>]
++        @[native-string<:label>, <meta>] [native-string<second>, <y>]
+     ]
+ ptr deref:~           =>
+-    @[[native-string<:app>, <meta>]] ~[
++    @[native-string<:app>, <meta>] ~[
+         <ptr>,
+-        @[[native-string<:label>, <meta>]] [native-string<deref>, ~]
++        @[native-string<:label>, <meta>] [native-string<deref>, ~]
+     ]
+ 
+ ;; blocks and block application
+-do end                => @[[native-string<:block>, <meta>]] []
+-do x; y; end          => @[[native-string<:block>, <meta>]] [<x>, <y>]
++do end                => @[native-string<:block>, <meta>] []
++do x; y; end          => @[native-string<:block>, <meta>] [<x>, <y>]
+ f do x; y end         => 
+-    @[[native-string<:app-block>, <meta>]] ~[
++    @[native-string<:app-block>, <meta>] ~[
+         <f>,
+-        @[[native-string<:block>, <meta>]] [<x>, <y>]
++        @[native-string<:block>, <meta>] [<x>, <y>]
+     ]
+ 
+ ;; operators
+-!x                    => @[[native-string<:prefix>, <meta>]] [native-string<!>, <x>]
+-x + y                 => @[[native-string<:infix>, <meta>]] [[native-string<+>], <x>, <y>]
+-x + y + z             => @[[native-string<:infix>, <meta>]] [[native-string<+>, native-string<+>], <x>, <y>, <z>]
+-x + y * z             => @[[native-string<:infix>, <meta>]] [[native-string<+>, native-string<*>], <x>, <y>, <z>]
++!x                    => @[native-string<:prefix>, <meta>] [native-string<!>, <x>]
++x + y                 => @[native-string<:infix>, <meta>] [[native-string<+>], <x>, <y>]
++x + y + z             => @[native-string<:infix>, <meta>] [[native-string<+>, native-string<+>], <x>, <y>, <z>]
++x + y * z             => @[native-string<:infix>, <meta>] [[native-string<+>, native-string<*>], <x>, <y>, <z>]
+ 
+ ;; closures, all the info in the native object
+-\[x] body             => @[[native-string<:fn>, <meta>]] native-closure<>
+-\[x, y] body          => @[[native-string<:fn>, <meta>]] native-closure<>
++\[x] body             => @[native-string<:fn>, <meta>] native-closure<>
++\[x, y] body          => @[native-string<:fn>, <meta>] native-closure<>
++
++;; binding: a clause list and body are operands of the binding opcode
++=[<bindings>] <body> =>
++    @[native-string<:app>, <meta>] ~[
++        @[native-string<:opcode>, []] native-opcode<bind>,
++        [<bindings>, <body>]
++    ]
++
++;; inspection: subject, binders, then leaf, stem, and fork blocks
++?(term, lhs, rhs) do leaf end do stem end do fork end =>
++    @[native-string<:app>, <meta>] ~[
++        @[native-string<:opcode>, []] native-opcode<inspect>,
++        [<term>, <lhs>, <rhs>, <do leaf end>, <do stem end>, <do fork end>]
++    ]
+ ```
+ 
+ The syntax deliberately assigns no precedence or associativity to infix operators.
