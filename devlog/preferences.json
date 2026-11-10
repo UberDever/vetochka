@@ -1,0 +1,6 @@
+{
+  "rotation": {
+    "max_bytes": 1048576,
+    "compress_after": 1
+  }
+}

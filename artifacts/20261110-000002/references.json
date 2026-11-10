@@ -1,0 +1,12 @@
+{
+  "previous_snapshot": "artifacts/20261110-000002/before-compaction.tar.gz",
+  "historical_manifest": "artifacts/20261110-000000/manifest.json",
+  "active_log": "devlog/log.md",
+  "active_entry_count": 249,
+  "updated_active_references": {
+    "10.11.26,129": "07.11.26, 5",
+    "10.11.26,91": "07.11.26, 4",
+    "17.02.26,0": "17.02.26, 0"
+  },
+  "scope": "Other preceding IDs remain scoped to the saved pre-compaction log; no identity equivalence is asserted for removed mechanical records."
+}

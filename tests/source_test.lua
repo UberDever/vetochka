@@ -53,7 +53,7 @@ return {
             "$ x",
             "@x",         -- `@` only opens `@[`
             "^",          -- an operator with no operands
-            "\u{394}",    -- Δ: the lexer is ASCII-only for now, task 20241220-144435
+            "\u{394}",    -- Δ: the lexer is ASCII-only for now, entry (07.11.26, 4)
             "007",
             "@[doc]\ntarget", -- annotation `]` ends an expression: ASI inserts `;`
         } do

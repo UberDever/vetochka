@@ -1,59 +1,44 @@
 ## Artifacts
 
-- Three kinds of artifacts. `docs/` holds user-facing docs: mostly correct, developed further.
-  `tasks/` holds everything about the development process, tracked with tatr (`tatr` skill).
-  `archive/` holds process artifacts whose content is captured in tasks or superseded.
-- Each task folder has `TASK.md` plus its artifacts: session notes, dialogues, drafts, experiments.
-  Records form a tree, Intent → Initiative → Task, linked only by `PARENT` (`tatr` skill).
-  Each claim lives in one record; others reference its ID. Sub-items that are not records of
-  their own go in the parent's `items.md`.
-- Docs and code reference tasks by ID instead of carrying TODOs.
-- A record's parent is the record of the concept it defines, not the spec page that mentions it.
-  The spec reads top to bottom, so a page may mention concepts defined elsewhere.
+- `docs/` holds user-facing documentation. `devlog/` holds the development record.
+  Read `devlog/format.md` and `devlog/rules.md` before working with entries.
+  `devlog/preferences.json` holds rotation and tool defaults.
+- Session notes, dialogues, designs, experiments, and migration evidence live under `artifacts/<HUID>/`.
+  Log entries contain the decisions, proposals, evidence, work items, and references to those artifacts.
+- Docs and code reference entries by `(date, index)` instead of carrying TODOs.
+- `devlog/rules.md` defines reading, writing, tag use, supersession, and verification procedures.
 
 ## Spec
 
-- The user writes the spec (`docs/new_spec`); the agent makes targeted edits only, in plain English.
-- Spec text is concise and normative; reasoning and alternatives go into tasks.
-
-## Archive
-
-- Archiving is garbage collection that keeps `tasks/` tidy. Move transient notes (drafts,
-  research dumps, dialogue ledgers, superseded session notes) once their outcome lives in a
-  TASK.md. Keep in `tasks/` what is still current and cited.
-- Layout mirrors `tasks/`: one folder per group, named by an approximate HUID
-  (`YYYYMMDD-HHMMSS`, date by content). Group by meaning first; prefer few folders over many.
-- Each folder has a `SUMMARY.md`: what the group is, one line per file, and which tasks now
-  carry the knowledge. Other files keep meaningful names, in any order.
-- After moving, repoint references in TASK.md and items.md to the archive path.
+- The user writes the spec; the agent makes targeted edits only, in plain English.
+- Spec text is concise and normative; reasoning and alternatives go into log entries and their artifacts.
+- Retained specification snapshots are under `artifacts/20261110-000001/`. Their migration does not approve old proposals.
 
 ## Memory discipline
 
-- Search `tasks/` and `docs/` (`memsearch search "<query>"`) at the start of any design
-  discussion or when past decisions might be relevant. Never index `archive/`; grep it only as
-  a last resort. Treat results as hint, not fact —
-  verify against real code before acting on remembered claims.
-- At the end of substantive sessions, distill: append decisions made, alternatives
-  rejected (and why), and open questions to a dated note in the task the session followed,
-  then run `memsearch index tasks/ docs/`.
-- Never delete entries; supersede them ("~~X~~ superseded by Y, see <date>").
+- Search the current log, its rotations, and `docs/` at the start of design discussions or when past decisions matter.
+  Follow artifact references for detail. Verify remembered claims against current code before relying on them.
+- At the end of substantive sessions, append decisions, rejected alternatives and their reasons, evidence, and open questions to the log.
+  Preserve attribution and distinguish proposals from approved decisions.
+- Treat search indexes as disposable caches. An index that omits rotated logs is incomplete; search those files directly.
+- The migration mapping and original source snapshot are under `artifacts/20261110-000000/`.
+  Those imported IDs refer to the preceding log saved under `artifacts/20261110-000002/`, not the compacted active log.
+  The compaction record and active reference mapping are in that same directory.
+  Legacy instructions and task metadata retained in artifacts are historical records, not the active workflow.
 
 ## Notation
 
-- Don't invent notation when an existing one suffices for the explanation. Use vf syntax
-  (the shared Vetochka syntax in `docs/new_spec/02_syntax.md`) generally, including lowered terms.
+- Don't invent notation when an existing one suffices. Use vf syntax, including lowered terms.
+  The retained syntax snapshot is `artifacts/20261110-000001/new_spec/02_syntax.md`.
 
 ## Skills
 
 Load the matching skill before doing the work:
 
-- `tatr` — any task edit: create, update, close, move, query. It also carries the rules for
-  tasks as project memory.
-- `memory` — recall and distill, with this project's locations: dated notes go into the task
-  folder the session followed; index and search `tasks/` and `docs/`. There is no
-  `.memsearch/memory/` here.
+- `memory` — recall and distill through `devlog/` and `docs/`; supporting records go into `artifacts/<HUID>/`.
+  Follow this project's log format instead of the skill's default memory layout.
 - `fpf` — design reasoning where claims, evidence, decisions and descriptions could mix.
-- `dialogue` — a design session with the user; its ADR output goes into the task.
+- `dialogue` — a design session with the user; its artifacts go under `artifacts/<HUID>/` and conclusions go into the log.
 - `adopt-purist-language-researcher` / `adopt-pragmatic-language-developer` — when the user
   asks for a critique or challenge of a language design choice.
 - `systematic-debugging` — a failing test or unexpected behavior, before proposing a fix.

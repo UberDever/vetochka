@@ -1,0 +1,1683 @@
+[
+  {
+    "source": "archive/20260322-120000/SUMMARY.md",
+    "source_sha256": "18d7977f0efcd7b21cb64fbc57907ee899d1ebfa72f0320fb896684cbb16f2d0",
+    "bytes": 478,
+    "git_path": "archive/20260322-120000/SUMMARY.md",
+    "git_history": [
+      "2259655e670cec4a09652f014412565d33d83772\t2026-09-26T07:35:52+03:00\t2026-09-26T07:35:52+03:00\tCheckpoint: archive, Rule 3 and opcode rulings, cells revision"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20260322-120000/claude_opcode_do_research_2026-07-10.md",
+    "source_sha256": "1ccb1eb4c5c78acfad8cfbd5ed4c815cf3132b0140c14c7c3f28cdbd1788536c",
+    "bytes": 2722,
+    "git_path": "archive/20260322-120000/claude_opcode_do_research_2026-07-10.md",
+    "git_history": [
+      "2259655e670cec4a09652f014412565d33d83772\t2026-09-26T07:35:52+03:00\t2026-09-26T07:35:52+03:00\tCheckpoint: archive, Rule 3 and opcode rulings, cells revision",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks",
+      "9cc70f635009660e7935948ba8808dfcfc85b7b7\t2026-07-15T17:30:24+03:00\t2026-07-15T17:30:24+03:00\t4 layers are somewhat decent"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20260322-120000/llm_research_on_opcode_shape.md",
+    "source_sha256": "90a6fe723c41b049aecadf562f10d60ade2ba0231c335a17f9c12719324993a4",
+    "bytes": 5207,
+    "git_path": "archive/20260322-120000/llm_research_on_opcode_shape.md",
+    "git_history": [
+      "2259655e670cec4a09652f014412565d33d83772\t2026-09-26T07:35:52+03:00\t2026-09-26T07:35:52+03:00\tCheckpoint: archive, Rule 3 and opcode rulings, cells revision",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks",
+      "b9ef3ff99f69f928496f7fdd5790486902c969bb\t2026-07-11T16:12:55+03:00\t2026-07-11T16:12:55+03:00\tincorporating free agent, using S3 configuration, see github.com/uberdever/agents",
+      "6b0bfc5bfbe3d8af8c5ea29fbe0153211d4796e1\t2026-06-13T18:15:55+03:00\t2026-06-13T18:15:55+03:00\tdocking rn",
+      "cc34eed1186635471c95ebd2a74ac209c0c82932\t2026-04-02T15:20:48+03:00\t2026-04-05T21:15:01+03:00\tupdated documentation",
+      "0a8901184a17cd0bdf4c8919fad6ff0effeed816\t2026-03-22T18:42:32+03:00\t2026-03-22T18:47:17+03:00\trules 0a and 0b"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20260613-120000/SUMMARY.md",
+    "source_sha256": "496c795b2cd2949612622e7db526aa9141a70ceb0bba85a9e50f5c69d0f37c18",
+    "bytes": 629,
+    "git_path": "archive/20260613-120000/SUMMARY.md",
+    "git_history": [
+      "2259655e670cec4a09652f014412565d33d83772\t2026-09-26T07:35:52+03:00\t2026-09-26T07:35:52+03:00\tCheckpoint: archive, Rule 3 and opcode rulings, cells revision"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20260613-120000/minimal-machine.md",
+    "source_sha256": "f8fe25ac2c55e4d52133d21dd9a76f27a3a56dde6d51f49390fc1143c1838f79",
+    "bytes": 2572,
+    "git_path": "archive/20260613-120000/minimal-machine.md",
+    "git_history": [
+      "2259655e670cec4a09652f014412565d33d83772\t2026-09-26T07:35:52+03:00\t2026-09-26T07:35:52+03:00\tCheckpoint: archive, Rule 3 and opcode rulings, cells revision",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks",
+      "b9ef3ff99f69f928496f7fdd5790486902c969bb\t2026-07-11T16:12:55+03:00\t2026-07-11T16:12:55+03:00\tincorporating free agent, using S3 configuration, see github.com/uberdever/agents"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20260613-120000/slop_field.md",
+    "source_sha256": "b30613197e8eaa1d649ba7060364a442f189dee50868a232e3f72386426ac8df",
+    "bytes": 36983,
+    "git_path": "archive/20260613-120000/slop_field.md",
+    "git_history": [
+      "2259655e670cec4a09652f014412565d33d83772\t2026-09-26T07:35:52+03:00\t2026-09-26T07:35:52+03:00\tCheckpoint: archive, Rule 3 and opcode rulings, cells revision",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks",
+      "b9ef3ff99f69f928496f7fdd5790486902c969bb\t2026-07-11T16:12:55+03:00\t2026-07-11T16:12:55+03:00\tincorporating free agent, using S3 configuration, see github.com/uberdever/agents"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20260613-120000/v0_basis_review.md",
+    "source_sha256": "eb104be597c7d53278da4d84b56cbe469eb52a860ec3bb4f3ca0c327c1784959",
+    "bytes": 6620,
+    "git_path": "archive/20260613-120000/v0_basis_review.md",
+    "git_history": [
+      "2259655e670cec4a09652f014412565d33d83772\t2026-09-26T07:35:52+03:00\t2026-09-26T07:35:52+03:00\tCheckpoint: archive, Rule 3 and opcode rulings, cells revision",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks",
+      "b9ef3ff99f69f928496f7fdd5790486902c969bb\t2026-07-11T16:12:55+03:00\t2026-07-11T16:12:55+03:00\tincorporating free agent, using S3 configuration, see github.com/uberdever/agents"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20260613-120000/v0_cesk_draft.md",
+    "source_sha256": "c430300ac07c32d83776974e081a342aa282570b21d1c3d1804271e36442eea2",
+    "bytes": 26816,
+    "git_path": "archive/20260613-120000/v0_cesk_draft.md",
+    "git_history": [
+      "2259655e670cec4a09652f014412565d33d83772\t2026-09-26T07:35:52+03:00\t2026-09-26T07:35:52+03:00\tCheckpoint: archive, Rule 3 and opcode rulings, cells revision",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks",
+      "b9ef3ff99f69f928496f7fdd5790486902c969bb\t2026-07-11T16:12:55+03:00\t2026-07-11T16:12:55+03:00\tincorporating free agent, using S3 configuration, see github.com/uberdever/agents"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20260711-120000/2026-07-11.md",
+    "source_sha256": "ec06ce6a04ee18ef0da63392b09842117c809923f520ad87e29b6426fd8c07d9",
+    "bytes": 37096,
+    "git_path": "archive/20260711-120000/2026-07-11.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "2259655e670cec4a09652f014412565d33d83772\t2026-09-26T07:35:52+03:00\t2026-09-26T07:35:52+03:00\tCheckpoint: archive, Rule 3 and opcode rulings, cells revision",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks",
+      "dbb6c0f52390c0cb80c8d257f158ae80d47505db\t2026-08-05T19:22:36+03:00\t2026-08-05T19:22:36+03:00\trewriting spec by hand",
+      "a66220f7a09fc2014f9b635f963849311e1870bb\t2026-07-21T19:24:22+03:00\t2026-07-21T19:24:22+03:00\ton lenses",
+      "907874e49b3cd94de806e2382c66bdcf8683ff0c\t2026-07-18T20:59:27+03:00\t2026-07-18T20:59:27+03:00\tproposing actual evaluation rules",
+      "d126d83edcf2735a09f0edecc26506bf7648279c\t2026-07-17T16:17:29+03:00\t2026-07-17T16:17:29+03:00\tmove from LOCAL",
+      "2f2475210bf9ae06734f61f6ac18d7cb0ea621f3\t2026-07-16T12:48:42+03:00\t2026-07-16T12:48:42+03:00\tworking out opcodes",
+      "2cedb15f8f5931c91540fcb0363d7652e7851afc\t2026-07-15T17:47:15+03:00\t2026-07-15T17:47:15+03:00\tadjusing spec",
+      "9cc70f635009660e7935948ba8808dfcfc85b7b7\t2026-07-15T17:30:24+03:00\t2026-07-15T17:30:24+03:00\t4 layers are somewhat decent",
+      "b9ef3ff99f69f928496f7fdd5790486902c969bb\t2026-07-11T16:12:55+03:00\t2026-07-11T16:12:55+03:00\tincorporating free agent, using S3 configuration, see github.com/uberdever/agents"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20260711-120000/SUMMARY.md",
+    "source_sha256": "6dc7b30dcb1b8d6d630ee712a9eba428a05cf4fab49999e9df85beb7c1da0ec1",
+    "bytes": 589,
+    "git_path": "archive/20260711-120000/SUMMARY.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "2259655e670cec4a09652f014412565d33d83772\t2026-09-26T07:35:52+03:00\t2026-09-26T07:35:52+03:00\tCheckpoint: archive, Rule 3 and opcode rulings, cells revision"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20260711-120000/v0-layers-restoration.md",
+    "source_sha256": "e37695feb1c6c3ace40b66826bea420beb40a1783a51e16b66cc3152d393f34b",
+    "bytes": 43770,
+    "git_path": "archive/20260711-120000/v0-layers-restoration.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "2259655e670cec4a09652f014412565d33d83772\t2026-09-26T07:35:52+03:00\t2026-09-26T07:35:52+03:00\tCheckpoint: archive, Rule 3 and opcode rulings, cells revision",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks",
+      "dbb6c0f52390c0cb80c8d257f158ae80d47505db\t2026-08-05T19:22:36+03:00\t2026-08-05T19:22:36+03:00\trewriting spec by hand",
+      "a66220f7a09fc2014f9b635f963849311e1870bb\t2026-07-21T19:24:22+03:00\t2026-07-21T19:24:22+03:00\ton lenses",
+      "907874e49b3cd94de806e2382c66bdcf8683ff0c\t2026-07-18T20:59:27+03:00\t2026-07-18T20:59:27+03:00\tproposing actual evaluation rules",
+      "d126d83edcf2735a09f0edecc26506bf7648279c\t2026-07-17T16:17:29+03:00\t2026-07-17T16:17:29+03:00\tmove from LOCAL",
+      "2f2475210bf9ae06734f61f6ac18d7cb0ea621f3\t2026-07-16T12:48:42+03:00\t2026-07-16T12:48:42+03:00\tworking out opcodes",
+      "2cedb15f8f5931c91540fcb0363d7652e7851afc\t2026-07-15T17:47:15+03:00\t2026-07-15T17:47:15+03:00\tadjusing spec",
+      "9cc70f635009660e7935948ba8808dfcfc85b7b7\t2026-07-15T17:30:24+03:00\t2026-07-15T17:30:24+03:00\t4 layers are somewhat decent"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20260711-120000/v0-state-audit.md",
+    "source_sha256": "0bb0a8f38e5ba62eecef59568ff0cb17ecae64449e316179e2e0a1645b2567ad",
+    "bytes": 4986,
+    "git_path": "archive/20260711-120000/v0-state-audit.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "2259655e670cec4a09652f014412565d33d83772\t2026-09-26T07:35:52+03:00\t2026-09-26T07:35:52+03:00\tCheckpoint: archive, Rule 3 and opcode rulings, cells revision",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks",
+      "5a1b4589c76ab23867e8887300c4820bba9f8746\t2026-09-03T11:50:28+03:00\t2026-09-03T11:50:28+03:00\tclearer picture on things",
+      "dbb6c0f52390c0cb80c8d257f158ae80d47505db\t2026-08-05T19:22:36+03:00\t2026-08-05T19:22:36+03:00\trewriting spec by hand"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20260711-120000/v0_layers.md",
+    "source_sha256": "43e8d0d3198ed290c08845024d2a7833bedc44be893cd2587adc4e8ba57eb349",
+    "bytes": 8743,
+    "git_path": "archive/20260711-120000/v0_layers.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "2259655e670cec4a09652f014412565d33d83772\t2026-09-26T07:35:52+03:00\t2026-09-26T07:35:52+03:00\tCheckpoint: archive, Rule 3 and opcode rulings, cells revision",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks",
+      "5a1b4589c76ab23867e8887300c4820bba9f8746\t2026-09-03T11:50:28+03:00\t2026-09-03T11:50:28+03:00\tclearer picture on things",
+      "9cc70f635009660e7935948ba8808dfcfc85b7b7\t2026-07-15T17:30:24+03:00\t2026-07-15T17:30:24+03:00\t4 layers are somewhat decent",
+      "b9ef3ff99f69f928496f7fdd5790486902c969bb\t2026-07-11T16:12:55+03:00\t2026-07-11T16:12:55+03:00\tincorporating free agent, using S3 configuration, see github.com/uberdever/agents"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20260717-120000/SUMMARY.md",
+    "source_sha256": "351a6082b89aaad869f3956faa481ebae5cca087050162e75f6a484f69f52509",
+    "bytes": 433,
+    "git_path": "archive/20260717-120000/SUMMARY.md",
+    "git_history": [
+      "2259655e670cec4a09652f014412565d33d83772\t2026-09-26T07:35:52+03:00\t2026-09-26T07:35:52+03:00\tCheckpoint: archive, Rule 3 and opcode rulings, cells revision"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20260717-120000/basis-experiment.md",
+    "source_sha256": "de057ee59e9f88a813a97e84cfeceecbaf4592401a85933a43f0fa8287fccde2",
+    "bytes": 11920,
+    "git_path": "archive/20260717-120000/basis-experiment.md",
+    "git_history": [
+      "2259655e670cec4a09652f014412565d33d83772\t2026-09-26T07:35:52+03:00\t2026-09-26T07:35:52+03:00\tCheckpoint: archive, Rule 3 and opcode rulings, cells revision",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks",
+      "dbb6c0f52390c0cb80c8d257f158ae80d47505db\t2026-08-05T19:22:36+03:00\t2026-08-05T19:22:36+03:00\trewriting spec by hand"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20260717-120000/lexical-reference-models.md",
+    "source_sha256": "b613b7873196b6a9980d65e8cb42868d7e4bf252ff3c3e0bf29e197747df2ba3",
+    "bytes": 5899,
+    "git_path": "archive/20260717-120000/lexical-reference-models.md",
+    "git_history": [
+      "2259655e670cec4a09652f014412565d33d83772\t2026-09-26T07:35:52+03:00\t2026-09-26T07:35:52+03:00\tCheckpoint: archive, Rule 3 and opcode rulings, cells revision",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks",
+      "d126d83edcf2735a09f0edecc26506bf7648279c\t2026-07-17T16:17:29+03:00\t2026-07-17T16:17:29+03:00\tmove from LOCAL"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20260807-120000/2026-08-07.md",
+    "source_sha256": "582184f4ce0180f9408cf21841e164d88c398caf5e1c83620dc849d1e368cb08",
+    "bytes": 326,
+    "git_path": "archive/20260807-120000/2026-08-07.md",
+    "git_history": [
+      "2259655e670cec4a09652f014412565d33d83772\t2026-09-26T07:35:52+03:00\t2026-09-26T07:35:52+03:00\tCheckpoint: archive, Rule 3 and opcode rulings, cells revision",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks",
+      "f10c3a07d2a1e0c5a075554ccce6bb641db2e7d2\t2026-08-30T14:11:34+03:00\t2026-08-30T14:11:34+03:00\tsyncing"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20260807-120000/Naming-a-node-nyad-2026-08-30.md",
+    "source_sha256": "c023f456db3c063593c8625322c38fbe54b1b0626db1b3c020d0aaf91eb5df16",
+    "bytes": 9643,
+    "git_path": "archive/20260807-120000/Naming-a-node-nyad-2026-08-30.md",
+    "git_history": [
+      "2259655e670cec4a09652f014412565d33d83772\t2026-09-26T07:35:52+03:00\t2026-09-26T07:35:52+03:00\tCheckpoint: archive, Rule 3 and opcode rulings, cells revision",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks",
+      "5b96c2ba7bf7c06a2f669890ccb70cb3ef05d041\t2026-08-30T16:27:59+03:00\t2026-08-30T16:27:59+03:00\ton nyad and operators"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20260807-120000/SUMMARY.md",
+    "source_sha256": "4faf36cde8be710a132d27b0579e39bfabadab86f047514010a949c023e9caa9",
+    "bytes": 599,
+    "git_path": "archive/20260807-120000/SUMMARY.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "2259655e670cec4a09652f014412565d33d83772\t2026-09-26T07:35:52+03:00\t2026-09-26T07:35:52+03:00\tCheckpoint: archive, Rule 3 and opcode rulings, cells revision"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20260807-120000/labels-kv.md",
+    "source_sha256": "d54d9b03c176d9611d5a19aa8e55d5ab6804f6516fa3c2bf7b46883687ad63d6",
+    "bytes": 6386,
+    "git_path": "archive/20260807-120000/labels-kv.md",
+    "git_history": [
+      "2259655e670cec4a09652f014412565d33d83772\t2026-09-26T07:35:52+03:00\t2026-09-26T07:35:52+03:00\tCheckpoint: archive, Rule 3 and opcode rulings, cells revision",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks",
+      "8fb767ef1cb612041e4969a674ecd09eaf000da9\t2026-08-31T18:51:52+03:00\t2026-08-31T18:51:52+03:00\ton grammar, recursion and such",
+      "c75edb4aa5821078a2921d2eb0b78e6892521e6f\t2026-08-30T18:07:44+03:00\t2026-08-30T18:07:44+03:00\tunifying the grammar more"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20260807-120000/prefix-infix-operators.md",
+    "source_sha256": "ddc8862adbe8116a391c14aab7a335fb4be0546f5cef420d1b89fd9b37e9fb66",
+    "bytes": 3735,
+    "git_path": "archive/20260807-120000/prefix-infix-operators.md",
+    "git_history": [
+      "2259655e670cec4a09652f014412565d33d83772\t2026-09-26T07:35:52+03:00\t2026-09-26T07:35:52+03:00\tCheckpoint: archive, Rule 3 and opcode rulings, cells revision",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks",
+      "c75edb4aa5821078a2921d2eb0b78e6892521e6f\t2026-08-30T18:07:44+03:00\t2026-08-30T18:07:44+03:00\tunifying the grammar more",
+      "5b96c2ba7bf7c06a2f669890ccb70cb3ef05d041\t2026-08-30T16:27:59+03:00\t2026-08-30T16:27:59+03:00\ton nyad and operators"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20260903-120000/2026-09-03.md",
+    "source_sha256": "cb8d1fa8209af5b4ed89be0a69341e60a6af27ff60481ebe4f12ad06ab050796",
+    "bytes": 7478,
+    "git_path": "archive/20260903-120000/2026-09-03.md",
+    "git_history": [
+      "2259655e670cec4a09652f014412565d33d83772\t2026-09-26T07:35:52+03:00\t2026-09-26T07:35:52+03:00\tCheckpoint: archive, Rule 3 and opcode rulings, cells revision",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20260903-120000/SUMMARY.md",
+    "source_sha256": "b4737f1e245c4f7c8d0d3441a7181089d2fa9f052259151d2bfe6033700efeb9",
+    "bytes": 404,
+    "git_path": "archive/20260903-120000/SUMMARY.md",
+    "git_history": [
+      "2259655e670cec4a09652f014412565d33d83772\t2026-09-26T07:35:52+03:00\t2026-09-26T07:35:52+03:00\tCheckpoint: archive, Rule 3 and opcode rulings, cells revision"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20260903-120000/experiment-2026-09-03-spec-edits.md",
+    "source_sha256": "bb958674a4c78404e1fcb1d07cc5309ebe795125a48a660cc19c2872a5f79656",
+    "bytes": 4773,
+    "git_path": "archive/20260903-120000/experiment-2026-09-03-spec-edits.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "2259655e670cec4a09652f014412565d33d83772\t2026-09-26T07:35:52+03:00\t2026-09-26T07:35:52+03:00\tCheckpoint: archive, Rule 3 and opcode rulings, cells revision",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20260903-120000/picture.md",
+    "source_sha256": "0dcb016def7bbc449ade1abd8748437f4c1de98691c4ec44e90b81e41acecd1a",
+    "bytes": 68570,
+    "git_path": "archive/20260903-120000/picture.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "2259655e670cec4a09652f014412565d33d83772\t2026-09-26T07:35:52+03:00\t2026-09-26T07:35:52+03:00\tCheckpoint: archive, Rule 3 and opcode rulings, cells revision",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20260924-120000/2026-09-24.md",
+    "source_sha256": "bbefadadc09e870d54283011e8071c16d47d79a273c5bf686121a18e72e7d296",
+    "bytes": 2593,
+    "git_path": "archive/20260924-120000/2026-09-24.md",
+    "git_history": [
+      "2259655e670cec4a09652f014412565d33d83772\t2026-09-26T07:35:52+03:00\t2026-09-26T07:35:52+03:00\tCheckpoint: archive, Rule 3 and opcode rulings, cells revision",
+      "4701b8bf94d5250fe86c2e9af2869bba552ba1e7\t2026-09-24T14:50:26+03:00\t2026-09-24T14:50:26+03:00\tReview tasks: retag zig/Lua as project, mark log TODOs discarded",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20260924-120000/SUMMARY.md",
+    "source_sha256": "c146ba2523a43b5cdef79eabf34e8725196d7fe9ee7b67af65dc52780e679d5b",
+    "bytes": 286,
+    "git_path": "archive/20260924-120000/SUMMARY.md",
+    "git_history": [
+      "2259655e670cec4a09652f014412565d33d83772\t2026-09-26T07:35:52+03:00\t2026-09-26T07:35:52+03:00\tCheckpoint: archive, Rule 3 and opcode rulings, cells revision"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20261020-000000/20241220-144435--adr-1-operator-adjacency.md",
+    "source_sha256": "180c95c91e0d67f5b07ee893f2a18cd323fe1fc6afdfc16f06c033704e1beb35",
+    "bytes": 1699,
+    "git_path": "archive/20261020-000000/20241220-144435--adr-1-operator-adjacency.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks",
+      "5b96c2ba7bf7c06a2f669890ccb70cb3ef05d041\t2026-08-30T16:27:59+03:00\t2026-08-30T16:27:59+03:00\ton nyad and operators"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20261020-000000/20241220-144435--grammar.md",
+    "source_sha256": "c6d3c80816b1c6f3750325d8a3a5c46b4ed819f26dd91165411696d4a5686103",
+    "bytes": 9010,
+    "git_path": "archive/20261020-000000/20241220-144435--grammar.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks",
+      "9cc70f635009660e7935948ba8808dfcfc85b7b7\t2026-07-15T17:30:24+03:00\t2026-07-15T17:30:24+03:00\t4 layers are somewhat decent",
+      "4cca9305b53f5f5a3287f516746932a8a756d416\t2026-06-15T21:49:26+03:00\t2026-06-15T21:49:26+03:00\topcodes should be 3-arity based",
+      "9b579ec48a862c0a1784c29ddcf0b072cbf56ada\t2026-06-14T16:30:21+03:00\t2026-06-14T16:30:21+03:00\trewriting rules",
+      "6b0bfc5bfbe3d8af8c5ea29fbe0153211d4796e1\t2026-06-13T18:15:55+03:00\t2026-06-13T18:15:55+03:00\tdocking rn",
+      "1f3aa1dfdf7e7cb160ca6e97f01e07352b2e06ff\t2026-06-10T12:12:40+03:00\t2026-06-10T12:12:40+03:00\tgood grammar",
+      "79cb3ccadf1f69d7440f9019438eb0d2d9a519e8\t2026-06-06T17:19:36+03:00\t2026-06-06T17:19:36+03:00\tgreat grammar changes",
+      "b4911b550ed4ccf5ac1bd48296b63a1ea17c3759\t2026-06-04T14:17:47+03:00\t2026-06-04T14:17:47+03:00\timproving grammar and current thoughts",
+      "612aab64aa69963ef91c77b338e81c26d3c850e8\t2026-06-01T11:40:08+03:00\t2026-06-01T11:40:08+03:00\tsyntax updates",
+      "70c68f1a80e61d771fddace68d6c2bfbfd6e2ec4\t2026-05-30T22:51:54+03:00\t2026-05-30T22:51:54+03:00\tsystematic syntax fixes",
+      "27fc84489ae461d0742c2bf9f2d94ddd766b2fe9\t2026-05-30T22:16:22+03:00\t2026-05-30T22:16:22+03:00\tadded rewrite \"rules\"",
+      "4de0cb80b913f76196aff204e841f387b33dcdea\t2026-05-30T16:17:52+03:00\t2026-05-30T16:17:52+03:00\tadded new updated grammar example, looks good enough",
+      "9216cd5b9af25a2b96858180b1ce8d657fd82458\t2026-05-29T21:36:00+03:00\t2026-05-29T21:36:00+03:00\tadded proper grammar ebnf",
+      "84e6f931359bd04155218e8a6a015761213f6481\t2025-02-16T19:01:15+03:00\t2025-02-17T18:25:07+03:00\tAdded layering of the language",
+      "9feb283269e9802f7b74e8ef6fb40af882cfbb57\t2025-02-16T17:39:26+03:00\t2025-02-16T17:39:26+03:00\tUpdated grammar.md and cleaned it up",
+      "8ff2f0252434e7edd716ce88247c120e92a0a197\t2025-01-25T23:24:22+03:00\t2025-01-25T23:24:22+03:00\tUpdated TODO and added new use form/numbers form/intrinsics",
+      "baa7f8b2a7f5235b5aef1d19d3b11d2471e960b9\t2025-01-14T17:42:48+03:00\t2025-01-15T11:36:18+03:00\tBeginning the spec",
+      "8eedd190c99b4c99567943e6b1f0898f806af016\t2025-01-14T12:52:24+03:00\t2025-01-14T13:11:37+03:00\tAdded use statement sugar and planned interpreter further development",
+      "3ce86310de9130462c007f998b01620f7013c791\t2025-01-13T17:52:23+03:00\t2025-01-13T17:52:23+03:00\tChanging syntax to be more pretty and consise",
+      "f5cc9e807fcf390163d452ad031720aa25510d60\t2025-01-13T17:13:26+03:00\t2025-01-13T17:13:26+03:00\tAdded use clause",
+      "9580dc5f9ad76914ad6facfbba4ad4708e85e897\t2025-01-08T16:26:50+03:00\t2025-01-08T16:26:50+03:00\tChanged line comments format",
+      "8d64579f5eb34f0f0750f21ce93db168821ea26e\t2025-01-07T17:51:14+03:00\t2025-01-07T17:51:14+03:00\tFixed some bugs; fixed scope parsing; added tests for scopes",
+      "d640c78b474808ea725c707419470add6d958eda\t2024-12-26T16:31:24+03:00\t2024-12-26T16:31:24+03:00\tDRAFT",
+      "d63091c30c3eadbda573128a1e127bb1140218e7\t2024-12-26T13:43:07+03:00\t2024-12-26T13:43:07+03:00\tMinor fixes",
+      "b6e69ae15900acfb12d84695378b05619afae800\t2024-12-26T11:15:03+03:00\t2024-12-26T11:15:03+03:00\tLittle changes to language features",
+      "45197d36dab867dc0685fec7efb5c91783460821\t2024-12-25T15:58:09+03:00\t2024-12-25T15:58:09+03:00\tDescribed efficient tree structure and added new string types",
+      "e94d57e20da8deeb924976ebc5f86a909f54194b\t2024-12-22T19:19:56+03:00\t2024-12-22T19:19:56+03:00\tImplemented left-associative application!",
+      "0df0ca494041f182995a094bd811d054206e20c7\t2024-12-22T18:04:39+03:00\t2024-12-22T18:04:39+03:00\tAdded parentesised expression to grammar",
+      "a5b70fbc30282b89365da7bbef2c6480357068ba\t2024-12-21T21:49:29+03:00\t2024-12-21T21:49:29+03:00\tRemoved infix operators for now",
+      "ce674453da54267c2347aef7bb90c3bf83f73085\t2024-12-21T16:11:48+03:00\t2024-12-21T16:11:48+03:00\tAdded simplest operators to grammar",
+      "1153a70f4333f3518d74cc3cc223db37aade5726\t2024-12-20T17:44:35+03:00\t2024-12-20T17:44:35+03:00\tAdded grammar and modified todo"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20261020-000000/20241220-144435--items.md",
+    "source_sha256": "46afc670480d555f46d17587315d3a911e94b07d56313d8d2883d7fb7f9362f2",
+    "bytes": 1181,
+    "git_path": "archive/20261020-000000/20241220-144435--items.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "2259655e670cec4a09652f014412565d33d83772\t2026-09-26T07:35:52+03:00\t2026-09-26T07:35:52+03:00\tCheckpoint: archive, Rule 3 and opcode rulings, cells revision",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20261020-000000/20241220-144435--newer_syntax.tree.md",
+    "source_sha256": "5bc620c30f9629c4cf5d4d7d97fe316648af169d29d6d10c4f2cdf7fdee989a3",
+    "bytes": 3585,
+    "git_path": "archive/20261020-000000/20241220-144435--newer_syntax.tree.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks",
+      "9cc70f635009660e7935948ba8808dfcfc85b7b7\t2026-07-15T17:30:24+03:00\t2026-07-15T17:30:24+03:00\t4 layers are somewhat decent",
+      "6b0bfc5bfbe3d8af8c5ea29fbe0153211d4796e1\t2026-06-13T18:15:55+03:00\t2026-06-13T18:15:55+03:00\tdocking rn"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20261020-000000/20241220-144435--vetochka_collections_vec.tree.md",
+    "source_sha256": "d86adcc76bdfb87cbebeb4d3873e4ae374a1edf8473c2282ffcf23aa9dbc656c",
+    "bytes": 2672,
+    "git_path": "archive/20261020-000000/20241220-144435--vetochka_collections_vec.tree.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks",
+      "9cc70f635009660e7935948ba8808dfcfc85b7b7\t2026-07-15T17:30:24+03:00\t2026-07-15T17:30:24+03:00\t4 layers are somewhat decent",
+      "4de0cb80b913f76196aff204e841f387b33dcdea\t2026-05-30T16:17:52+03:00\t2026-05-30T16:17:52+03:00\tadded new updated grammar example, looks good enough",
+      "2e8611d65dd2b859700a9bd1571a2ec952337127\t2026-05-30T15:12:07+03:00\t2026-05-30T15:12:07+03:00\tadded project dir"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20261020-000000/20241220-144435--vetochka_uniform.tree.md",
+    "source_sha256": "97be16c433e274d53c4215090a85110ad2b4d2e8ff213493653f93311de9fc51",
+    "bytes": 3794,
+    "git_path": "archive/20261020-000000/20241220-144435--vetochka_uniform.tree.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks",
+      "9cc70f635009660e7935948ba8808dfcfc85b7b7\t2026-07-15T17:30:24+03:00\t2026-07-15T17:30:24+03:00\t4 layers are somewhat decent",
+      "b4911b550ed4ccf5ac1bd48296b63a1ea17c3759\t2026-06-04T14:17:47+03:00\t2026-06-04T14:17:47+03:00\timproving grammar and current thoughts",
+      "612aab64aa69963ef91c77b338e81c26d3c850e8\t2026-06-01T11:40:08+03:00\t2026-06-01T11:40:08+03:00\tsyntax updates",
+      "70c68f1a80e61d771fddace68d6c2bfbfd6e2ec4\t2026-05-30T22:51:54+03:00\t2026-05-30T22:51:54+03:00\tsystematic syntax fixes",
+      "27fc84489ae461d0742c2bf9f2d94ddd766b2fe9\t2026-05-30T22:16:22+03:00\t2026-05-30T22:16:22+03:00\tadded rewrite \"rules\"",
+      "4de0cb80b913f76196aff204e841f387b33dcdea\t2026-05-30T16:17:52+03:00\t2026-05-30T16:17:52+03:00\tadded new updated grammar example, looks good enough"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20261020-000000/20241220-144435--vetochka_word_count_example.md",
+    "source_sha256": "b725473b2dd9b4cc818eaac9498303b00ff80b70581a49ed92234ead25c593f8",
+    "bytes": 1893,
+    "git_path": "archive/20261020-000000/20241220-144435--vetochka_word_count_example.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks",
+      "9cc70f635009660e7935948ba8808dfcfc85b7b7\t2026-07-15T17:30:24+03:00\t2026-07-15T17:30:24+03:00\t4 layers are somewhat decent",
+      "2e8611d65dd2b859700a9bd1571a2ec952337127\t2026-05-30T15:12:07+03:00\t2026-05-30T15:12:07+03:00\tadded project dir"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20261020-000000/20241220-144435--wisp_syntax_example.md",
+    "source_sha256": "bae5bb2e01ff630519e26fb35af238175849d779c457cd28c17681f93c484cd1",
+    "bytes": 494,
+    "git_path": "archive/20261020-000000/20241220-144435--wisp_syntax_example.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks",
+      "9cc70f635009660e7935948ba8808dfcfc85b7b7\t2026-07-15T17:30:24+03:00\t2026-07-15T17:30:24+03:00\t4 layers are somewhat decent"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20261020-000000/20241225-125809--items.md",
+    "source_sha256": "a9d67bd2bceb0b2147a020beecca1d20d6b1f4cbfffc11f5a736571c13d35cbf",
+    "bytes": 713,
+    "git_path": "archive/20261020-000000/20241225-125809--items.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20261020-000000/20241225-140425--identifier-context.md",
+    "source_sha256": "94a7f32a5625ffd60355281f09d9382735d3482b667bc807c07b13a7869f89f6",
+    "bytes": 3085,
+    "git_path": "archive/20261020-000000/20241225-140425--identifier-context.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks",
+      "b4d5fcbad6d2b7ac68cc4547ce37f20b78a60540\t2026-08-30T19:56:15+03:00\t2026-08-30T19:56:15+03:00\ttrying to remember anything about bindings",
+      "f10c3a07d2a1e0c5a075554ccce6bb641db2e7d2\t2026-08-30T14:11:34+03:00\t2026-08-30T14:11:34+03:00\tsyncing"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20261020-000000/20241225-140425--items.md",
+    "source_sha256": "5c297ef72a033d10ecaef84af1f47b5d8de4cebb25d777c6106f38f8df147998",
+    "bytes": 810,
+    "git_path": "archive/20261020-000000/20241225-140425--items.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "2259655e670cec4a09652f014412565d33d83772\t2026-09-26T07:35:52+03:00\t2026-09-26T07:35:52+03:00\tCheckpoint: archive, Rule 3 and opcode rulings, cells revision",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20261020-000000/20241225-140425--module_name_clash_example.md",
+    "source_sha256": "3e1597c2725c9634fb661dfcca1025ccb47b107ce72c931b6405832c4966b693",
+    "bytes": 463,
+    "git_path": "archive/20261020-000000/20241225-140425--module_name_clash_example.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks",
+      "9cc70f635009660e7935948ba8808dfcfc85b7b7\t2026-07-15T17:30:24+03:00\t2026-07-15T17:30:24+03:00\t4 layers are somewhat decent"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20261020-000000/20241225-140425--module_nesting_example.md",
+    "source_sha256": "1c26ac1cd2136c2187041fd43daea1a0162fd1a0ddebf0d7f72df58040fa1cc1",
+    "bytes": 790,
+    "git_path": "archive/20261020-000000/20241225-140425--module_nesting_example.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks",
+      "9cc70f635009660e7935948ba8808dfcfc85b7b7\t2026-07-15T17:30:24+03:00\t2026-07-15T17:30:24+03:00\t4 layers are somewhat decent",
+      "2e8611d65dd2b859700a9bd1571a2ec952337127\t2026-05-30T15:12:07+03:00\t2026-05-30T15:12:07+03:00\tadded project dir"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20261020-000000/20241225-140425--module_syntax_sugar_example.md",
+    "source_sha256": "53f57480d3c74874d87e9e572a96abf8da01139651868eebd9f0028db8c247a2",
+    "bytes": 700,
+    "git_path": "archive/20261020-000000/20241225-140425--module_syntax_sugar_example.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks",
+      "9cc70f635009660e7935948ba8808dfcfc85b7b7\t2026-07-15T17:30:24+03:00\t2026-07-15T17:30:24+03:00\t4 layers are somewhat decent",
+      "2e8611d65dd2b859700a9bd1571a2ec952337127\t2026-05-30T15:12:07+03:00\t2026-05-30T15:12:07+03:00\tadded project dir"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20261020-000000/20241225-140425--module_use_example.md",
+    "source_sha256": "f36441fc3f3384d0a7bacda0ebf102f2c000ff4ebb496fda15e59e658b96c71c",
+    "bytes": 452,
+    "git_path": "archive/20261020-000000/20241225-140425--module_use_example.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks",
+      "9cc70f635009660e7935948ba8808dfcfc85b7b7\t2026-07-15T17:30:24+03:00\t2026-07-15T17:30:24+03:00\t4 layers are somewhat decent"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20261020-000000/20241225-140425--scope_syntax_example.md",
+    "source_sha256": "4034f382f8cbc8d72fe198936fb743a9f09cf0dd61a2b0fee93e0996503d126d",
+    "bytes": 424,
+    "git_path": "archive/20261020-000000/20241225-140425--scope_syntax_example.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks",
+      "9cc70f635009660e7935948ba8808dfcfc85b7b7\t2026-07-15T17:30:24+03:00\t2026-07-15T17:30:24+03:00\t4 layers are somewhat decent"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20261020-000000/20250123-091611--internal_tagging_approach.md",
+    "source_sha256": "4c04596c750b25c99f797180ec1e30c00453ac919f62dba0c866f1164869c611",
+    "bytes": 649,
+    "git_path": "archive/20261020-000000/20250123-091611--internal_tagging_approach.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks",
+      "9cc70f635009660e7935948ba8808dfcfc85b7b7\t2026-07-15T17:30:24+03:00\t2026-07-15T17:30:24+03:00\t4 layers are somewhat decent",
+      "2e8611d65dd2b859700a9bd1571a2ec952337127\t2026-05-30T15:12:07+03:00\t2026-05-30T15:12:07+03:00\tadded project dir"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20261020-000000/20250123-091611--items.md",
+    "source_sha256": "e0a81d7e93de1bb1021a962047262a0ac3ef139a5f552e3735bbc01c5a649aa3",
+    "bytes": 955,
+    "git_path": "archive/20261020-000000/20250123-091611--items.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "2259655e670cec4a09652f014412565d33d83772\t2026-09-26T07:35:52+03:00\t2026-09-26T07:35:52+03:00\tCheckpoint: archive, Rule 3 and opcode rulings, cells revision",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20261020-000000/20250123-091611--native_tagging_approach.md",
+    "source_sha256": "688186c177c7b2dc33dcbe9c29e8f934f390c3d8296fe6b4f07c451c71ce3093",
+    "bytes": 820,
+    "git_path": "archive/20261020-000000/20250123-091611--native_tagging_approach.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks",
+      "9cc70f635009660e7935948ba8808dfcfc85b7b7\t2026-07-15T17:30:24+03:00\t2026-07-15T17:30:24+03:00\t4 layers are somewhat decent",
+      "2e8611d65dd2b859700a9bd1571a2ec952337127\t2026-05-30T15:12:07+03:00\t2026-05-30T15:12:07+03:00\tadded project dir"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20261020-000000/20250123-091611--vetochka_lambda_example.md",
+    "source_sha256": "36f9829bc59fffa0eb9897e16c64bf61c1a60879c628ac3649c43e4551d7878d",
+    "bytes": 457,
+    "git_path": "archive/20261020-000000/20250123-091611--vetochka_lambda_example.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks",
+      "9cc70f635009660e7935948ba8808dfcfc85b7b7\t2026-07-15T17:30:24+03:00\t2026-07-15T17:30:24+03:00\t4 layers are somewhat decent"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20261020-000000/20260201-183604--project_history.md",
+    "source_sha256": "b0757b5a546faf2ee9f7119ff9e0c59513e1064070b2ad30e39304cee7145caf",
+    "bytes": 60147,
+    "git_path": "archive/20261020-000000/20260201-183604--project_history.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "2259655e670cec4a09652f014412565d33d83772\t2026-09-26T07:35:52+03:00\t2026-09-26T07:35:52+03:00\tCheckpoint: archive, Rule 3 and opcode rulings, cells revision",
+      "4701b8bf94d5250fe86c2e9af2869bba552ba1e7\t2026-09-24T14:50:26+03:00\t2026-09-24T14:50:26+03:00\tReview tasks: retag zig/Lua as project, mark log TODOs discarded",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks",
+      "9cc70f635009660e7935948ba8808dfcfc85b7b7\t2026-07-15T17:30:24+03:00\t2026-07-15T17:30:24+03:00\t4 layers are somewhat decent",
+      "b9ef3ff99f69f928496f7fdd5790486902c969bb\t2026-07-11T16:12:55+03:00\t2026-07-11T16:12:55+03:00\tincorporating free agent, using S3 configuration, see github.com/uberdever/agents",
+      "4cca9305b53f5f5a3287f516746932a8a756d416\t2026-06-15T21:49:26+03:00\t2026-06-15T21:49:26+03:00\topcodes should be 3-arity based",
+      "9b579ec48a862c0a1784c29ddcf0b072cbf56ada\t2026-06-14T16:30:21+03:00\t2026-06-14T16:30:21+03:00\trewriting rules",
+      "e0b7b3f58b6c4c188a39715fda0bebd606280395\t2026-06-14T15:11:50+03:00\t2026-06-14T15:11:50+03:00\ttightened bytecode main description",
+      "6b0bfc5bfbe3d8af8c5ea29fbe0153211d4796e1\t2026-06-13T18:15:55+03:00\t2026-06-13T18:15:55+03:00\tdocking rn",
+      "79cb3ccadf1f69d7440f9019438eb0d2d9a519e8\t2026-06-06T17:19:36+03:00\t2026-06-06T17:19:36+03:00\tgreat grammar changes",
+      "de3308f65f5d7aa59339046c55e3f33c9937af5d\t2026-06-04T18:03:04+03:00\t2026-06-04T18:03:04+03:00\ton execution, important stuff",
+      "b4911b550ed4ccf5ac1bd48296b63a1ea17c3759\t2026-06-04T14:17:47+03:00\t2026-06-04T14:17:47+03:00\timproving grammar and current thoughts",
+      "612aab64aa69963ef91c77b338e81c26d3c850e8\t2026-06-01T11:40:08+03:00\t2026-06-01T11:40:08+03:00\tsyntax updates",
+      "c87d49ac646da2c3ab78b00f4cab13b05ab0a116\t2026-05-31T17:44:23+03:00\t2026-05-31T17:44:23+03:00\tclever stuff",
+      "27fc84489ae461d0742c2bf9f2d94ddd766b2fe9\t2026-05-30T22:16:22+03:00\t2026-05-30T22:16:22+03:00\tadded rewrite \"rules\"",
+      "4de0cb80b913f76196aff204e841f387b33dcdea\t2026-05-30T16:17:52+03:00\t2026-05-30T16:17:52+03:00\tadded new updated grammar example, looks good enough",
+      "2e8611d65dd2b859700a9bd1571a2ec952337127\t2026-05-30T15:12:07+03:00\t2026-05-30T15:12:07+03:00\tadded project dir",
+      "9216cd5b9af25a2b96858180b1ce8d657fd82458\t2026-05-29T21:36:00+03:00\t2026-05-29T21:36:00+03:00\tadded proper grammar ebnf",
+      "32ec275d33544c584d2e3f3264e5a22137843dbe\t2026-05-29T13:35:07+03:00\t2026-05-29T13:39:14+03:00\tnew on syntax, since direction has changed probably won't be doing more syntax, at least in terms of cardinal change",
+      "cc34eed1186635471c95ebd2a74ac209c0c82932\t2026-04-02T15:20:48+03:00\t2026-04-05T21:15:01+03:00\tupdated documentation",
+      "2b5dd4619235c9fdcbdd2e67186869a6129332b1\t2026-03-24T15:12:01+03:00\t2026-03-24T15:12:01+03:00\tadded stub for bytecode text implementation",
+      "0a8901184a17cd0bdf4c8919fad6ff0effeed816\t2026-03-22T18:42:32+03:00\t2026-03-22T18:47:17+03:00\trules 0a and 0b",
+      "3d58ed09d141924b90cc75a6ca13ca99d301b434\t2026-02-22T11:02:50+03:00\t2026-02-22T11:02:50+03:00\tGreat promises",
+      "3c661293ba67b877f085ae491ecc00a681d380d2\t2026-02-17T10:48:16+03:00\t2026-02-17T10:48:16+03:00\tThere's no cake",
+      "1612adbaf8d1abc3d4c75850e10dc9814c3bf2c1\t2026-02-16T16:05:42+03:00\t2026-02-16T16:05:42+03:00\ton apply",
+      "c456827184a3a9970ea7c26543a89c4292c7b148\t2026-02-16T13:00:19+03:00\t2026-02-16T13:00:19+03:00\tFINAL on syntax + example. За сим всё",
+      "37b313cea2efd86ee5908cc5ceaf953170d3e0f8\t2026-02-15T15:23:41+03:00\t2026-02-15T15:23:41+03:00\tfinal on syntax",
+      "4d3ac3cf3648a291293f9bd675c7aac1437f3873\t2026-02-13T15:05:43+03:00\t2026-02-13T15:05:43+03:00\tproject.md on syntax",
+      "b233ef3fd27666833fc5a200dd51b58417c18690\t2026-02-12T19:34:30+03:00\t2026-02-12T19:34:30+03:00\ton syntax",
+      "08678146d0d479fa82cafbb808ff10f7440b91c7\t2026-02-10T17:56:30+03:00\t2026-02-10T18:01:24+03:00\timplemented allocation with reference placement",
+      "0cb901cb9db0fde19860842a00152e385955eea8\t2026-02-10T16:05:24+03:00\t2026-02-10T16:05:24+03:00\tadded call opcode",
+      "bef15984a4b9d895c2145768d773f278eaf5be8f\t2026-02-09T21:50:16+03:00\t2026-02-09T21:50:16+03:00\timplemented new tagging scheme for nodes",
+      "007a2dc96d79c842d5e0070f6708dc69db94e8bf\t2026-02-09T19:20:03+03:00\t2026-02-09T19:20:03+03:00\tslight code refactoring",
+      "378cd852ca9f1801a6b2c5d3df41c5bb2cf84e3c\t2026-02-03T13:33:30+03:00\t2026-02-03T13:33:30+03:00\tupdated signatures to have stronger typing",
+      "ca62e4e5ef5dc9732142577d2a06d1c8f7ef4fdc\t2026-02-02T21:32:57+03:00\t2026-02-02T21:32:57+03:00\timplemented cells",
+      "6b4cf93667655cb6c43c5b496f39f00319e630dd\t2026-02-01T21:36:04+03:00\t2026-02-01T21:36:04+03:00\tworking on stuff"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20261020-000000/20260529-103914--2026-09-26.md",
+    "source_sha256": "13480dace2370a8db6eb612de4db6437689566f8fdfb139ed46a0088075be993",
+    "bytes": 1080,
+    "git_path": "archive/20261020-000000/20260529-103914--2026-09-26.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "e67fd6659ef92e51c7179dfe4f3e0e31d20b3221\t2026-09-29T14:42:02+03:00\t2026-09-29T14:42:02+03:00\tPlan the path to a working v0 machine"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20261020-000000/20260529-103914--items.md",
+    "source_sha256": "5d322bf94da033516a3009fded9132b4a6df75ae6f508668c80f32714ef5833f",
+    "bytes": 979,
+    "git_path": "archive/20261020-000000/20260529-103914--items.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "2259655e670cec4a09652f014412565d33d83772\t2026-09-26T07:35:52+03:00\t2026-09-26T07:35:52+03:00\tCheckpoint: archive, Rule 3 and opcode rulings, cells revision",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20261020-000000/20260529-103915--porosity.md",
+    "source_sha256": "4abd20fb08b4ccca4eb323dcbbc7d43a98611e11711774dbe1908119d872a49c",
+    "bytes": 1294,
+    "git_path": "archive/20261020-000000/20260529-103915--porosity.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks",
+      "9cc70f635009660e7935948ba8808dfcfc85b7b7\t2026-07-15T17:30:24+03:00\t2026-07-15T17:30:24+03:00\t4 layers are somewhat decent"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20261020-000000/20260805-162236--2026-08-30.md",
+    "source_sha256": "a2d987394135f9b4d30705d455c96ebab0a92b675710733e8492eb61f5d81874",
+    "bytes": 24624,
+    "git_path": "archive/20261020-000000/20260805-162236--2026-08-30.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks",
+      "5a1b4589c76ab23867e8887300c4820bba9f8746\t2026-09-03T11:50:28+03:00\t2026-09-03T11:50:28+03:00\tclearer picture on things",
+      "8fb767ef1cb612041e4969a674ecd09eaf000da9\t2026-08-31T18:51:52+03:00\t2026-08-31T18:51:52+03:00\ton grammar, recursion and such",
+      "a9afffd19233cfbca12ccf53fe09a79659011898\t2026-08-31T17:58:59+03:00\t2026-08-31T17:58:59+03:00\tmemsearch",
+      "1e54c57af8bc8d0a86f1e151127e633ef3581f92\t2026-08-30T20:14:33+03:00\t2026-08-30T20:14:33+03:00\tcleaning up blank spots",
+      "b4d5fcbad6d2b7ac68cc4547ce37f20b78a60540\t2026-08-30T19:56:15+03:00\t2026-08-30T19:56:15+03:00\ttrying to remember anything about bindings",
+      "a7057d5d8051c3b3b3f3c96a0ccc172c73d9fac2\t2026-08-30T18:20:21+03:00\t2026-08-30T18:20:21+03:00\tadded apostrophe",
+      "c75edb4aa5821078a2921d2eb0b78e6892521e6f\t2026-08-30T18:07:44+03:00\t2026-08-30T18:07:44+03:00\tunifying the grammar more",
+      "5b96c2ba7bf7c06a2f669890ccb70cb3ef05d041\t2026-08-30T16:27:59+03:00\t2026-08-30T16:27:59+03:00\ton nyad and operators"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20261020-000000/20260830-165615--binders.md",
+    "source_sha256": "1af4612438c13fdbdf185902f219d9e2c8c4ad78183920728938b320f49cd6d4",
+    "bytes": 2390,
+    "git_path": "archive/20261020-000000/20260830-165615--binders.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks",
+      "b4d5fcbad6d2b7ac68cc4547ce37f20b78a60540\t2026-08-30T19:56:15+03:00\t2026-08-30T19:56:15+03:00\ttrying to remember anything about bindings"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20261020-000000/20260903-085029--apply-evidence.md",
+    "source_sha256": "35256a502a98e30a3b93bd6ec0d12b32f2cb86ccd2705fc047f06b87db0bc37c",
+    "bytes": 3911,
+    "git_path": "archive/20261020-000000/20260903-085029--apply-evidence.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "2ea8c404a3baec28f9b0d96c4056b596bd7ed8a6\t2026-09-26T08:41:13+03:00\t2026-09-26T08:41:13+03:00\tAdd literals task; session note; close the {@} spec gap",
+      "2259655e670cec4a09652f014412565d33d83772\t2026-09-26T07:35:52+03:00\t2026-09-26T07:35:52+03:00\tCheckpoint: archive, Rule 3 and opcode rulings, cells revision"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20261020-000000/20260925-134730--2026-09-25.md",
+    "source_sha256": "5aa2e96883beb15189acd4a6c6389d42bd29aa06979bf130dd85f3d06aaf8d36",
+    "bytes": 904,
+    "git_path": "archive/20261020-000000/20260925-134730--2026-09-25.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "2259655e670cec4a09652f014412565d33d83772\t2026-09-26T07:35:52+03:00\t2026-09-26T07:35:52+03:00\tCheckpoint: archive, Rule 3 and opcode rulings, cells revision"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20261020-000000/20260925-134730--2026-09-26.md",
+    "source_sha256": "b2933b4b0fe54ddca89fd51122b6b564379faea62b4d7fb0e4690f8b361cc912",
+    "bytes": 558,
+    "git_path": "archive/20261020-000000/20260925-134730--2026-09-26.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "2259655e670cec4a09652f014412565d33d83772\t2026-09-26T07:35:52+03:00\t2026-09-26T07:35:52+03:00\tCheckpoint: archive, Rule 3 and opcode rulings, cells revision"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20261020-000000/20260925-134730--cells-encoding.md",
+    "source_sha256": "b1b685252e53bbb596c9973b07db5aa1c4806c57b8f14713c56f2c990e2c7c77",
+    "bytes": 1987,
+    "git_path": "archive/20261020-000000/20260925-134730--cells-encoding.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "c3b0072598b00bee6b292f65b2a40d2c7eb280ae\t2026-09-29T16:10:19+03:00\t2026-09-29T16:10:19+03:00\tPoint open tasks at the moved sources",
+      "2259655e670cec4a09652f014412565d33d83772\t2026-09-26T07:35:52+03:00\t2026-09-26T07:35:52+03:00\tCheckpoint: archive, Rule 3 and opcode rulings, cells revision"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20261020-000000/20260925-134730--object-kinds.md",
+    "source_sha256": "e8ff332fffd31a5643ecc9fa60b1e01b1f26b7175ffb3de27f44d50f9343f275",
+    "bytes": 3233,
+    "git_path": "archive/20261020-000000/20260925-134730--object-kinds.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "2259655e670cec4a09652f014412565d33d83772\t2026-09-26T07:35:52+03:00\t2026-09-26T07:35:52+03:00\tCheckpoint: archive, Rule 3 and opcode rulings, cells revision"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20261020-000000/20260926-043840--2026-09-26.md",
+    "source_sha256": "c2d62e197b634fb729dfcd08c26053a23cc344f9e39ba70c5db64b6073737a18",
+    "bytes": 945,
+    "git_path": "archive/20261020-000000/20260926-043840--2026-09-26.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "2ea8c404a3baec28f9b0d96c4056b596bd7ed8a6\t2026-09-26T08:41:13+03:00\t2026-09-26T08:41:13+03:00\tAdd literals task; session note; close the {@} spec gap"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20261020-000000/20260926-043840--intents-dialogue.md",
+    "source_sha256": "c65e157d43a9399a87b2e81cb77c6c5dfe1d551b6cdb5cba9b6eb774128dd340",
+    "bytes": 3593,
+    "git_path": "archive/20261020-000000/20260926-043840--intents-dialogue.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "aff656532e08ab7cf9695eed60ec21ce5612be82\t2026-09-26T08:11:33+03:00\t2026-09-26T08:11:33+03:00\tRestructure tasks into an intent tree"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20261020-000000/20260926-043840--mapping.md",
+    "source_sha256": "7b410cf4edf358642762ea5c04c26e647da9bdb91eef550eae61d3f4fe5769e5",
+    "bytes": 5118,
+    "git_path": "archive/20261020-000000/20260926-043840--mapping.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "aff656532e08ab7cf9695eed60ec21ce5612be82\t2026-09-26T08:11:33+03:00\t2026-09-26T08:11:33+03:00\tRestructure tasks into an intent tree"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20261020-000000/20260926-091318--2026-10-19-research.md",
+    "source_sha256": "31ed7185798c56c79eb9609a988309dd4ae565718d530123c5a3f1b58da28e32",
+    "bytes": 5253,
+    "git_path": "archive/20261020-000000/20260926-091318--2026-10-19-research.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20261020-000000/20260926-091318--2026-10-19.md",
+    "source_sha256": "ed3ad65757b5f7373d06b2511859ae65ef47b4c50081c2a348c751004e4b87d9",
+    "bytes": 4736,
+    "git_path": "archive/20261020-000000/20260926-091318--2026-10-19.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20261020-000000/README.md",
+    "source_sha256": "eaace7dfd8339da10fe3d0c86a2fef8a1f5f00711c785357e8914ffb7fadd597",
+    "bytes": 293,
+    "git_path": "archive/20261020-000000/README.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20261020-000000/SUMMARY.md",
+    "source_sha256": "7bc88b3a0e95a227a9b7975c6d523448c02064b67e67d7c10d5bcbdbcaac03a0",
+    "bytes": 10562,
+    "git_path": "archive/20261020-000000/SUMMARY.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20261020-000000/records.md",
+    "source_sha256": "6ce74a65e83b5a04f832ee9e9c679c666945408b2c146e2ab06fa42f90c94866",
+    "bytes": 86962,
+    "git_path": "archive/20261020-000000/records.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/20261020-000000/tags",
+    "source_sha256": "ffb24afcfa89f0160b8a8227de94df8f97e1af35f15525abb808a36f988921d6",
+    "bytes": 701,
+    "git_path": "archive/20261020-000000/tags",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "aff656532e08ab7cf9695eed60ec21ce5612be82\t2026-09-26T08:11:33+03:00\t2026-09-26T08:11:33+03:00\tRestructure tasks into an intent tree",
+      "9bceff822efbb7b8e933098c3fdfd329d2747729\t2026-09-24T14:50:26+03:00\t2026-09-24T14:50:26+03:00\tRecord tag, pith and metadata design; add meta to rewrite rules",
+      "4701b8bf94d5250fe86c2e9af2869bba552ba1e7\t2026-09-24T14:50:26+03:00\t2026-09-24T14:50:26+03:00\tReview tasks: retag zig/Lua as project, mark log TODOs discarded",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/new_spec/00_contents.md",
+    "source_sha256": "c1fff69c50889e9084a80417bbb9be0be06c13f388fdb261c04bad3f354d15e7",
+    "bytes": 181,
+    "git_path": "docs/new_spec/00_contents.md",
+    "git_history": [
+      "dbb6c0f52390c0cb80c8d257f158ae80d47505db\t2026-08-05T19:22:36+03:00\t2026-08-05T19:22:36+03:00\trewriting spec by hand"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/new_spec/01_intro.md",
+    "source_sha256": "acd29cd1a3f8bc75e7d97066c17af7c7301e3b3c63f3485ad718b5b99e55fb7e",
+    "bytes": 4410,
+    "git_path": "docs/new_spec/01_intro.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "f3aaae7051df7677becbdbdd56c279a147127f41\t2026-09-26T08:41:13+03:00\t2026-09-26T08:41:13+03:00\tSpec: applications as {@} data, whole $ form, epigraph to intro",
+      "7580d4b63dbe1f1fec3d3cb0e1cff9f8b89aa806\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tReplace spec and code TODOs with task references",
+      "dbb6c0f52390c0cb80c8d257f158ae80d47505db\t2026-08-05T19:22:36+03:00\t2026-08-05T19:22:36+03:00\trewriting spec by hand"
+    ],
+    "matches_HEAD": false
+  },
+  {
+    "source": "archive/new_spec/02_syntax.md",
+    "source_sha256": "d74bcff7ba90303f3c665d01dad327b1d1726e49c1e8af1c179d29eb3245c848",
+    "bytes": 17181,
+    "git_path": "docs/new_spec/02_syntax.md",
+    "git_history": [
+      "818adf5b4e998ba3a81e0008e1c8f38d9354911e\t2026-10-27T12:24:39+03:00\t2026-10-27T12:24:39+03:00\tsyntax changes that are important for runtime",
+      "40f7fd672b971bc0351b5862a04a05b154c1a296\t2026-10-23T13:17:19+03:00\t2026-10-23T13:17:19+03:00\tLower application syntax to tagged forks",
+      "2530f964975068c3e2ba554f6065334aad0c5337\t2026-10-23T13:17:05+03:00\t2026-10-23T13:17:05+03:00\tClarify syntax interpretation and outline v0 execution",
+      "f92379cd0caac12adc93b8af12d8ca2613f68349\t2026-10-22T10:58:59+03:00\t2026-10-22T10:58:59+03:00\tadded unlabeled labels",
+      "39f71160209f868e9d21150f4f81825a65bfd938\t2026-10-21T20:53:24+03:00\t2026-10-21T20:53:24+03:00\tsyntax BIG",
+      "1156ce49818439721cf3ce7e2049f5d4a12102c4\t2026-10-20T13:40:53+03:00\t2026-10-20T13:40:53+03:00\tWIP syntax adjustments",
+      "f3aaae7051df7677becbdbdd56c279a147127f41\t2026-09-26T08:41:13+03:00\t2026-09-26T08:41:13+03:00\tSpec: applications as {@} data, whole $ form, epigraph to intro",
+      "0ed9c2851cbab6326bae19ed19f3d12859aae9c4\t2026-09-25T15:16:47+03:00\t2026-09-25T15:16:47+03:00\tBring the parser up to date with the spec",
+      "9bceff822efbb7b8e933098c3fdfd329d2747729\t2026-09-24T14:50:26+03:00\t2026-09-24T14:50:26+03:00\tRecord tag, pith and metadata design; add meta to rewrite rules",
+      "3a4ebc9ff0feda3363491d9570e22415ade4ac5e\t2026-09-24T12:29:09+03:00\t2026-09-24T12:30:07+03:00\tLower mixed infix chains flat; reject paren-statements",
+      "7580d4b63dbe1f1fec3d3cb0e1cff9f8b89aa806\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tReplace spec and code TODOs with task references",
+      "5a1b4589c76ab23867e8887300c4820bba9f8746\t2026-09-03T11:50:28+03:00\t2026-09-03T11:50:28+03:00\tclearer picture on things",
+      "8fb767ef1cb612041e4969a674ecd09eaf000da9\t2026-08-31T18:51:52+03:00\t2026-08-31T18:51:52+03:00\ton grammar, recursion and such",
+      "a7057d5d8051c3b3b3f3c96a0ccc172c73d9fac2\t2026-08-30T18:20:21+03:00\t2026-08-30T18:20:21+03:00\tadded apostrophe",
+      "c75edb4aa5821078a2921d2eb0b78e6892521e6f\t2026-08-30T18:07:44+03:00\t2026-08-30T18:07:44+03:00\tunifying the grammar more",
+      "5b96c2ba7bf7c06a2f669890ccb70cb3ef05d041\t2026-08-30T16:27:59+03:00\t2026-08-30T16:27:59+03:00\ton nyad and operators",
+      "f10c3a07d2a1e0c5a075554ccce6bb641db2e7d2\t2026-08-30T14:11:34+03:00\t2026-08-30T14:11:34+03:00\tsyncing",
+      "dbb6c0f52390c0cb80c8d257f158ae80d47505db\t2026-08-05T19:22:36+03:00\t2026-08-05T19:22:36+03:00\trewriting spec by hand"
+    ],
+    "matches_HEAD": false
+  },
+  {
+    "source": "archive/new_spec/03_v0.md",
+    "source_sha256": "bcc4365605955fd256371c710af200749cd4664f275dbe802dd25a2ba4ab6cb0",
+    "bytes": 7809,
+    "git_path": "docs/new_spec/03_v0.md",
+    "git_history": [
+      "2530f964975068c3e2ba554f6065334aad0c5337\t2026-10-23T13:17:05+03:00\t2026-10-23T13:17:05+03:00\tClarify syntax interpretation and outline v0 execution",
+      "39f71160209f868e9d21150f4f81825a65bfd938\t2026-10-21T20:53:24+03:00\t2026-10-21T20:53:24+03:00\tsyntax BIG",
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "f3aaae7051df7677becbdbdd56c279a147127f41\t2026-09-26T08:41:13+03:00\t2026-09-26T08:41:13+03:00\tSpec: applications as {@} data, whole $ form, epigraph to intro",
+      "7580d4b63dbe1f1fec3d3cb0e1cff9f8b89aa806\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tReplace spec and code TODOs with task references",
+      "5a1b4589c76ab23867e8887300c4820bba9f8746\t2026-09-03T11:50:28+03:00\t2026-09-03T11:50:28+03:00\tclearer picture on things",
+      "8fb767ef1cb612041e4969a674ecd09eaf000da9\t2026-08-31T18:51:52+03:00\t2026-08-31T18:51:52+03:00\ton grammar, recursion and such",
+      "b4d5fcbad6d2b7ac68cc4547ce37f20b78a60540\t2026-08-30T19:56:15+03:00\t2026-08-30T19:56:15+03:00\ttrying to remember anything about bindings",
+      "5b96c2ba7bf7c06a2f669890ccb70cb3ef05d041\t2026-08-30T16:27:59+03:00\t2026-08-30T16:27:59+03:00\ton nyad and operators",
+      "f10c3a07d2a1e0c5a075554ccce6bb641db2e7d2\t2026-08-30T14:11:34+03:00\t2026-08-30T14:11:34+03:00\tsyncing",
+      "dbb6c0f52390c0cb80c8d257f158ae80d47505db\t2026-08-05T19:22:36+03:00\t2026-08-05T19:22:36+03:00\trewriting spec by hand"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/new_spec/99_sources.md",
+    "source_sha256": "742c08f5257ec34bab581785b0b01ac7989e8cd8128bf12dec1a18df783400f2",
+    "bytes": 337,
+    "git_path": "docs/new_spec/99_sources.md",
+    "git_history": [
+      "dbb6c0f52390c0cb80c8d257f158ae80d47505db\t2026-08-05T19:22:36+03:00\t2026-08-05T19:22:36+03:00\trewriting spec by hand"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/new_spec/build.sh",
+    "source_sha256": "6b187764a717fac6ec38e6872b6665cc6832eb4191523317422fc2b881807e55",
+    "bytes": 272,
+    "git_path": "docs/new_spec/build.sh",
+    "git_history": [
+      "dbb6c0f52390c0cb80c8d257f158ae80d47505db\t2026-08-05T19:22:36+03:00\t2026-08-05T19:22:36+03:00\trewriting spec by hand"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/new_spec/output.pdf",
+    "source_sha256": "f1017650f1da518465ae778f9bc538d96f8e18fb51dda510367dd25f94fac339",
+    "bytes": 58642,
+    "git_path": "archive/new_spec/output.pdf",
+    "git_history": [],
+    "matches_HEAD": false
+  },
+  {
+    "source": "archive/spec/00_contents.md",
+    "source_sha256": "40a09512afcebc1dd9ddb4d4eb6d962e4b54e2b6f81b602749b370468cb102c0",
+    "bytes": 180,
+    "git_path": "docs/spec/00_contents.md",
+    "git_history": [
+      "dbb6c0f52390c0cb80c8d257f158ae80d47505db\t2026-08-05T19:22:36+03:00\t2026-08-05T19:22:36+03:00\trewriting spec by hand",
+      "907874e49b3cd94de806e2382c66bdcf8683ff0c\t2026-07-18T20:59:27+03:00\t2026-07-18T20:59:27+03:00\tproposing actual evaluation rules",
+      "9cc70f635009660e7935948ba8808dfcfc85b7b7\t2026-07-15T17:30:24+03:00\t2026-07-15T17:30:24+03:00\t4 layers are somewhat decent",
+      "baa7f8b2a7f5235b5aef1d19d3b11d2471e960b9\t2025-01-14T17:42:48+03:00\t2025-01-15T11:36:18+03:00\tBeginning the spec"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/spec/01_introduction.md",
+    "source_sha256": "53bba8c954bb1087bb1e59fd60ec41c0f5d7f65246a577d61855f3379d58bbdf",
+    "bytes": 5032,
+    "git_path": "docs/spec/01_introduction.md",
+    "git_history": [
+      "dbb6c0f52390c0cb80c8d257f158ae80d47505db\t2026-08-05T19:22:36+03:00\t2026-08-05T19:22:36+03:00\trewriting spec by hand",
+      "baa7f8b2a7f5235b5aef1d19d3b11d2471e960b9\t2025-01-14T17:42:48+03:00\t2025-01-15T11:36:18+03:00\tBeginning the spec"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/spec/02_concrete_syntax.md",
+    "source_sha256": "7e4672c3dabb4a78a3bdd7de1d7af00adcbd5f79684822d92f88d43e0defbd86",
+    "bytes": 6997,
+    "git_path": "docs/spec/02_concrete_syntax.md",
+    "git_history": [
+      "dbb6c0f52390c0cb80c8d257f158ae80d47505db\t2026-08-05T19:22:36+03:00\t2026-08-05T19:22:36+03:00\trewriting spec by hand",
+      "2f2475210bf9ae06734f61f6ac18d7cb0ea621f3\t2026-07-16T12:48:42+03:00\t2026-07-16T12:48:42+03:00\tworking out opcodes",
+      "9cc70f635009660e7935948ba8808dfcfc85b7b7\t2026-07-15T17:30:24+03:00\t2026-07-15T17:30:24+03:00\t4 layers are somewhat decent"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/spec/03_v0.md",
+    "source_sha256": "bf1b4b9e8809739e7d436db9bd70081d98e6b340e42aadc3e00a10a0dcef5f65",
+    "bytes": 17106,
+    "git_path": "docs/spec/03_v0.md",
+    "git_history": [
+      "dbb6c0f52390c0cb80c8d257f158ae80d47505db\t2026-08-05T19:22:36+03:00\t2026-08-05T19:22:36+03:00\trewriting spec by hand",
+      "a66220f7a09fc2014f9b635f963849311e1870bb\t2026-07-21T19:24:22+03:00\t2026-07-21T19:24:22+03:00\ton lenses",
+      "907874e49b3cd94de806e2382c66bdcf8683ff0c\t2026-07-18T20:59:27+03:00\t2026-07-18T20:59:27+03:00\tproposing actual evaluation rules",
+      "d126d83edcf2735a09f0edecc26506bf7648279c\t2026-07-17T16:17:29+03:00\t2026-07-17T16:17:29+03:00\tmove from LOCAL",
+      "2f2475210bf9ae06734f61f6ac18d7cb0ea621f3\t2026-07-16T12:48:42+03:00\t2026-07-16T12:48:42+03:00\tworking out opcodes",
+      "2cedb15f8f5931c91540fcb0363d7652e7851afc\t2026-07-15T17:47:15+03:00\t2026-07-15T17:47:15+03:00\tadjusing spec",
+      "9cc70f635009660e7935948ba8808dfcfc85b7b7\t2026-07-15T17:30:24+03:00\t2026-07-15T17:30:24+03:00\t4 layers are somewhat decent"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/spec/04_vf.md",
+    "source_sha256": "82bde13822eaa15f8b56f7ed3294ab86cd50889e465d74806ff98645b562f6da",
+    "bytes": 3871,
+    "git_path": "docs/spec/04_vf.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks",
+      "5a1b4589c76ab23867e8887300c4820bba9f8746\t2026-09-03T11:50:28+03:00\t2026-09-03T11:50:28+03:00\tclearer picture on things",
+      "2cedb15f8f5931c91540fcb0363d7652e7851afc\t2026-07-15T17:47:15+03:00\t2026-07-15T17:47:15+03:00\tadjusing spec",
+      "9cc70f635009660e7935948ba8808dfcfc85b7b7\t2026-07-15T17:30:24+03:00\t2026-07-15T17:30:24+03:00\t4 layers are somewhat decent"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/spec/build.sh",
+    "source_sha256": "be9cd94b4f9b00b1d932a6556ef18754281bf1d09f1611a96e47615c694744ed",
+    "bytes": 216,
+    "git_path": "docs/spec/build.sh",
+    "git_history": [
+      "baa7f8b2a7f5235b5aef1d19d3b11d2471e960b9\t2025-01-14T17:42:48+03:00\t2025-01-15T11:36:18+03:00\tBeginning the spec"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "archive/spec/output.pdf",
+    "source_sha256": "0243c108a9e5b270688a29bc1eb577fdb5367f06af6b16dd0e8cf0bc4a50d02c",
+    "bytes": 93212,
+    "git_path": "archive/spec/output.pdf",
+    "git_history": [],
+    "matches_HEAD": false
+  },
+  {
+    "source": "tasks/20241220-144435/2026-10-20.md",
+    "source_sha256": "5c451f685d2ab8f491fcc347d0a62aa22161f60d818e24fe85965a41e3f130d3",
+    "bytes": 883,
+    "git_path": "tasks/20241220-144435/2026-10-20.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "tasks/20241220-144435/2026-10-23.md",
+    "source_sha256": "ff8deb8f082d2dd0daa2c72e77e96c1490403d5789f413c1cf5820b6d0cc1445",
+    "bytes": 544,
+    "git_path": "tasks/20241220-144435/2026-10-23.md",
+    "git_history": [
+      "40f7fd672b971bc0351b5862a04a05b154c1a296\t2026-10-23T13:17:19+03:00\t2026-10-23T13:17:19+03:00\tLower application syntax to tagged forks"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "tasks/20241220-144435/2026-10-26.md",
+    "source_sha256": "384bbcae1b964f0dacc1bd9cb6802f1311a244d77fa615f1ee70e048d041a209",
+    "bytes": 1754,
+    "git_path": "tasks/20241220-144435/2026-10-26.md",
+    "git_history": [
+      "818adf5b4e998ba3a81e0008e1c8f38d9354911e\t2026-10-27T12:24:39+03:00\t2026-10-27T12:24:39+03:00\tsyntax changes that are important for runtime"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "tasks/20241220-144435/2026-10-27-agent-edits/01-wording.diff",
+    "source_sha256": "7b2dccc85ad7fd9ce54d1d8b973f9128d58d75fd5355e91559677e8486acae31",
+    "bytes": 11078,
+    "git_path": "tasks/20241220-144435/2026-10-27-agent-edits/01-wording.diff",
+    "git_history": [
+      "818adf5b4e998ba3a81e0008e1c8f38d9354911e\t2026-10-27T12:24:39+03:00\t2026-10-27T12:24:39+03:00\tsyntax changes that are important for runtime"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "tasks/20241220-144435/2026-10-27-agent-edits/02-syntax-additions.diff",
+    "source_sha256": "cf6c9ea908187b519580c7ee796a625e9512ce2789ee2d4e9d472151cc811120",
+    "bytes": 11000,
+    "git_path": "tasks/20241220-144435/2026-10-27-agent-edits/02-syntax-additions.diff",
+    "git_history": [
+      "818adf5b4e998ba3a81e0008e1c8f38d9354911e\t2026-10-27T12:24:39+03:00\t2026-10-27T12:24:39+03:00\tsyntax changes that are important for runtime"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "tasks/20241220-144435/2026-10-27-agent-edits/README.txt",
+    "source_sha256": "debf6df80aba60be5e0761fc1ab8af5cdb4c155a3d8ae2e1eeb171b8cff645c3",
+    "bytes": 861,
+    "git_path": "tasks/20241220-144435/2026-10-27-agent-edits/README.txt",
+    "git_history": [
+      "818adf5b4e998ba3a81e0008e1c8f38d9354911e\t2026-10-27T12:24:39+03:00\t2026-10-27T12:24:39+03:00\tsyntax changes that are important for runtime"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "tasks/20241220-144435/2026-11-07.md",
+    "source_sha256": "fc4c16beef406e48c11624887597e80ad0848fc242ca706ba3a64b3e6217e235",
+    "bytes": 1118,
+    "git_path": "tasks/20241220-144435/2026-11-07.md",
+    "git_history": [],
+    "matches_HEAD": false
+  },
+  {
+    "source": "tasks/20241220-144435/TASK.md",
+    "source_sha256": "27e320e8e4c2e09b4795cf61737f6a8bed91c1569ead974e52ba4eb06a32660e",
+    "bytes": 4312,
+    "git_path": "tasks/20241220-144435/TASK.md",
+    "git_history": [
+      "818adf5b4e998ba3a81e0008e1c8f38d9354911e\t2026-10-27T12:24:39+03:00\t2026-10-27T12:24:39+03:00\tsyntax changes that are important for runtime",
+      "40f7fd672b971bc0351b5862a04a05b154c1a296\t2026-10-23T13:17:19+03:00\t2026-10-23T13:17:19+03:00\tLower application syntax to tagged forks",
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "aff656532e08ab7cf9695eed60ec21ce5612be82\t2026-09-26T08:11:33+03:00\t2026-09-26T08:11:33+03:00\tRestructure tasks into an intent tree",
+      "0ed9c2851cbab6326bae19ed19f3d12859aae9c4\t2026-09-25T15:16:47+03:00\t2026-09-25T15:16:47+03:00\tBring the parser up to date with the spec",
+      "3a4ebc9ff0feda3363491d9570e22415ade4ac5e\t2026-09-24T12:29:09+03:00\t2026-09-24T12:30:07+03:00\tLower mixed infix chains flat; reject paren-statements",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks"
+    ],
+    "matches_HEAD": false
+  },
+  {
+    "source": "tasks/20241220-144435/adr-1-operator-adjacency.md",
+    "source_sha256": "25b5f7da86023aa30fd87f0ba107eca43e7cbad208f6cc3774df7423463ec761",
+    "bytes": 1767,
+    "git_path": "tasks/20241220-144435/adr-1-operator-adjacency.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks",
+      "5b96c2ba7bf7c06a2f669890ccb70cb3ef05d041\t2026-08-30T16:27:59+03:00\t2026-08-30T16:27:59+03:00\ton nyad and operators"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "tasks/20241220-144435/items.md",
+    "source_sha256": "7b9dcdf8ffa4608fac645fd7998b7ec9e6ef5466421468a37c874d08018e79d8",
+    "bytes": 1520,
+    "git_path": "tasks/20241220-144435/items.md",
+    "git_history": [
+      "818adf5b4e998ba3a81e0008e1c8f38d9354911e\t2026-10-27T12:24:39+03:00\t2026-10-27T12:24:39+03:00\tsyntax changes that are important for runtime",
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "2259655e670cec4a09652f014412565d33d83772\t2026-09-26T07:35:52+03:00\t2026-09-26T07:35:52+03:00\tCheckpoint: archive, Rule 3 and opcode rulings, cells revision",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks"
+    ],
+    "matches_HEAD": false
+  },
+  {
+    "source": "tasks/20241225-140425/TASK.md",
+    "source_sha256": "6d4cfd132d7ed78132c31e742775d8dc1d81b9d09f01bf0d38068b96b9a9a4bb",
+    "bytes": 4258,
+    "git_path": "tasks/20241225-140425/TASK.md",
+    "git_history": [
+      "614f582efd3a644309ed058e3a16c34ed0208a7a\t2026-10-23T13:17:19+03:00\t2026-10-23T13:17:19+03:00\tRecord lambda evaluation, ANF, and custom-tagging work",
+      "39f71160209f868e9d21150f4f81825a65bfd938\t2026-10-21T20:53:24+03:00\t2026-10-21T20:53:24+03:00\tsyntax BIG",
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "aff656532e08ab7cf9695eed60ec21ce5612be82\t2026-09-26T08:11:33+03:00\t2026-09-26T08:11:33+03:00\tRestructure tasks into an intent tree",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "tasks/20241225-140425/binders.md",
+    "source_sha256": "1af4612438c13fdbdf185902f219d9e2c8c4ad78183920728938b320f49cd6d4",
+    "bytes": 2390,
+    "git_path": "tasks/20241225-140425/binders.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks",
+      "b4d5fcbad6d2b7ac68cc4547ce37f20b78a60540\t2026-08-30T19:56:15+03:00\t2026-08-30T19:56:15+03:00\ttrying to remember anything about bindings"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "tasks/20241225-140425/identifier-context.md",
+    "source_sha256": "94a7f32a5625ffd60355281f09d9382735d3482b667bc807c07b13a7869f89f6",
+    "bytes": 3085,
+    "git_path": "tasks/20241225-140425/identifier-context.md",
+    "git_history": [
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks",
+      "b4d5fcbad6d2b7ac68cc4547ce37f20b78a60540\t2026-08-30T19:56:15+03:00\t2026-08-30T19:56:15+03:00\ttrying to remember anything about bindings",
+      "f10c3a07d2a1e0c5a075554ccce6bb641db2e7d2\t2026-08-30T14:11:34+03:00\t2026-08-30T14:11:34+03:00\tsyncing"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "tasks/20241225-140425/items.md",
+    "source_sha256": "767ef8ee8386f3dd333471d397b99913e19692c62b29ecf45e2b4c94b4706253",
+    "bytes": 1448,
+    "git_path": "tasks/20241225-140425/items.md",
+    "git_history": [
+      "614f582efd3a644309ed058e3a16c34ed0208a7a\t2026-10-23T13:17:19+03:00\t2026-10-23T13:17:19+03:00\tRecord lambda evaluation, ANF, and custom-tagging work",
+      "39f71160209f868e9d21150f4f81825a65bfd938\t2026-10-21T20:53:24+03:00\t2026-10-21T20:53:24+03:00\tsyntax BIG",
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "2259655e670cec4a09652f014412565d33d83772\t2026-09-26T07:35:52+03:00\t2026-09-26T07:35:52+03:00\tCheckpoint: archive, Rule 3 and opcode rulings, cells revision",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "tasks/20250123-091611/TASK.md",
+    "source_sha256": "9d23d227cdd5594b67bc7985ec6a7f2164c7d533d99483923bafdf999ea262ad",
+    "bytes": 3065,
+    "git_path": "tasks/20250123-091611/TASK.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "aff656532e08ab7cf9695eed60ec21ce5612be82\t2026-09-26T08:11:33+03:00\t2026-09-26T08:11:33+03:00\tRestructure tasks into an intent tree",
+      "2259655e670cec4a09652f014412565d33d83772\t2026-09-26T07:35:52+03:00\t2026-09-26T07:35:52+03:00\tCheckpoint: archive, Rule 3 and opcode rulings, cells revision",
+      "9bceff822efbb7b8e933098c3fdfd329d2747729\t2026-09-24T14:50:26+03:00\t2026-09-24T14:50:26+03:00\tRecord tag, pith and metadata design; add meta to rewrite rules",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "tasks/20250123-091611/items.md",
+    "source_sha256": "75b6d14992762ee434d9c26ff61bd9422bc4a98d9999a8ef7643803b25c75bda",
+    "bytes": 853,
+    "git_path": "tasks/20250123-091611/items.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "2259655e670cec4a09652f014412565d33d83772\t2026-09-26T07:35:52+03:00\t2026-09-26T07:35:52+03:00\tCheckpoint: archive, Rule 3 and opcode rulings, cells revision",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "tasks/20260529-103914/2026-10-23-anf.md",
+    "source_sha256": "74f42a46fbf7dd142bf5b5da3f9a9d6862ca5259e0dfd2158439a506debe780f",
+    "bytes": 4332,
+    "git_path": "tasks/20260529-103914/2026-10-23-anf.md",
+    "git_history": [
+      "818adf5b4e998ba3a81e0008e1c8f38d9354911e\t2026-10-27T12:24:39+03:00\t2026-10-27T12:24:39+03:00\tsyntax changes that are important for runtime"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "tasks/20260529-103914/2026-10-26.md",
+    "source_sha256": "2d737f41a3f84a669a3b580d4be84982dd136792de9d52af92c9fefac5e7e421",
+    "bytes": 2523,
+    "git_path": "tasks/20260529-103914/2026-10-26.md",
+    "git_history": [
+      "818adf5b4e998ba3a81e0008e1c8f38d9354911e\t2026-10-27T12:24:39+03:00\t2026-10-27T12:24:39+03:00\tsyntax changes that are important for runtime"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "tasks/20260529-103914/2026-11-06.md",
+    "source_sha256": "c83229ae6203bb432b060697cf2916b59fc34827ae4a0ad6514acd6c518468fe",
+    "bytes": 2847,
+    "git_path": "tasks/20260529-103914/2026-11-06.md",
+    "git_history": [],
+    "matches_HEAD": false
+  },
+  {
+    "source": "tasks/20260529-103914/TASK.md",
+    "source_sha256": "07887df8940642adbc34874fb4832dbeb282172ec73f1c4a71e36c98c3622e9d",
+    "bytes": 5315,
+    "git_path": "tasks/20260529-103914/TASK.md",
+    "git_history": [
+      "818adf5b4e998ba3a81e0008e1c8f38d9354911e\t2026-10-27T12:24:39+03:00\t2026-10-27T12:24:39+03:00\tsyntax changes that are important for runtime",
+      "614f582efd3a644309ed058e3a16c34ed0208a7a\t2026-10-23T13:17:19+03:00\t2026-10-23T13:17:19+03:00\tRecord lambda evaluation, ANF, and custom-tagging work",
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "e67fd6659ef92e51c7179dfe4f3e0e31d20b3221\t2026-09-29T14:42:02+03:00\t2026-09-29T14:42:02+03:00\tPlan the path to a working v0 machine",
+      "aff656532e08ab7cf9695eed60ec21ce5612be82\t2026-09-26T08:11:33+03:00\t2026-09-26T08:11:33+03:00\tRestructure tasks into an intent tree",
+      "2259655e670cec4a09652f014412565d33d83772\t2026-09-26T07:35:52+03:00\t2026-09-26T07:35:52+03:00\tCheckpoint: archive, Rule 3 and opcode rulings, cells revision",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks"
+    ],
+    "matches_HEAD": false
+  },
+  {
+    "source": "tasks/20260529-103914/apply-evidence.md",
+    "source_sha256": "f170495634e899a2c6f4e2111720d1af191608f59310144618bb5e3f5cd3df74",
+    "bytes": 3911,
+    "git_path": "tasks/20260529-103914/apply-evidence.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "2ea8c404a3baec28f9b0d96c4056b596bd7ed8a6\t2026-09-26T08:41:13+03:00\t2026-09-26T08:41:13+03:00\tAdd literals task; session note; close the {@} spec gap",
+      "2259655e670cec4a09652f014412565d33d83772\t2026-09-26T07:35:52+03:00\t2026-09-26T07:35:52+03:00\tCheckpoint: archive, Rule 3 and opcode rulings, cells revision"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "tasks/20260529-103914/items.md",
+    "source_sha256": "f2fe24f46bb19d071d2d33890202fbaf6cbdcb4b516a7a20da350732da7aa50c",
+    "bytes": 2707,
+    "git_path": "tasks/20260529-103914/items.md",
+    "git_history": [
+      "818adf5b4e998ba3a81e0008e1c8f38d9354911e\t2026-10-27T12:24:39+03:00\t2026-10-27T12:24:39+03:00\tsyntax changes that are important for runtime",
+      "614f582efd3a644309ed058e3a16c34ed0208a7a\t2026-10-23T13:17:19+03:00\t2026-10-23T13:17:19+03:00\tRecord lambda evaluation, ANF, and custom-tagging work",
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "2259655e670cec4a09652f014412565d33d83772\t2026-09-26T07:35:52+03:00\t2026-09-26T07:35:52+03:00\tCheckpoint: archive, Rule 3 and opcode rulings, cells revision",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "tasks/20260529-103915/2026-11-05-datatype-example.c",
+    "source_sha256": "bb748d671cd2ea4140197c839b7a702766b5ac47a25d8d630581805b093dd963",
+    "bytes": 1483,
+    "git_path": "tasks/20260529-103915/2026-11-05-datatype-example.c",
+    "git_history": [],
+    "matches_HEAD": false
+  },
+  {
+    "source": "tasks/20260529-103915/2026-11-05-datatype.md",
+    "source_sha256": "725ae93dd05a2e403763e0dbcb271881dd38f99f59f51d8717512e19dd563183",
+    "bytes": 10230,
+    "git_path": "tasks/20260529-103915/2026-11-05-datatype.md",
+    "git_history": [],
+    "matches_HEAD": false
+  },
+  {
+    "source": "tasks/20260529-103915/2026-11-05.md",
+    "source_sha256": "5f16c5c37c8df4303d9bba49c7303dbafeb7734a2f24c0dcc40488b7acbe40ac",
+    "bytes": 9336,
+    "git_path": "tasks/20260529-103915/2026-11-05.md",
+    "git_history": [],
+    "matches_HEAD": false
+  },
+  {
+    "source": "tasks/20260529-103915/2026-11-06.md",
+    "source_sha256": "ac3d814b0512ddb4ea8398beab0bab8d980198739019151601aa892fc2898ede",
+    "bytes": 1796,
+    "git_path": "tasks/20260529-103915/2026-11-06.md",
+    "git_history": [],
+    "matches_HEAD": false
+  },
+  {
+    "source": "tasks/20260529-103915/TASK.md",
+    "source_sha256": "1d6747231962d9aba3bd024a5d6d46c3faac6c6b5a38244c6a43f933ddf94253",
+    "bytes": 1536,
+    "git_path": "tasks/20260529-103915/TASK.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "aff656532e08ab7cf9695eed60ec21ce5612be82\t2026-09-26T08:11:33+03:00\t2026-09-26T08:11:33+03:00\tRestructure tasks into an intent tree",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks"
+    ],
+    "matches_HEAD": false
+  },
+  {
+    "source": "tasks/20260529-103915/items.md",
+    "source_sha256": "2ad018b2f22d5f2fd83cf24271830c5c4456bced0419bca0397e3f42f740cb98",
+    "bytes": 246,
+    "git_path": "tasks/20260529-103915/items.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "tasks/20260529-103915/porosity.md",
+    "source_sha256": "4abd20fb08b4ccca4eb323dcbbc7d43a98611e11711774dbe1908119d872a49c",
+    "bytes": 1294,
+    "git_path": "tasks/20260529-103915/porosity.md",
+    "git_history": [
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks",
+      "9cc70f635009660e7935948ba8808dfcfc85b7b7\t2026-07-15T17:30:24+03:00\t2026-07-15T17:30:24+03:00\t4 layers are somewhat decent"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "tasks/20260926-050128/TASK.md",
+    "source_sha256": "9b0b6c41f701502098839e64319f77f6385e38ac1e75173bf83b2fc442ee0ebc",
+    "bytes": 522,
+    "git_path": "tasks/20260926-050128/TASK.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "aff656532e08ab7cf9695eed60ec21ce5612be82\t2026-09-26T08:11:33+03:00\t2026-09-26T08:11:33+03:00\tRestructure tasks into an intent tree"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "tasks/20260926-050129/TASK.md",
+    "source_sha256": "a2ea5ef8ef69792c47e48ef2a6004ae9517224aaa3a28bfcb63baeccfb142f8d",
+    "bytes": 675,
+    "git_path": "tasks/20260926-050129/TASK.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "aff656532e08ab7cf9695eed60ec21ce5612be82\t2026-09-26T08:11:33+03:00\t2026-09-26T08:11:33+03:00\tRestructure tasks into an intent tree"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "tasks/20260926-050130/TASK.md",
+    "source_sha256": "fca7c2bffe7f90a5f9be65b7c909bef06c9f571f4a43670f424bd1ae5ab3b268",
+    "bytes": 1441,
+    "git_path": "tasks/20260926-050130/TASK.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "aff656532e08ab7cf9695eed60ec21ce5612be82\t2026-09-26T08:11:33+03:00\t2026-09-26T08:11:33+03:00\tRestructure tasks into an intent tree"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "tasks/20260926-050132/2026-10-20.md",
+    "source_sha256": "df625226bd1a7b4182a423627c05ee8f81da99b38560954a98a74d7fcfc14371",
+    "bytes": 784,
+    "git_path": "tasks/20260926-050132/2026-10-20.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "tasks/20260926-050132/TASK.md",
+    "source_sha256": "58f941399a4f70981c98d48cccb14277c4944725cac56d1ae6be6ad2ea790441",
+    "bytes": 1620,
+    "git_path": "tasks/20260926-050132/TASK.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "aff656532e08ab7cf9695eed60ec21ce5612be82\t2026-09-26T08:11:33+03:00\t2026-09-26T08:11:33+03:00\tRestructure tasks into an intent tree"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "tasks/20260926-050132/items.md",
+    "source_sha256": "e318eb8af5a1fc165b4cfec55152e67c9175bdd043e5fae46f4ff60c5c4fa975",
+    "bytes": 532,
+    "git_path": "tasks/20260926-050132/items.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "tasks/20260926-091318/2026-10-19-research.md",
+    "source_sha256": "9a943955ff53819b600c8bfe8ef2167045b5435a0c655e6cc2a74996c07fe16d",
+    "bytes": 5253,
+    "git_path": "tasks/20260926-091318/2026-10-19-research.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "tasks/20260926-091318/2026-10-19.md",
+    "source_sha256": "5f8e7a5863791a53c6e0b2013727a8d69066c39e2662b2939109695071a326e8",
+    "bytes": 4572,
+    "git_path": "tasks/20260926-091318/2026-10-19.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "tasks/20260926-091318/2026-10-20.md",
+    "source_sha256": "fb73de6fd2d6761b0ee9e164d69013ff670d0a87a90ffeed2bed53b23c2bfce8",
+    "bytes": 16651,
+    "git_path": "tasks/20260926-091318/2026-10-20.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "tasks/20260926-091318/2026-10-22.md",
+    "source_sha256": "c8d997a6e2c46d4f84c880930ea602c7e5ecf2653336b2d4992f470d03f8deba",
+    "bytes": 4213,
+    "git_path": "tasks/20260926-091318/2026-10-22.md",
+    "git_history": [
+      "0686f5935d5f5a7dd894d8f3f6c1f863eca673f6\t2026-10-23T13:16:35+03:00\t2026-10-23T13:16:35+03:00\tRecord value-model questions using Scheme terminology"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "tasks/20260926-091318/2026-10-23-application-inspection-transcript.md",
+    "source_sha256": "aa199e9b878fec036ee0c4e6b1d9a977347ad3a91079d0bbb8a18e3b5b8d8e5b",
+    "bytes": 42900,
+    "git_path": "tasks/20260926-091318/2026-10-23-application-inspection-transcript.md",
+    "git_history": [
+      "d7451018165a1c36c59dfff815e9f177bf56182d\t2026-10-23T13:17:05+03:00\t2026-10-23T13:17:05+03:00\tPreserve original application-inspection discussions"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "tasks/20260926-091318/2026-10-23.md",
+    "source_sha256": "7a115ef60c5476818d0ff4f0f0028d6fb7d28dd23ccd197aa7d670e1cd6a5842",
+    "bytes": 1846,
+    "git_path": "tasks/20260926-091318/2026-10-23.md",
+    "git_history": [
+      "614f582efd3a644309ed058e3a16c34ed0208a7a\t2026-10-23T13:17:19+03:00\t2026-10-23T13:17:19+03:00\tRecord lambda evaluation, ANF, and custom-tagging work",
+      "40f7fd672b971bc0351b5862a04a05b154c1a296\t2026-10-23T13:17:19+03:00\t2026-10-23T13:17:19+03:00\tLower application syntax to tagged forks"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "tasks/20260926-091318/2026-11-06.md",
+    "source_sha256": "eade4a22f334ad1d331d2d69b348c08596594052794a91a4bd6513bdc3c7b5fd",
+    "bytes": 937,
+    "git_path": "tasks/20260926-091318/2026-11-06.md",
+    "git_history": [],
+    "matches_HEAD": false
+  },
+  {
+    "source": "tasks/20260926-091318/2026-11-07.md",
+    "source_sha256": "544b2c7ad7d93a74e31aede3221c90322096b67371be0b3f0a480939dfec7d98",
+    "bytes": 3666,
+    "git_path": "tasks/20260926-091318/2026-11-07.md",
+    "git_history": [],
+    "matches_HEAD": false
+  },
+  {
+    "source": "tasks/20260926-091318/TASK.md",
+    "source_sha256": "5e609ff4a676247b8ee762e92677b9185e04c70ea4f5d1d24feda6b911b72ac6",
+    "bytes": 8582,
+    "git_path": "tasks/20260926-091318/TASK.md",
+    "git_history": [
+      "614f582efd3a644309ed058e3a16c34ed0208a7a\t2026-10-23T13:17:19+03:00\t2026-10-23T13:17:19+03:00\tRecord lambda evaluation, ANF, and custom-tagging work",
+      "40f7fd672b971bc0351b5862a04a05b154c1a296\t2026-10-23T13:17:19+03:00\t2026-10-23T13:17:19+03:00\tLower application syntax to tagged forks",
+      "d7451018165a1c36c59dfff815e9f177bf56182d\t2026-10-23T13:17:05+03:00\t2026-10-23T13:17:05+03:00\tPreserve original application-inspection discussions",
+      "0686f5935d5f5a7dd894d8f3f6c1f863eca673f6\t2026-10-23T13:16:35+03:00\t2026-10-23T13:16:35+03:00\tRecord value-model questions using Scheme terminology",
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "e67fd6659ef92e51c7179dfe4f3e0e31d20b3221\t2026-09-29T14:42:02+03:00\t2026-09-29T14:42:02+03:00\tPlan the path to a working v0 machine"
+    ],
+    "matches_HEAD": false
+  },
+  {
+    "source": "tasks/20260926-091318/__pycache__/exec_scratchpad.cpython-310.pyc",
+    "source_sha256": "ed9364bf8115831b0201f4bc9f83f2e2ef5262ef756cb3156119da8a4e6daaa7",
+    "bytes": 7358,
+    "git_path": "tasks/20260926-091318/__pycache__/exec_scratchpad.cpython-310.pyc",
+    "git_history": [],
+    "matches_HEAD": false
+  },
+  {
+    "source": "tasks/20260926-091318/__pycache__/tagging_scratchpad.cpython-310.pyc",
+    "source_sha256": "c003e1d2d69fd73e250c5bfdaed920469ee77503ceaf00c12d10af411ecb04f7",
+    "bytes": 6293,
+    "git_path": "tasks/20260926-091318/__pycache__/tagging_scratchpad.cpython-310.pyc",
+    "git_history": [],
+    "matches_HEAD": false
+  },
+  {
+    "source": "tasks/20260926-091318/cells-encoding.md",
+    "source_sha256": "877c822a5fe7fbff14dcddb29f9a3ac66b2fccc0cc5de4ab5ccb66f69b6596d4",
+    "bytes": 1987,
+    "git_path": "tasks/20260926-091318/cells-encoding.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "c3b0072598b00bee6b292f65b2a40d2c7eb280ae\t2026-09-29T16:10:19+03:00\t2026-09-29T16:10:19+03:00\tPoint open tasks at the moved sources",
+      "2259655e670cec4a09652f014412565d33d83772\t2026-09-26T07:35:52+03:00\t2026-09-26T07:35:52+03:00\tCheckpoint: archive, Rule 3 and opcode rulings, cells revision"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "tasks/20260926-091318/exec-core.vf",
+    "source_sha256": "535e666a21ce4a2caad9f2a2cc169e0c9a840d0f040d1fc44bb9347a65e0ad79",
+    "bytes": 11407,
+    "git_path": "tasks/20260926-091318/exec-core.vf",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "tasks/20260926-091318/exec.md",
+    "source_sha256": "070081b5825f03ba716bfa34607b456eff732670ae275a3817e78f2279778036",
+    "bytes": 3011,
+    "git_path": "tasks/20260926-091318/exec.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "tasks/20260926-091318/exec_scratchpad.py",
+    "source_sha256": "4890f6e3ec1f75e022ded08a0006f04ba1dc714a9f1c1d287aa7d48bb8ead74e",
+    "bytes": 8321,
+    "git_path": "tasks/20260926-091318/exec_scratchpad.py",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "tasks/20260926-091318/items.md",
+    "source_sha256": "c673fd76d3eb0fd310122a7f9dfa0a2e98d128264b5cb476561fc82ecd3c6abe",
+    "bytes": 2857,
+    "git_path": "tasks/20260926-091318/items.md",
+    "git_history": [
+      "614f582efd3a644309ed058e3a16c34ed0208a7a\t2026-10-23T13:17:19+03:00\t2026-10-23T13:17:19+03:00\tRecord lambda evaluation, ANF, and custom-tagging work",
+      "0686f5935d5f5a7dd894d8f3f6c1f863eca673f6\t2026-10-23T13:16:35+03:00\t2026-10-23T13:16:35+03:00\tRecord value-model questions using Scheme terminology",
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "tasks/20260926-091318/object-kinds.md",
+    "source_sha256": "e8ff332fffd31a5643ecc9fa60b1e01b1f26b7175ffb3de27f44d50f9343f275",
+    "bytes": 3233,
+    "git_path": "tasks/20260926-091318/object-kinds.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "2259655e670cec4a09652f014412565d33d83772\t2026-09-26T07:35:52+03:00\t2026-09-26T07:35:52+03:00\tCheckpoint: archive, Rule 3 and opcode rulings, cells revision"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "tasks/20260926-091318/tagged-integer-trace.txt",
+    "source_sha256": "e98bb400f1ff1cb5771beb7cff962b56c5c25f3d9c4d252a364f941cdf4d4d15",
+    "bytes": 5925,
+    "git_path": "tasks/20260926-091318/tagged-integer-trace.txt",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "tasks/20260926-091318/tagging_scratchpad.py",
+    "source_sha256": "1b4afbfd1fb603efd46f2c6d57fbab6aa93d3680f8619bd05ddeecd7047ea79f",
+    "bytes": 5525,
+    "git_path": "tasks/20260926-091318/tagging_scratchpad.py",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "tasks/20261020-103514/TASK.md",
+    "source_sha256": "30c3c7cb7170507eda361ad96003381de1616017bed6470de508135f30fbc440",
+    "bytes": 675,
+    "git_path": "tasks/20261020-103514/TASK.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "tasks/README.md",
+    "source_sha256": "60ed9a2fc7a39e859a103a3e5e9f8a204cc9a75bf15023cd6d90f981a4622b31",
+    "bytes": 1286,
+    "git_path": "tasks/README.md",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks"
+    ],
+    "matches_HEAD": true
+  },
+  {
+    "source": "tasks/tags",
+    "source_sha256": "dd4ea3c988ff6a619bf70f2c346395c42fa946c70858443143f2b95517992004",
+    "bytes": 338,
+    "git_path": "tasks/tags",
+    "git_history": [
+      "fae4285ef957ea1f247ca016f097490ba5fae850\t2026-10-20T18:14:07+03:00\t2026-10-20T18:14:07+03:00\tConsolidate language tasks and preserve design experiments",
+      "aff656532e08ab7cf9695eed60ec21ce5612be82\t2026-09-26T08:11:33+03:00\t2026-09-26T08:11:33+03:00\tRestructure tasks into an intent tree",
+      "9bceff822efbb7b8e933098c3fdfd329d2747729\t2026-09-24T14:50:26+03:00\t2026-09-24T14:50:26+03:00\tRecord tag, pith and metadata design; add meta to rewrite rules",
+      "4701b8bf94d5250fe86c2e9af2869bba552ba1e7\t2026-09-24T14:50:26+03:00\t2026-09-24T14:50:26+03:00\tReview tasks: retag zig/Lua as project, mark log TODOs discarded",
+      "70531d81dd425464be164f8372bb0e8e603905cf\t2026-09-24T12:10:30+03:00\t2026-09-24T12:10:30+03:00\tMove design records into tatr tasks"
+    ],
+    "matches_HEAD": true
+  }
+]

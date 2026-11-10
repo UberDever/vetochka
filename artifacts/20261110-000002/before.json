@@ -1,0 +1,26 @@
+[
+  {
+    "path": "devlog/log.md",
+    "sha256": "a8857ec604d48c88785cc164e755e400f8ee2b3673e978e38273df9846629895"
+  },
+  {
+    "path": "devlog/format.md",
+    "sha256": "8b6412b7b14a8627033ab64e1a92607712e8c0d4995f92612617a794d56a96b9"
+  },
+  {
+    "path": "devlog/rules.md",
+    "sha256": "320e3d04e43fcc23dc4852840db86a232c014177b8f5ec8b6916b06a50e6abcd"
+  },
+  {
+    "path": "devlog/preferences.json",
+    "sha256": "92077bd0874c493e6121cb28d773c92ca30a9bce55580e71ac6dcb493cff8c6d"
+  },
+  {
+    "path": "devlog/log.md.1",
+    "sha256": "bb06943d36b8c7a0234a439b4832c46e4d5aec11357f88f1c864710ed89a9e85"
+  },
+  {
+    "path": "artifacts/20261110-000000/manifest.json",
+    "sha256": "272dda7b84e5f9b376d7e7a3720d960638a96028e03574c2371c87fa8316d7e4"
+  }
+]

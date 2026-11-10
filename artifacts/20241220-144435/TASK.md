@@ -1,0 +1,40 @@
+# Specify and implement shared syntax and lowering
+
+- STATUS: OPEN
+- PRIORITY: 100
+- TAGS: syntax, spec
+- KIND: TASK
+- PARENT: 20260926-050128
+
+- Work (agent): maintain one grammar, parser, formatter, and lowering path for source programs and program-generated syntax.
+- Done when (agent): the open syntax choices in `items.md` are resolved, documented, and covered by parser, formatter, and encoder tests.
+
+## Current basis
+
+- Decision (user, 2026-11-07): `2026-11-07.md` records the accepted raw-byte literal syntax. The lexical spec is updated; parser and formatter implementation remain pending.
+- Change (agent, user request, 2026-10-27): simplify documented ASI around completion of the current statement-list expression. Parenthesized and bracketed contexts retain whitespace newlines; nested blocks have their own statement lists. `...` continues a complete expression. This replaces the per-header and per-triage-clause exceptions with a parser-aware rule. Parser implementation remains pending.
+- Decision (user, 2026-10-27): tags are arbitrary terms. Use list-valued tags in examples, without restricting the annotation header to list syntax. This supersedes the October 26 literal tag-list restriction and concatenation rule.
+- Update (user request, agent edit, 2026-10-26): `2026-10-26.md` records literal tag-list headers, the binding and triage grammar and lowering, and full-expression nyad children. Parser and runtime implementation remain pending.
+- Decision (user, 2026-10-26): permit trailing commas after the last child in stem and fork syntax. The documented nyad grammar now permits them. Parser implementation remains separate work.
+- Decision (user, spec): source is UTF-8. Comments use `;;`, nested `#| |#`, and `#;`. `...` continues a line.
+- Decision (user, spec): byte strings use balanced `{...}` without escapes. Integers currently use decimal notation. `do` and `end` are reserved.
+- Decision (user, 2026-08-30): ~~adjacency classifies operator runs~~ superseded by explicit grammar constraints (2026-10-20). Tight postfixes must touch their receiver. See `2026-10-20.md` and the historical `adr-1-operator-adjacency.md`.
+- Decision (user, spec): newlines insert `;` after expression-ending tokens in layout-active contexts.
+- Decision (user, 2026-08-30): applications have five surface forms: `f(args)`, `f[list]`, `f{bytes}`, labeled application, and `f do end`.
+- Decision (user, spec): nyads use `~[]`, `~[x]`, and `~[x, y]`. Opcodes start with `$`. Annotations use `@[...]`.
+- Decision (user, 2026-08-30): labeled expressions are first-class. The parser imposes no operator precedence. vf interprets mixed infix chains.
+- Decision (user, spec): ~~lowering produces inert terms with `{@}` for application~~ superseded by tagged forks containing the recursively lowered function and operand (user, 2026-10-23). Grouping parentheses disappear.
+- Decision (user, 2026-07-11): there is no language-level quotation.
+- Decision (user, 2026-09-24): ASCII-only identifiers are an implementation limitation. The admitted Unicode characters remain open.
+- Direction (user): number syntax should be extensible, like string syntax. The initial implementation needs i64.
+- Boundary (agent): 20260926-091318 owns literal representations, tags, metadata, and k-v node shapes. This task implements their agreed lowering.
+- Decision (user, 2026-10-20): `@[...] expression` is shorthand for the semantics of `tag`. Implement those semantics directly; do not lower the annotation to a call through the name `tag`. The tagging construction is tracked in 20260926-091318.
+
+## Evidence and unresolved behavior
+
+- Recorded result (agent, 2026-09-24): parser alignment landed in `0ed9c28`. This is historical evidence, not a fresh test result.
+- Finding (agent, 2026-09-29): formatting `f(x,   y)` produces `f(x, y)\n`. Formatting that output adds `;` before the final newline.
+- Open (user): whether canonical formatting must be idempotent. The existing test promises that the formatted result parses again.
+- Rejected (user): the older curly-infix, `s{}` prefix, and parenthesized-statement designs. The archive retains their rationale and examples.
+
+- History (agent): `archive/20261020-000000/records.md` preserves the original records. Its SUMMARY maps former subjects to their current owners.
