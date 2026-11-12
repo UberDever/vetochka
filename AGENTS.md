@@ -10,7 +10,7 @@
 
 ## Spec
 
-- The user writes the spec; the agent makes targeted edits only, in plain English.
+- The user writes the spec; the agent makes targeted edits to existing text only, in plain English. Add spec text only when the user explicitly requests it. A request to apply decisions does not authorize new prose.
 - Spec text is concise and normative; reasoning and alternatives go into log entries and their artifacts.
 - Retained specification snapshots are under `artifacts/20261110-000001/`. Their migration does not approve old proposals.
 

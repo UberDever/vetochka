@@ -48,7 +48,7 @@ A current-state summary alone cannot replace that history.
 | `#experiment` | Exploratory work |
 | `#question` | An unresolved question |
 
-- Keep rationale, constraints, and snapshot provenance in the text. Use checkboxes for work state.
+- Record decisions with their stated rationale, including relevant constraints and why alternatives were rejected. Preserve the user's reasons and attribution; do not reduce them to a decision-only statement or invent missing reasons. Keep rationale and snapshot provenance in the text. Use checkboxes for work state.
 - Use in-place edits for fixups that preserve replayable history. Record substantive state changes in new entries.
   Preserve existing IDs, entry order, and recognition as entries.
 - To supersede an entry, append a replacement with `Supersession for` after its optional title.
