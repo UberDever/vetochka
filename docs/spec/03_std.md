@@ -2,7 +2,7 @@ We
 use descriptive names, inline description and examples to minimize the ambiguity.
 
 ```
-w64 = ;; a blob of eight bytes, little-endian
+w64 = ;; a fruit of eight bytes, little-endian
 
 a-i64 = [[{:i64}, ...], w64]
 ;; Example: -42 == [[{:i64}, [], 0, 0], ~{d6 ff ff ff ff ff ff ff}]
