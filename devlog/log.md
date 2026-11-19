@@ -403,3 +403,57 @@
 
 ### 19.11.26
 - (#binders #machine #proposal #question) Spine-batching. User revisits ZINC applicability: traverse the executing application spine, collect inputs, and build the environment directly; binder or triage encounters may interrupt the optimization. Agent assessment: collected inputs remain pending until matched to the reached closure and its TERM environment; only consumed inputs extend that environment. Binder/triage dispatch can end a direct batching segment without necessarily discarding pending inputs or forcing intermediate closure allocation. Forced subcomputations need their own pending-input boundary. ZINC section 3.2 provides a relevant precedent through stack marks even though its strict argument evaluation is not selected for Vetochka. This is an assessment, not approved transition rules or measured performance.
+- (#encoding #decision) Cells-layout. User decision: each runtime ref word carries a leaf, fork, or fruit kind. A leaf represents `~` directly, with no payload or allocation. A fork ref locates exactly two consecutive ref words, left then right, with no object header. A fruit ref has an in-place bit. An in-place fruit fits in the ref word and its encoding must convey its byte length. An out-of-line fruit ref locates a ULEB128 byte length followed by that many bytes. The ref kind lets execution and garbage collection identify a target before reading it. If the buffer model is chosen, offsets are relative to the buffer start, so moving the slot that holds an offset does not change its value.
+- (#encoding #question #superseded) Cells-addressing. Link to (19.11.26, 1) "Cells-layout". The user leaves open whether a ref locates its target through a native pointer or a buffer-relative offset. Word width and exact bit assignments remain to be designed.
+- (#encoding #decision) Buffer-offsets. Supersession for (19.11.26, 2) "Cells-addressing". The user chooses buffer-relative offsets for fork refs and out-of-line fruit refs. A contiguous buffer can grow and move as a unit by updating its base, with all stored refs still valid. Native pointers would require stable addresses or pointer rewrites when the buffer relocates. Word width and exact bit assignments remain open.
+- (#encoding #proposal) Cells-long-refs. Link to (19.11.26, 3) "Buffer-offsets". For the packed cells experiment, ordinary refs use an unsigned offset from the current base, initially the buffer start. Long refs use a signed displacement from their own location. A long ref that resolves to a fork supplies the base for its child refs. The proposed layout is below.
+
+```text
+One contiguous heap buffer and a retained known-fruit registry buffer.
+Little-endian encoding. Packed allocations.
+w = 2 for the selected layout.
+The initial ref base is the start of the heap. Kind uses the low three bits.
+
+Ref · w bytes
++---------------------------------------------+------+
+|             Payload · 8*w − 3 bits           | Kind |
++---------------------------------------------+------+
+  000  Leaf ~              all-zero word
+  001  Fork                unsigned offset from the current base to a fork
+  010  Out-of-line fruit   unsigned offset from the current base to a fruit
+  011  Indirect            unsigned offset from the current base to a long ref
+  100  In-place fruit      length in bits 3–5, fruit bytes starting at byte 1
+  101  Known fruit         unsigned offset from the start of the registry buffer
+
+Long ref · 2*w bytes
++---------------------------------------------+------+
+|      Signed displacement · 16*w − 3 bits    | Kind |
++---------------------------------------------+------+
+  The displacement is measured from the location of this long ref.
+  001  Fork                end at a fork and use this long ref as its base
+  010  Out-of-line fruit   end at a fruit
+  011  Indirect            continue at another long ref
+
+Fork · 2*w bytes · headerless
++-------------------------+--------------------------+
+|       Left ref · w      |       Right ref · w      |
++-------------------------+--------------------------+
+  Both slots use the fork's base. A direct fork ref preserves that base.
+  All paths to a shared fork must supply the same base.
+  Paths from different bases can converge on the same terminal long ref.
+
+Out-of-line fruit · variable length
++-------------------------+--------------------------+
+| ULEB128 byte length N   | N fruit bytes            |
++-------------------------+--------------------------+
+
+Every indirect chain terminates at a fork or out-of-line fruit.
+A ref held outside its slot travels with its base.
+```
+
+- (#encoding #experiment #evidence) Cells-layout-spike. Link to (19.11.26, 4) "Cells-long-refs". The throwaway Python prototype at `artifacts/20261119-140102/cells_layout.py` encodes and follows actual buffer bytes. A densely placed spine of one million forks took 4,001,952 bytes and 488 long-ref lookups at w=2, 6,000,012 bytes and two long-ref lookups at w=3, and 8,000,000 bytes and zero long-ref lookups at w=4. Two intermingled trees resolved the same fork and base through a signed backward hop. Both a direct ref and a long ref recovered a 130-byte fruit, and an indirect cycle was rejected. At w=2, an anonymous mapping reached a fork beyond 1 GiB using four indirect long refs and a terminal long ref. The initial fixture used an unsigned hop from the earlier sketch, which exceeded the signed 29-bit range and was replaced with shorter hops. The spine uses deliberate placement and the shared trees are hand placed, so the counts describe those layouts only. Reproduce with `python3 artifacts/20261119-140102/cells_layout.py --forks 1000000`.
+- (#encoding #proposal #superseded) Known-fruit. Link to (19.11.26, 4) "Cells-long-refs". The user proposes a ref kind for known fruit, inspired by Lisp symbols. A retained registry buffer would hold commonly encountered fruit payloads, for example the bytes of `{:closure}`, `{:binder}`, and `{:triage}` from the v0 spec. The registry would likely be assembled during language development. The payload of a known-fruit ref would be an offset from the start of the registry buffer, so multiple refs can reuse the same fruit bytes.
+- (#encoding #decision) Known-fruit-refs. Supersession for (19.11.26, 6) "Known-fruit". The user adopts known fruit as a ref kind in the cells layout at (19.11.26, 4). A ref of this kind carries an unsigned byte offset from the start of the retained registry buffer. The sketch uses the available tag `101`. The experiment at (19.11.26, 5) exercised the earlier five-kind layout.
+- (#encoding #experiment #evidence) Cells-locality. Link to (19.11.26, 5) "Cells-layout-spike". A throwaway native C benchmark compares w=2, 3, and 4 on identical shuffled traversals of fork-heavy trees with shared suffixes under grouped and interleaved placement. In the 6,291,456-fork cases, grouped w=2 uses 24 MiB with zero long-ref hops and has a lower traversal median than grouped w=4 at 48 MiB in both runs. Interleaving 16-fork fragments uses 25.5 MiB at w=2 and causes two hops per 32 fork visits. Its timing ranks behind w=4 on the smaller workload and switches order across the two larger runs. With 64-fork fragments, interleaved w=2 uses 24.375 MiB, causes two hops per 128 visits, and has a lower median than w=4 in both runs. Per-trial timing ranges overlap. These are synthetic placement cases with the allocation time and root storage excluded from the reported traversal time and packed bytes, respectively. Source, reproduction, and raw measurements: `artifacts/20261119-142158/results.md`.
+- (#encoding #experiment #evidence) Three-byte-window. Link to (19.11.26, 8) "Cells-locality". Repeated the native benchmark on interleaved 294,912-fork heaps whose 1.6875 MiB at w=3 fits within one ref window. The w=3 layout removed all long-ref lookups while using 25 percent less packed space than w=4. With eight-fork fragments, it had a higher traversal median than both widths in both runs. With 16-fork fragments, it traded places with w=2 and had a higher median than w=4 in both runs. The grouped w=2 layout had the lowest median in all four runs. The fixtures include only one-byte fruits and give no evidence about the second inline fruit byte. Commands and raw output: `artifacts/20261119-142158/results.md`.
+- (#encoding #decision) Two-byte-refs. Link to (19.11.26, 4) "Cells-long-refs". The user selects `w = 2`, giving two-byte refs, four-byte long refs, and four-byte headerless forks. The experiments at (19.11.26, 8) and (19.11.26, 9) support the choice on packed space and on traversal speed with grouped placement. Interleaved traversal speed depends on the workload. The user's deciding judgment is that saving space is worth the extra lookups in this runtime, with allocation locality expected to keep long refs infrequent.
