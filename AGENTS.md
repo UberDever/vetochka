@@ -36,7 +36,7 @@
 Load the matching skill before doing the work:
 
 - `memory` — recall and distill through `devlog/` and `docs/`; supporting records go into `artifacts/<HUID>/`.
-  Follow this project's log format instead of the skill's default memory layout.
+  Follow this project's log format, supersession rules, and write conditions.
 - `fpf` — design reasoning where claims, evidence, decisions and descriptions could mix.
 - `dialogue` — a design session with the user; its artifacts go under `artifacts/<HUID>/` and conclusions go into the log.
 - `adopt-purist-language-researcher` / `adopt-pragmatic-language-developer` — when the user
