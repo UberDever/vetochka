@@ -1,0 +1,213 @@
+[
+  [{:binder}],
+  [
+    ~[
+      {tag-of},
+      [
+        [{:lambda}],
+        [{term}],
+        [
+          [{:binder}],
+          [
+            ~[
+              {result},
+              [
+                [{$}],
+                [
+                  [{:triage}],
+                  [{left}, {right}],
+                  ~,
+                  [
+                    [{:binder}],
+                    [
+                      ~[
+                        {result},
+                        [
+                          [{$}],
+                          [
+                            [{:triage}],
+                            [{tag}, {rest}],
+                            ~,
+                            [
+                              [{:binder}],
+                              [
+                                ~[
+                                  {result},
+                                  [
+                                    [{$}],
+                                    [[{:triage}], [{left}, {right}], [[{:id}], {tag}], ~, ~],
+                                    [[{:id}], {rest}]
+                                  ]
+                                ]
+                              ],
+                              [[{:id}], {result}]
+                            ],
+                            ~
+                          ],
+                          [[{:id}], {left}]
+                        ]
+                      ]
+                    ],
+                    [[{:id}], {result}]
+                  ],
+                  ~
+                ],
+                [[{:id}], {term}]
+              ]
+            ]
+          ],
+          [[{:id}], {result}]
+        ]
+      ]
+    ]
+  ],
+  [
+    [{:binder}],
+    [
+      ~[
+        {executable-tag?},
+        [
+          [{:lambda}],
+          [{tag}],
+          [
+            [{:binder}],
+            [~[{equal}, [[{$}], [[{:id}], {fruit-equal}], [[[{:id}], {tag}], {$}]]]],
+            [
+              [{:binder}],
+              [
+                ~[
+                  {result},
+                  [
+                    [{$}],
+                    [
+                      [{:triage}],
+                      [{left}, {right}],
+                      [
+                        [{:binder}],
+                        [
+                          ~[
+                            {equal},
+                            [[{$}], [[{:id}], {fruit-equal}], [[[{:id}], {tag}], {:binder}]]
+                          ]
+                        ],
+                        [
+                          [{:binder}],
+                          [
+                            ~[
+                              {result},
+                              [
+                                [{$}],
+                                [
+                                  [{:triage}],
+                                  [{left}, {right}],
+                                  [
+                                    [{:binder}],
+                                    [
+                                      ~[
+                                        {equal},
+                                        [[{$}], [[{:id}], {fruit-equal}], [[[{:id}], {tag}], {:id}]]
+                                      ]
+                                    ],
+                                    [
+                                      [{:binder}],
+                                      [
+                                        ~[
+                                          {result},
+                                          [
+                                            [{$}],
+                                            [
+                                              [{:triage}],
+                                              [{left}, {right}],
+                                              ~,
+                                              ~,
+                                              [[{:id}], {left}]
+                                            ],
+                                            [[{:id}], {equal}]
+                                          ]
+                                        ]
+                                      ],
+                                      [[{:id}], {result}]
+                                    ]
+                                  ],
+                                  ~,
+                                  [[{:id}], {left}]
+                                ],
+                                [[{:id}], {equal}]
+                              ]
+                            ]
+                          ],
+                          [[{:id}], {result}]
+                        ]
+                      ],
+                      ~,
+                      [[{:id}], {left}]
+                    ],
+                    [[{:id}], {equal}]
+                  ]
+                ]
+              ],
+              [[{:id}], {result}]
+            ]
+          ]
+        ]
+      ]
+    ],
+    [
+      [{:binder}],
+      [
+        ~[
+          {worker},
+          [
+            [{:lambda}],
+            [{self}, {term}],
+            [
+              [{:binder}],
+              [~[{tag}, [[{$}], [[{:id}], {tag-of}], [[{:id}], {term}]]]],
+              [
+                [{:binder}],
+                [~[{executable}, [[{$}], [[{:id}], {executable-tag?}], [[{:id}], {tag}]]]],
+                [
+                  [{:binder}],
+                  [
+                    ~[
+                      {result},
+                      [
+                        [{$}],
+                        [
+                          [{:triage}],
+                          [{left}, {right}],
+                          [[{:binder}], [~[{value}, [[{:id}], {term}]]], [[{:id}], {value}]],
+                          ~,
+                          [
+                            [{:binder}],
+                            [~[{next}, [[{:id}], {term}]]],
+                            [
+                              [{:binder}],
+                              [~[{continue}, [[{$}], [[{:id}], {self}], [[{:id}], {self}]]]],
+                              [
+                                [{:binder}],
+                                [~[{result}, [[{$}], [[{:id}], {continue}], [[{:id}], {next}]]]],
+                                [[{:id}], {result}]
+                              ]
+                            ]
+                          ]
+                        ],
+                        [[{:id}], {executable}]
+                      ]
+                    ]
+                  ],
+                  [[{:id}], {result}]
+                ]
+              ]
+            ]
+          ]
+        ]
+      ],
+      [
+        [{:binder}],
+        [~[{force}, [[{$}], [[{:id}], {worker}], [[{:id}], {worker}]]]],
+        [[{:id}], {force}]
+      ]
+    ]
+  ]
+]

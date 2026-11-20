@@ -1,0 +1,53 @@
+=[tag-of = \[term] do
+    =[result = (?[left, right]
+        ~
+        do =[result = (?[tag, rest]
+            ~
+            do
+                =[result = (?[left, right] do tag end ~ ~)(rest)] do result; end
+            end
+            ~
+        )(left)] do result; end
+        end
+    ~)(term)] do result; end
+end] do
+=[executable-tag? = \[tag] do
+    =[equal = fruit-equal[tag, {$}]] do
+    =[result = (?[left, right] do
+        =[equal = fruit-equal[tag, {:binder}]] do
+        =[result = (?[left, right] do
+            =[equal = fruit-equal[tag, {:id}]] do
+            =[result = (?[left, right] ~ ~ do left; end)(equal)] do
+                result
+            end
+            end
+        end ~ do left end)(equal)] do result; end
+        end end
+        ~
+        do left; end
+    )(equal)] do result; end
+    end
+    end] do
+=[worker = \[self, term] do
+    =[tag = tag-of(term)] do
+    =[executable = executable-tag?(tag)] do
+    =[result = (?[left, right]
+        do =[value = term] do value end end
+        ~
+        do
+            =[next = term] do
+            =[continue = self(self)] do
+            =[result = continue(next)] do result; end
+        end end end
+    )(executable)] do
+        result
+    end
+    end
+    end
+end] do
+=[force = worker(worker)] do
+    force
+end
+end
+end
+end
