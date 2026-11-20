@@ -1,3 +1,5 @@
+<img src="docs/logo.svg" alt="Vetochka logo" width="256">
+
 [![tests](https://github.com/UberDever/vetochka/actions/workflows/tests.yml/badge.svg)](https://github.com/UberDever/vetochka/actions/workflows/tests.yml)
 
 # What is Vetochka?
