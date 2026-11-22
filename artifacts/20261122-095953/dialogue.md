@@ -26,3 +26,6 @@ Agent-raised candidate topic (not yet accepted by user):
 
 - Agent objected: identity lookup needs stable private bytes; hand-built identities can collide.
 - User: "unstable" means user programs get no guarantee on these bytes when they use them directly. Forging is the same: a program can coincide with the current implementation, but that is unreliable and nasty; this is a policy. Agent concedes both objections (refuted by clarifying scope: user contract vs implementation). Logged as (22.11.26, 0).
+- Agent: per-identifier issued identities in lowered trees collide with "no persistence beyond RAM"; offered (a) never persist, (b) renumber on load.
+- User: no problem; lowered trees persist as-is and reload under the same language version. Policy is just "user can't do anything with private state; if they do, they are bad". Logged as (22.11.26, 1).
+- Agent objection (standing, raised next): two trees persisted from different runs and loaded into one run can carry equal identities issued independently, with no user misuse. Same version does not prevent it; the issuing scheme must be unique across runs.
