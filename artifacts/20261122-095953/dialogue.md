@@ -163,3 +163,7 @@ Agent proposal (from snapshot grammar: `\[..]` closure_head, `?` triage, `~[a, b
 
 At the user's request the 22.11.26 section was condensed from 35 to 16 entries before the session ended; references in this record and the experiment files were remapped. Old to new: 0->0, 1->0, 2->1, 3->3, 4->3, 5->2, 6->2, 7->5, 8->3, 9->6, 10->6, 11->3, 12->3, 13->3, 14->4, 15->5, 16->3, 17->4, 18->3, 19->3, 20->7, 21->7, 22->8, 23->9, 24->10, 25->11, 26->12, 27->15, 28->13, 29->14, 30->15, 31->3, 32->15, 33->13, 34->14. The pre-condensation log is in git history (commit 8f1c60c).
 - User: yes, align format.md with the condensing rule. Added the session exception to devlog/format.md.
+
+### Topic 6: what is left before implementing v0; CESK abstract or specific
+
+- Agent list and recommendation given in chat (abstract machine normative; cells, known fruits, ZINC batching as refinements checked by differential tests). Not logged; awaiting user.
