@@ -49,6 +49,7 @@ A current-state summary alone cannot replace that history.
 | `#question` | An unresolved question |
 
 - Record decisions with their stated rationale, including relevant constraints and why alternatives were rejected. Preserve the user's reasons and attribution; do not reduce them to a decision-only statement or invent missing reasons. Keep rationale and snapshot provenance in the text. Use checkboxes for work state.
+- Before committing, condense the session's entries that the commit adds: merge, shorten, or drop drafts and intermediate steps among them. Entry IDs become stable once committed; condense only uncommitted entries.
 - Use in-place edits for fixups that preserve replayable history. Record substantive state changes in new entries.
   Preserve existing IDs, entry order, and recognition as entries.
 - To supersede an entry, append a replacement with `Supersession for` after its optional title.

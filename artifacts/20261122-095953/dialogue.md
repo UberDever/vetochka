@@ -156,3 +156,5 @@ Agent proposal (from snapshot grammar: `\[..]` closure_head, `?` triage, `~[a, b
 - User: precedence follows from unique ids; no separate rule.
 - User: header env = defining env without own params, not empty. Applied; 18 checks. Logged (22.11.26, 34), supersedes (29).
 - User: `unique` lets the language express cycles without tying the knot. Agent reading pending user confirmation (below).
+- User: add devlog rule: before committing, condense the session entries in the commit. Added to devlog/rules.md (Write), scoped to uncommitted entries so committed IDs stay stable.
+- User on cycles: just an intuition. Kept here, not logged.
