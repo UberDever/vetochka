@@ -108,3 +108,4 @@ New findings:
 - User: `{:all}` positions are the implicit wildcards; bodies list only triage shapes. (Agent meant a wildcard inside a triage position.)
 - User design B: header is a row of bindings (one or two ids per position); each body carries a full row of expected shapes including an explicit wildcard; corner cases are errors.
 - Agent: if overlap between cases is an error, B stays order-free and is strictly more expressive than A: [fork, *] and [leaf, fruit] do not overlap. Not logged; awaiting choice between A and B.
+- User picks B. Logged (22.11.26, 16). User asks: what is the harm in allowing overlaps?
