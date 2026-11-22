@@ -163,6 +163,24 @@ def unset_identifier(name):
     return Term(tree_list([tree_list([b":id"]), name]), {})
 
 
+def triage_tail_env(subject):
+    pending = subject.pending
+    if pending is None:
+        try:
+            if tag(subject) != b":lambda":
+                return subject.env
+            _, declared, _ = elements(subject.tree)
+            pending = tuple(elements(declared))
+        except ValueError:
+            # Malformed control trees are still available for structural inspection.
+            return subject.env
+        if not all(isinstance(name, bytes) for name in pending):
+            return subject.env
+
+    # Keep the unfilled declarations in scope when triage extracts the body.
+    return subject.env | {name: unset_identifier(name) for name in pending}
+
+
 def apply(callee, operand):
     if isinstance(callee, Intrinsic):
         return Term(callee.apply(operand), {})
@@ -186,7 +204,7 @@ def apply(callee, operand):
             elif isinstance(subject.tree, Fork):
                 body = fork
                 left = Term(subject.tree.left, subject.env)
-                right = Term(subject.tree.right, subject.env)
+                right = Term(subject.tree.right, triage_tail_env(subject))
             else:
                 body = fruit
                 left, right = subject, unset_identifier(rhs)
