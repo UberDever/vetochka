@@ -90,3 +90,4 @@ New findings:
   - C3 failure as value: Jay-style `p -> s | r`; each case is a separate unary value; alternatives compose by extension; an unhandled failure at the top is an error.
 - Crux K1: must compile-time code see the authored clause matrix in v0 (favors C1/C3), or is a vf-level record enough (favors C2)?
 - Open: name vs fruit-literal pattern ambiguity: if a head `{x}` is a name, a fruit literal pattern needs a marker.
+- User: too rigorous for this stage; write less. Agent: short replies, one point or question at a time.
