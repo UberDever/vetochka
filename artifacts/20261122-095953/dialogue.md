@@ -69,3 +69,12 @@ New findings:
 - O8 private-state in unary form: one parameter means no partial-application progress; what does the slot hold?
 - O9 rhs absence: make it locally checkable: well-formed only when the fork arm is `{:!}`. Alternative: missing rhs binds lhs to the whole fork, mirroring fruit binding lhs to the whole fruit; then with leaf binding lhs to `~`, `~[x, ~]` subsumes `{x}` (same redundancy as O2).
 - Gain of unary nesting: flat/nested distinction (19.11.26, 23) disappears; "at least one parameter" (19.11.26, 22) holds by construction; no runtime cost, since each application already yields a CLOSURE (19.11.26, 19).
+
+#### Round 3
+
+- User: don't commit+push every message. Agent: commit at checkpoints.
+- User (1): `:` prefix = symbol, registry, well-known symbols as known fruits; clarity over space. Logged (22.11.26, 6). Fail-marker width concern withdrawn.
+- User (2): head is the fruit `{x}`, not an identifier. Agent misread: O6 rests on an inference, not on the text. Restated O6: under (21.11.26, 0) the declaration's identity must be stored somewhere; a bare-fruit head has no room. Candidate: the lambda's `<private-state>` slot carries the declaration identities.
+- User (3): agent misread; N clauses = N-ary lambda. O7 refuted. Unary nesting withdrawn by user: better sharing but materializes lambdas in place, against ZINC; keep multi-param with COW. Logged (22.11.26, 7). O8 moot (private-state still holds progress).
+- User (4): unclear. Agent to restate O9 with an example.
+- New question Q1: what do statements of clause i < N do? Run when argument i arrives (staged), or only the last clause's body runs?
