@@ -141,3 +141,4 @@ Agent proposal (from snapshot grammar: `\[..]` closure_head, `?` triage, `~[a, b
 - Agent: `force-end.vf` applies `end.` (20.11.26, 6) with the reading: close every open block up to the nearest enclosing delimiter, or all at top level. Not run.
 - User: binder body is one expression, so `=[...] expr` without `do end`; sequential clauses can hold the work and the body is the result. Agent agrees; `force-flat.vf` (not run) assumes clauses bind in order (let*), as the snapshot example `=[x: .., y: x + ..]` implies, and that each clause forces its value. Not logged; awaiting confirmation.
 - User confirms; `end.` is a proposal, not a feature. Logged (22.11.26, 22). Agent: with lambda and binder bodies as expressions, `end.` only applies to explicit `do` blocks.
+- User: forcing by binders already logged; (22.11.26, 22) fixed to cite (23.10.26, 3). Keep `end.` in mind, never present as a feature.
