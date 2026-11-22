@@ -1,39 +1,39 @@
-"""Throwaway evaluator for case-lambdas and binders, written fresh for (22.11.26, 26).
+"""Throwaway evaluator for case-lambdas and binders, written fresh for (22.11.26, 12).
 
 Rules implemented, with their log sources:
 
 - Trees: `None` is a leaf, `bytes` is a fruit, `Fork` is a fork.
 - Identifiers are `[[{:id}], {name}, ~[{:private}, <identity>]]`. Lookup matches the identity
   bytes, never the spelling (21.11.26, 0). Unforgeability is policy only (22.11.26, 0).
-- Lambda: `[[{:lambda}], <private-state>, <header>, <case>, ...]` (22.11.26, 15), (22.11.26, 16).
+- Lambda: `[[{:lambda}], <private-state>, <header>, <case>, ...]` (22.11.26, 3).
   The header is a list of positions; each position is a list of one or two identifiers
-  (22.11.26, 18). A case is a pair `~[<shape-row>, <expr>]` with shapes `{:leaf}`, `{:fork}`,
-  `{:fruit}`, or the wildcard `{:all}` (22.11.26, 20).
-- Each argument binds its position at once (22.11.26, 15). A one-name position binds the whole
+  (22.11.26, 3). A case is a pair `~[<shape-row>, <expr>]` with shapes `{:leaf}`, `{:fork}`,
+  `{:fruit}`, or the wildcard `{:all}` (22.11.26, 3).
+- Each argument binds its position at once (22.11.26, 4). A one-name position binds the whole
   operand. A two-name position binds by the operand's shape: a fork binds both children, a fruit
   binds the first name to the whole fruit, a leaf binds neither (20.11.26, 5). An unset name
   shadows outer bindings and stays identifier data.
-- The case is selected only when all arguments are bound (22.11.26, 14), first match in written
-  order (22.11.26, 17). No match, a malformed row, and `{:fork}` at a one-name position are
-  errors (22.11.26, 16), (22.11.26, 18).
+- The case is selected only when all arguments are bound (22.11.26, 4), first match in written
+  order (22.11.26, 4). No match, a malformed row, and `{:fork}` at a one-name position are
+  errors (22.11.26, 3).
 - A partial application is a CLOSURE whose tree replaces the private state with the count of
-  bound arguments (22.11.26, 19) and shares the cases (22.11.26, 7).
-- Binder: `[[{:binder}], [~[<id>, <rhs>], ...], <expr>]`. Clauses bind in order (22.11.26, 22);
+  bound arguments (22.11.26, 3) and shares the cases (22.11.26, 5).
+- Binder: `[[{:binder}], [~[<id>, <rhs>], ...], <expr>]`. Clauses bind in order (22.11.26, 8);
   each right-hand side is forced one step (23.10.26, 3), (20.11.26, 4).
 - Shape inspection never forces (20.11.26, 3).
 
-- Identifiers are a rewriting optimization (22.11.26, 28). An unbound identifier is a hole; a
+- Identifiers are a rewriting optimization (22.11.26, 13). An unbound identifier is a hole; a
   bound identifier is the tree it rewrites to. When an occurrence rewrites to identifier data,
   that identifier sits where the occurrence was and is rewritten in the occurrence's environment.
   Execution, shape inspection, and display all use this one rule (`rewrite`).
 - A partial application keeps its header as a term in the lambda's defining environment, which
-  excludes the lambda's own parameters (22.11.26, 34). Header occurrences can still name values
+  excludes the lambda's own parameters (22.11.26, 14). Header occurrences can still name values
   from that environment, and the partial application's bindings cannot rewrite its
   declarations. A tree may hold such a term as a node, as cells hold CLOSURE refs.
 
-- An authored lambda carries `~` in its private-state slot (22.11.26, 31).
+- An authored lambda carries `~` in its private-state slot (22.11.26, 3).
 - Every position of a lambda or binder, including list tails, cases, and clauses, is read
-  through `rewrite`, so a bound identifier anywhere is its tree (22.11.26, 28).
+  through `rewrite`, so a bound identifier anywhere is its tree (22.11.26, 13).
 """
 
 from dataclasses import dataclass
@@ -205,7 +205,7 @@ def rewrite(value):
 
     Following an occurrence bound in its own environment moves to its value. If that value is
     identifier data unbound in its own environment, it stands where the occurrence stood, so it
-    is rewritten in the occurrence's environment (22.11.26, 28).
+    is rewritten in the occurrence's environment (22.11.26, 13).
     """
     place = None
     for _ in range(LIMIT):
@@ -260,7 +260,7 @@ def declaration(term):
 def spine(term):
     """Read a proper list through context: rewrite every cell, return the element terms.
 
-    Under (22.11.26, 28) a bound identifier anywhere in a list, including its tail, is the tree it
+    Under (22.11.26, 13) a bound identifier anywhere in a list, including its tail, is the tree it
     rewrites to. Also returns the term for the rest after each element, for sharing.
     """
     cells = []
@@ -363,7 +363,7 @@ def private_count(count):
 
 
 def read_header(term):
-    """A lambda's header, read through context (22.11.26, 29)."""
+    """A lambda's header, read through context (22.11.26, 14)."""
     positions = []
     for position in items(term):
         positions.append(tuple(declaration(name) for name in items(position)))
@@ -427,7 +427,7 @@ def apply_lambda(callee, argument):
     if count < len(positions):
         if WRAP_HEADER:
             # The header keeps the environment it was defined in, without this lambda's own
-            # parameters (22.11.26, 34); a partial application shares the header tree.
+            # parameters (22.11.26, 14); a partial application shares the header tree.
             stored = header
         else:
             stored = node(header, callee.env)

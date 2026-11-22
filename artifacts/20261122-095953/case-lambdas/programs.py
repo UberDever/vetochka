@@ -107,7 +107,7 @@ PROGRAMS = {
  ], $r]
 """,
     # A parsed two-parameter lambda partially applied to identifier data. Its second
-    # application must still see its own declarations, not the argument (22.11.26, 29).
+    # application must still see its own declarations, not the argument (22.11.26, 14).
     "identifier-argument": """
 [[{:binder}], [
   ~[$i, [[{$}], $unique, {i}]],
