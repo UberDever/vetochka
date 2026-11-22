@@ -133,3 +133,8 @@ Agent proposal (from snapshot grammar: `\[..]` closure_head, `?` triage, `~[a, b
 - Agent: (a) `:fork` already parses as a label-less labeled expression; symbol spelling needed (`{:fork}` works today). (b) ASI ends an expression at newline, so rows on later lines would end the lambda. (c) Nested case-lambdas: trailing rows attach to the innermost lambda (dangling else).
 - User: `{:fork}` verbose but this is low-level; innermost attachment with parens; multiline lambda should parse whole. Logged (22.11.26, 21).
 - Agent: ASI rule (snapshot l.226-237) ends a complete expression at newline; candidate amendment: a newline followed by `?[` continues the innermost case-lambda (one-token lookahead). Zero-change option: wrap in parens.
+
+### Topic 4: forcing program in case-lambda syntax
+
+- User: no ASI amendment; the devlog will be replayed when the syntax chapter is revised.
+- Agent rewrote artifacts/20261120-172943/force.vf as `force.vf` here (not run). Triage applications become applied case-lambdas; tag-of destructures its parameter directly; forcing binders kept as in the original. Every multiline lambda sits inside brackets or parens, so ASI does not interfere.
