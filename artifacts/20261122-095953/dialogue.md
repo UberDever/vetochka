@@ -29,3 +29,25 @@ Agent-raised candidate topic (not yet accepted by user):
 - Agent: per-identifier issued identities in lowered trees collide with "no persistence beyond RAM"; offered (a) never persist, (b) renumber on load.
 - User: no problem; lowered trees persist as-is and reload under the same language version. Policy is just "user can't do anything with private state; if they do, they are bad". Logged as (22.11.26, 1).
 - Agent objection (standing, raised next): two trees persisted from different runs and loaded into one run can carry equal identities issued independently, with no user misuse. Same version does not prevent it; the issuing scheme must be unique across runs.
+- User: cross-run collision is valid but implementation-wise; concept unaffected; defer. Logged (22.11.26, 2).
+
+### Topic 2: merge triage into lambda (light dialogue; agent runs full colloquium below)
+
+User proposal, logged (22.11.26, 3):
+
+    [[{:lambda}...], [{x}, {y}, {z}...], [{:cases}, <statements>, {:fail}, <statements>], [{:as-is}, <statements>], ...]
+
+Agent reading (confidence in brackets):
+- [high] `{:cases}` group = three positional arms leaf, fork, fruit; an arm is a statement list or the fruit `{:fail}`. Example: fork fails.
+- [high] `{:as-is}` group = no shape inspection; operand bound whole.
+- [low] how groups map to parameters: one group per parameter in order? alternatives in order? where fork children get names?
+- [medium] `<statements>` = new core sequencing, value of last statement?
+
+Objections (status after this turn: all standing, pending user reading):
+- O1 child names: fork needs two names, fruit one, leaf zero; param list is the only name source. Conflating arity with destructuring width.
+- O2 as-is redundancy: if cases also binds the whole operand and shape inspection never forces, as-is == cases with three identical arms. Needed only if some value is not shape-observable (intrinsics failed in the spike, (20.11.26, 7)).
+- O3 statements vs binder: a statement list is a second sequencing mechanism beside `=[..] do end`; ANF already sequences via binders.
+- O4 fail semantics: "signaled" (R7RS raise, catchable, needs handler frames in K) vs "is an error"/termination (abort machine). Different machine costs; pick one.
+- O5 scope creep: `...` invites more match modes; each mode is a mini-language in the core.
+- Antithesis A1: keep triage separate; lambda stays as-is only; fewer cross-cutting rules per form.
+Gains noted: one fewer control kind; explicit partiality via `{:fail}` instead of totality-by-construction; lambda/triage share application, environment, and partial-application machinery already (20.11.26, 3).
