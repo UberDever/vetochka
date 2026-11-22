@@ -105,3 +105,6 @@ New findings:
 - User: triage on partial lambdas breaks with per-case names (cannot tell which ids are bound). Moves to a general signature: `[[{:all}, id1], [{:triage}, id1, id2]]`; each body lists expected shapes for the triage params, e.g. `[{:fork}, {:leaf}, {:fruit}]`. Logged (22.11.26, 15), supersedes (12), obsoletes (13).
 - Agent: fixed names per position restore per-argument env extension; the positional buffer from round (14) is no longer needed.
 - Agent point: no wildcard shape in a case; a body indifferent to one triage position needs 3 duplicate cases. Allowing `{:all}` as a shape wildcard reintroduces overlap, hence case order.
+- User: `{:all}` positions are the implicit wildcards; bodies list only triage shapes. (Agent meant a wildcard inside a triage position.)
+- User design B: header is a row of bindings (one or two ids per position); each body carries a full row of expected shapes including an explicit wildcard; corner cases are errors.
+- Agent: if overlap between cases is an error, B stays order-free and is strictly more expressive than A: [fork, *] and [leaf, fruit] do not overlap. Not logged; awaiting choice between A and B.
