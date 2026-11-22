@@ -51,3 +51,21 @@ Objections (status after this turn: all standing, pending user reading):
 - O5 scope creep: `...` invites more match modes; each mode is a mini-language in the core.
 - Antithesis A1: keep triage separate; lambda stays as-is only; fewer cross-cutting rules per form.
 Gains noted: one fewer control kind; explicit partiality via `{:fail}` instead of totality-by-construction; lambda/triage share application, environment, and partial-application machinery already (20.11.26, 3).
+
+#### Round 2 — user revision, logged (22.11.26, 4)
+
+    [[{:lambda}...], <private-state>, [{x}, <statements>] [~[<lhs>, <rhs>], <leaf>, <fork>, <fruit>], ...]
+    ;; <rhs> could be absent ~; if fork case has no <rhs> it is an error
+    ;; {:!} so fruit is inplace; "it is an error"; no raise
+    ;; maybe single-param lambdas that nest:
+    [[{:lambda}...], <private-state>, [{x}, <statements>], [[{:lambda}...], <private-state>, [~[<lhs>, <rhs>], <leaf>, <fork>, <fruit>], ...]]
+
+Answers to round 1: O4 resolved (no raise, "it is an error"). O1 resolved by clause head carrying names. O5 narrowed: clause kind is the head's shape, not a tag.
+
+New findings:
+- [fact] `{:!}` is 2 bytes; w=2 in-place fruit holds 1 byte (layout (19.11.26, 4)). Known-fruit ref or `{!}`. Logged (22.11.26, 5).
+- O6 head discrimination vs identities: (21.11.26, 0) gives occurrences identity; declarations must carry the same identity for lookup to match. If a declaration lowers to the identifier tree `[[{:id}], {x}, ~[..]]`, it is a fork, as is `~[lhs, rhs]`; dispatch then needs a tag check at depth 2, not a shape check. [assumption: declarations carry identity in the tree; lambda-lowering artifact (19.11.26, 21) predates (21.11.26, 0) and lowers declarations as bare fruits.]
+- O7 clause list is dead past the first clause: both pattern kinds are total, so `...` alternatives never get tried. Unary nesting makes this explicit.
+- O8 private-state in unary form: one parameter means no partial-application progress; what does the slot hold?
+- O9 rhs absence: make it locally checkable: well-formed only when the fork arm is `{:!}`. Alternative: missing rhs binds lhs to the whole fork, mirroring fruit binding lhs to the whole fruit; then with leaf binding lhs to `~`, `~[x, ~]` subsumes `{x}` (same redundancy as O2).
+- Gain of unary nesting: flat/nested distinction (19.11.26, 23) disappears; "at least one parameter" (19.11.26, 22) holds by construction; no runtime cost, since each application already yields a CLOSURE (19.11.26, 19).
