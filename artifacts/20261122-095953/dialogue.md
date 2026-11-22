@@ -96,3 +96,6 @@ New findings:
 - User sketch logged (22.11.26, 12): `[[{:lambda}], <ps>, ~[[~[{:all}, <id>], ~[{:fork}, <id1>, <id2>], ...], expr], ...]`.
 - Agent: `~[{:fork}, <id1>, <id2>]` has three elements; a pair holds two. Needs `[{:fork}, id1, id2]` or `~[{:fork}, ~[id1, id2]]`.
 - Agent: with order-free cases, after k < N arguments several cases can still match; private state needs the set of surviving cases, not one branch.
+- User: fork pattern `~[{:fork}, ~[id1, id2]]`. Logged (22.11.26, 13).
+- User (tentative): cases match in order as written; the old triage encoding materialized trees explicitly and avoided the surviving-set issue.
+- Agent: order resolves overlap, not timing. Cases [fork, leaf] and [fork, fruit] both survive the first argument either way. Alternative: match only when all N arguments are bound; shape tests do not force, so deferring loses nothing, and private state is again just progress. Not logged yet; awaiting user.
