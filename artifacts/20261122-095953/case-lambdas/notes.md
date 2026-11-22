@@ -10,7 +10,7 @@ Run: `python3 -m pytest -q -p no:cacheprovider` from this directory. 15 checks p
   as both declaration and body occurrence; applying the result to `{hello}` returns `{hello}`.
 - `shapes`: a case-lambda with header `[[a], [l, r]]` built from generated identifiers. One partial
   application `g = f({p})` completes three times: fork, fruit, and leaf rows each select.
-  `g` stores count `01`, the header it read as literal identifiers, and the original cases (shared).
+  `g` stores count `01`, its rewritten header in an empty environment, and the original cases (shared).
 - `two-positions`: rows `[fork, leaf]` and `[fork, fruit]` both survive the first argument; the second decides.
 - `overlap`: first matching row in written order wins.
 - `binder`: a binder held in a fork is extracted by a case-lambda (not run), then a clause forces it.
