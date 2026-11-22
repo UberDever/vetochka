@@ -171,3 +171,4 @@ At the user's request the 22.11.26 section was condensed from 35 to 16 entries b
 - User: factorial and Fibonacci. Done over unary numerals in `arith`; 27 checks. Folded into (22.11.26, 17).
 - User: store keys are addresses `[[{:address}], <private-part>]`; agent misread earlier. Logged (22.11.26, 18).
 - User on whole-value binding in a split: third name in a fork position vs rebuilding `~[h, t]`; leans to rebuilding. Agent analysis in chat; awaiting choice.
+- User: log the fork direction (rebuild `~[h, t]`). Logged (22.11.26, 19).
