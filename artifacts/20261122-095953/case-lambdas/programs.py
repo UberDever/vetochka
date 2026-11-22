@@ -174,6 +174,28 @@ PROGRAMS = {
   ~[$out, [[{$}], $k1, $pid]]
  ], [$pid, $out]]
 """,
+    # Lists held in variables: a lambda whose case list is the variable `cases`, a two-parameter
+    # lambda whose cases come from a variable and complete through a partial application, and
+    # a binder (held as data, then forced) whose clause list is the variable `cl`.
+    "spines": """
+[[{:binder}], [
+  ~[$x, [[{$}], $unique, {x}]],
+  ~[$x.2, [[{$}], $unique, {x}]],
+  ~[$cases, [~[[{:all}], $x]]],
+  ~[$f, ~[[{:lambda}], ~[~, ~[[[$x]], $cases]]]],
+  ~[$v1, [[{$}], $f, {a}]],
+  ~[$cases2, [~[[{:all}, {:all}], ~[$x, $x.2]]]],
+  ~[$f2, ~[[{:lambda}], ~[~, ~[[[$x], [$x.2]], $cases2]]]],
+  ~[$g2, [[{$}], $f2, {1}]],
+  ~[$v2, [[{$}], $g2, {2}]],
+  ~[$y, [[{$}], $unique, {y}]],
+  ~[$cl, [~[$y, {w}]]],
+  ~[$box, ~[{box}, [[{:binder}], $cl, $y]]],
+  ~[$unbox, [[{:lambda}], ~, [[$h, $t]], ~[[{:fork}], $t]]],
+  ~[$b, [[{$}], $unbox, $box]],
+  ~[$v3, $b]
+ ], [$v1, $v2, $v3]]
+""",
     # Errors.
     "no-match": """
 [[{:binder}], [

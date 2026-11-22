@@ -30,11 +30,9 @@ Rules implemented, with their log sources:
   environment (22.11.26, 29), so a partial application's own bindings cannot rewrite its
   declarations. A tree may hold such a wrapped term as a node, as cells hold CLOSURE refs.
 
-Choices this experiment still makes without a log decision (see notes.md):
-
-- C1. An authored lambda has a leaf `~` in its private-state slot (count zero).
-- C4. The lambda and binder spines, cases, and clauses are read as literal trees; only identifiers
-  and shape symbols are read through context.
+- An authored lambda carries `~` in its private-state slot (22.11.26, 31).
+- Every position of a lambda or binder, including list tails, cases, and clauses, is read
+  through `rewrite`, so a bound identifier anywhere is its tree (22.11.26, 28).
 """
 
 from dataclasses import dataclass
@@ -258,29 +256,68 @@ def declaration(term):
 # ---------------------------------------------------------------- execution
 
 
+def spine(term):
+    """Read a proper list through context: rewrite every cell, return the element terms.
+
+    Under (22.11.26, 28) a bound identifier anywhere in a list, including its tail, is the tree it
+    rewrites to. Also returns the term for the rest after each element, for sharing.
+    """
+    cells = []
+    current = view(term)
+    for _ in range(LIMIT):
+        if isinstance(current, Intrinsic) or current.unset:
+            raise VError("expected a proper list")
+        if current.tree is None:
+            return cells
+        if not isinstance(current.tree, Fork):
+            raise VError("expected a proper list")
+        rest = view(at(current.tree.right, current.env))
+        cells.append((at(current.tree.left, current.env), rest))
+        current = rest
+    raise VError("list too long")
+
+
+def items(term):
+    return [element for element, _ in spine(term)]
+
+
+def kind(value):
+    """The kind fruit of a singleton tag head, read through context."""
+    value = view(value)
+    if not isinstance(value, Term):
+        return None
+    if value.unset or is_identifier(value.tree):
+        return b":id"
+    if not isinstance(value.tree, Fork):
+        return None
+    head = view(at(value.tree.left, value.env))
+    if not (isinstance(head, Term) and isinstance(head.tree, Fork)):
+        return None
+    name = view(at(head.tree.left, head.env))
+    rest = view(at(head.tree.right, head.env))
+    if isinstance(name, Term) and isinstance(name.tree, bytes) and isinstance(rest, Term):
+        if rest.tree is None:
+            return name.tree
+    return None
+
+
 def operand(term):
-    """An ANF atom: identifiers are resolved, nothing is executed."""
-    kind = static_kind(term.tree)
-    if kind in (b"$", b":binder"):
+    """An ANF atom: identifiers are rewritten, nothing is executed."""
+    if static_kind(term.tree) in (b"$", b":binder"):
         raise VError("expected an ANF atom")
-    if kind == b":id":
-        if not is_identifier(term.tree):
-            raise VError("malformed identifier")
+    if is_identifier(term.tree):
         return rewrite(term)
     return term
 
 
 def enter(term):
     """Enter a body expression. A returned tree goes directly to the caller."""
-    kind = static_kind(term.tree)
-    if kind == b":binder":
-        return run_binder(term)
-    if kind == b":id":
-        if not is_identifier(term.tree):
-            raise VError("malformed identifier")
+    if is_identifier(term.tree) and not term.unset:
         if identity(term.tree) not in term.env:
             raise VError("unbound identifier")
         return rewrite(term)
+    if kind(term) == b":binder":
+        return run_binder(term)
     return term
 
 
@@ -289,33 +326,34 @@ def step(term):
     value = rewrite(term)
     if isinstance(value, Intrinsic):
         return value
-    kind = static_kind(value.tree)
-    if kind == b"$":
-        items = elements(value.tree)
-        if len(items) != 3:
-            raise VError("an application has one callee and one operand")
-        callee = view(operand(Term(items[1], value.env)))
-        return apply(callee, operand(Term(items[2], value.env)))
-    if kind == b":binder":
-        return run_binder(value)
-    if kind == b":id":
-        raise VError("cannot run an unbound identifier")
+    match kind(value):
+        case b"$":
+            parts = items(value)
+            if len(parts) != 3:
+                raise VError("an application has one callee and one operand")
+            return apply(view(operand(parts[1])), operand(parts[2]))
+        case b":binder":
+            return run_binder(value)
+        case b":id":
+            raise VError("cannot run an unbound identifier")
     return value
 
 
 def apply(callee, argument):
     if isinstance(callee, Intrinsic):
         return Term(callee.apply(argument), {})
-    if isinstance(callee, Term) and static_kind(callee.tree) == b":lambda":
+    if kind(callee) == b":lambda":
         return apply_lambda(callee, argument)
     raise VError("expected a callable")
 
 
 def progress(state):
-    if state is None:
+    state = view(state)
+    tree = state.tree
+    if tree is None:
         return 0
-    if isinstance(state, Fork) and state.left == b":private" and isinstance(state.right, bytes):
-        return int.from_bytes(state.right, "big")
+    if isinstance(tree, Fork) and tree.left == b":private" and isinstance(tree.right, bytes):
+        return int.from_bytes(tree.right, "big")
     raise VError("malformed lambda private state")
 
 
@@ -324,13 +362,10 @@ def private_count(count):
 
 
 def read_header(term):
-    """Header of an unapplied lambda, read through context (C2)."""
-    header = view(term)
+    """A lambda's header, read through context (22.11.26, 29)."""
     positions = []
-    for item in elements(header.tree):
-        position = view(at(item, header.env))
-        names = tuple(declaration(at(name, position.env)) for name in elements(position.tree))
-        positions.append(names)
+    for position in items(term):
+        positions.append(tuple(declaration(name) for name in items(position)))
     return positions
 
 
@@ -346,41 +381,59 @@ def check_header(positions):
         raise VError("a header declares an identity twice")
 
 
-def bind(env, names, argument):
+def bind(names, argument):
     if len(names) == 1:
-        return env | {identity(names[0]): argument}
+        return {identity(names[0]): argument}
     left_name, right_name = names
     left_key, right_key = identity(left_name), identity(right_name)
     match shape(argument):
         case b":fork":
             left, right = children(argument)
-            return env | {left_key: left, right_key: right}
+            return {left_key: left, right_key: right}
         case b":fruit":
-            return env | {left_key: argument, right_key: unset(right_name)}
+            return {left_key: argument, right_key: unset(right_name)}
         case _:
-            return env | {left_key: unset(left_name), right_key: unset(right_name)}
+            return {left_key: unset(left_name), right_key: unset(right_name)}
+
+
+def parameters(env, positions):
+    """The bindings this lambda has made so far, recovered from its header identities."""
+    return {
+        identity(name): env[identity(name)]
+        for names in positions
+        for name in names
+        if identity(name) in env
+    }
+
+
+def node(term, env):
+    """A tree node for `term` inside a tree read in `env`: raw when the context agrees."""
+    return term.tree if term.env is env and not term.unset else term
 
 
 def apply_lambda(callee, argument):
-    items = elements(callee.tree)
-    if len(items) < 4:
+    cells = spine(callee)
+    if len(cells) < 4:
         raise VError("a lambda needs a header and at least one case")
-    tag, state, header, *cases = items
+    (tag, _), (state, _), (header, cases_rest), *case_cells = cells
     count = progress(state)
-    positions = read_header(at(header, callee.env))
+    positions = read_header(header)
     check_header(positions)
     if count >= len(positions):
         raise VError("malformed lambda progress")
-    env = bind(callee.env, positions[count], argument)
+    env = callee.env | bind(positions[count], argument)
     count += 1
     if count < len(positions):
         if WRAP_HEADER:
             stored = Term(tree_list([tree_list(list(names)) for names in positions]), {})
         else:
-            stored = header
-        shared_cases = callee.tree.right.right.right
-        return Term(Fork(tag, Fork(private_count(count), Fork(stored, shared_cases))), env)
-    return select(positions, cases, env)
+            stored = node(header, callee.env)
+        tree = Fork(
+            node(tag, callee.env),
+            Fork(private_count(count), Fork(stored, node(cases_rest, callee.env))),
+        )
+        return Term(tree, env)
+    return select(positions, [case for case, _ in case_cells], env)
 
 
 def bound(env, name):
@@ -403,14 +456,15 @@ def position_shape(env, names):
 
 
 def select(positions, cases, env):
+    params = parameters(env, positions)
     rows = []
     for case in cases:
-        if not isinstance(case, Fork):
+        case = view(case)
+        if not (isinstance(case, Term) and isinstance(case.tree, Fork)):
             raise VError("a case is a pair of a shape row and an expression")
-        row = view(at(case.left, env))
         shapes = []
-        for item in elements(row.tree):
-            symbol = view(at(item, row.env))
+        for item in items(at(case.tree.left, case.env)):
+            symbol = view(item)
             if not (isinstance(symbol, Term) and symbol.tree in SHAPES):
                 raise VError("a shape row holds shape symbols")
             shapes.append(symbol.tree)
@@ -419,7 +473,9 @@ def select(positions, cases, env):
         for expected, names in zip(shapes, positions):
             if expected == b":fork" and len(names) == 1:
                 raise VError("{:fork} needs a two-name position")
-        rows.append((shapes, case.right))
+        body = at(case.tree.right, case.env)
+        # A case read from another context still sees this lambda's parameters.
+        rows.append((shapes, Term(body.tree, body.env | params, body.unset)))
 
     actual = {}
 
@@ -435,25 +491,29 @@ def select(positions, cases, env):
             expected == b":all" or expected == actual_shape(index)
             for index, expected in enumerate(shapes)
         ):
-            return enter(Term(body, env))
+            return enter(body)
     raise VError("no case matches")
 
 
 def run_binder(term):
-    items = elements(term.tree)
-    if len(items) != 3:
+    parts = items(term)
+    if len(parts) != 3:
         raise VError("a binder has clauses and one body")
-    _, clauses, body = items
-    clauses = elements(clauses)
+    _, clauses, body = parts
+    clauses = items(clauses)
     if not clauses:
         raise VError("a binder needs at least one clause")
-    env = term.env
+    made = {}
     for clause in clauses:
-        if not isinstance(clause, Fork):
+        clause = view(clause)
+        if not (isinstance(clause, Term) and isinstance(clause.tree, Fork)):
             raise VError("a clause is a pair of a declaration and an expression")
-        key = identity(declaration(at(clause.left, env)))
-        env = env | {key: step(Term(clause.right, env))}
-    return enter(Term(body, env))
+        # Clauses read from another context still see the bindings made so far.
+        scope = clause.env | made
+        key = identity(declaration(Term(clause.tree.left, scope)))
+        made[key] = step(Term(clause.tree.right, scope))
+    body_scope = body.env | made
+    return enter(Term(body.tree, body_scope, body.unset))
 
 
 # ---------------------------------------------------------------- results

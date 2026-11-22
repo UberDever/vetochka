@@ -122,3 +122,7 @@ def test_reflective_reentry_with_an_identifier_argument_declares_that_identifier
 def elements_p(pid):
     # `p` is the third identifier the simulated parser issued in this program.
     return ev.make_identifier(b"p", bytes.fromhex("03"))
+
+
+def test_lists_held_in_variables_are_their_trees():
+    assert [shown(v) for v in results("spines")] == ["{a}", "~[{1}, {2}]", "{w}"]

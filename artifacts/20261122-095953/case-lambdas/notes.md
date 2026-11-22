@@ -2,7 +2,7 @@
 
 Task: (22.11.26, 26). Fresh throwaway evaluator `evaluator.py`; programs in `programs.py`
 (expanded v0 in `programs/`); checks in `test_case_lambdas.py`.
-Run: `python3 -m pytest -q -p no:cacheprovider` from this directory. 17 checks pass.
+Run: `python3 -m pytest -q -p no:cacheprovider` from this directory. 18 checks pass.
 
 ## What runs
 
@@ -35,13 +35,14 @@ Run: `python3 -m pytest -q -p no:cacheprovider` from this directory. 17 checks p
   lambda declares `I` and returns its argument. This follows from (22.11.26, 28): inside its
   scope a bound identifier is its value and cannot be reused as a declaration.
 
-## Choices the log does not settle
+## Settled choices
 
-C1 (`~` as an authored lambda's private state) is accepted at (22.11.26, 31).
-
-
-- C4. Spines, cases, and clauses are read as literal trees; only identifiers and shape symbols go
-  through context.
+- An authored lambda carries `~` in its private-state slot (22.11.26, 31).
+- Every position of a lambda or binder, list tails, cases, and clauses included, is read through
+  `rewrite` (22.11.26, 33). Program `spines`: a case list, a partially applied lambda's cases, and
+  a binder's clause list held in variables all work; the evaluator that read them literally
+  failed with "expected a proper list". A case or clause read from another context still sees
+  the lambda's parameters or the binder's earlier clauses.
 
 ## Not covered
 

@@ -151,3 +151,4 @@ Agent proposal (from snapshot grammar: `\[..]` closure_head, `?` triage, `~[a, b
 - User: wrap header in empty env (logged (22.11.26, 29)); identifiers are a rewriting optimization: holes vs already-rewritten trees, bound ids cannot be quoted (logged (22.11.26, 28)); inconsistency was in the throwaway case-lambda evaluator, not worth fixing.
 - Experiment adjusted to (22.11.26, 28)-(22.11.26, 29); 15 checks; red-green on `observe` (old {fork}, new {fruit}). Logged (22.11.26, 30).
 - User: C1 fine (logged (22.11.26, 31)); asked about C4; asked to try the reflective hole: done, logged (22.11.26, 32).
+- User: apply rewriting to structure. Done; 18 checks; old evaluator fails `spines`. Logged (22.11.26, 33).
