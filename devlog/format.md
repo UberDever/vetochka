@@ -27,6 +27,8 @@ Dates strictly increase across the logical log. Same-day additions extend the cu
 An entry's ID is `(date, index)`: its section date and zero-based entry index.
 Entries may change in place. Preserve existing IDs: no deletion, reordering,
 or insertion before existing entries. Append new sections and entries.
+The current session's entries are an exception until the session ends:
+they may be merged, shortened, or dropped, as `rules.md` describes.
 
 ## Entries
 
