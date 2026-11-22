@@ -99,3 +99,6 @@ New findings:
 - User: fork pattern `~[{:fork}, ~[id1, id2]]`. Logged (22.11.26, 13).
 - User (tentative): cases match in order as written; the old triage encoding materialized trees explicitly and avoided the surviving-set issue.
 - Agent: order resolves overlap, not timing. Cases [fork, leaf] and [fork, fruit] both survive the first argument either way. Alternative: match only when all N arguments are bound; shape tests do not force, so deferring loses nothing, and private state is again just progress. Not logged yet; awaiting user.
+- User: worried about devlog noise. Agent review: 14 entries today; (22.11.26, 5) and (22.11.26, 13) were low value; drafts (3), (4) could have stayed in the ledger. IDs cannot be removed. From now on: devlog gets decisions and surviving questions only; drafts and agent critique stay here.
+- User agrees on matching at saturation; "lambda superposition, dead and alive until settled"; CLOSURE installed on the whole lambda. Logged (22.11.26, 14).
+- Agent: no real superposition: arguments sit in a positional buffer in private state; nothing binds until the match picks a case.
