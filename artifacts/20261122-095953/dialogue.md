@@ -131,3 +131,5 @@ Agent proposal (from snapshot grammar: `\[..]` closure_head, `?` triage, `~[a, b
 - `?` prefix needed: `[_, fork] do ... end` would parse as a list with a loose block postfix.
 - User: `_` is an ordinary identifier; row heads hold symbols; no `do end`; `\[]` is a prefix form; after `?[]` expect one expression; no plain expression once a row is present. Logged (22.11.26, 20).
 - Agent: (a) `:fork` already parses as a label-less labeled expression; symbol spelling needed (`{:fork}` works today). (b) ASI ends an expression at newline, so rows on later lines would end the lambda. (c) Nested case-lambdas: trailing rows attach to the innermost lambda (dangling else).
+- User: `{:fork}` verbose but this is low-level; innermost attachment with parens; multiline lambda should parse whole. Logged (22.11.26, 21).
+- Agent: ASI rule (snapshot l.226-237) ends a complete expression at newline; candidate amendment: a newline followed by `?[` continues the innermost case-lambda (one-token lookahead). Zero-change option: wrap in parens.
