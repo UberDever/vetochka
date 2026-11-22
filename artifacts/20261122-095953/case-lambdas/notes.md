@@ -2,7 +2,7 @@
 
 Task: (22.11.26, 12). Fresh throwaway evaluator `evaluator.py`; programs in `programs.py`
 (expanded v0 in `programs/`); checks in `test_case_lambdas.py`.
-Run: `python3 -m pytest -q -p no:cacheprovider` from this directory. 19 checks pass.
+Run: `python3 -m pytest -q -p no:cacheprovider` from this directory. 27 checks pass.
 
 ## What runs
 
@@ -42,6 +42,9 @@ Program `fix`: `fix = \[f] =[w = \[x, v] =[self = x(x), fs = f(self), r = fs(v)]
 recursive reference into the recursive function: `length([{a}, {b}, {c}])` gives `[{s}, {s}, {s}]`,
 and a two-argument `append` gives `[{a}, {b}, {c}, {d}]`. Each call rebuilds the reference as a fresh
 partial application `w(w)`, so no binding refers to itself and no cyclic structure is built.
+Program `arith`: factorial and Fibonacci over unary numerals (`~` is zero, `~[{s}, n]` is a
+successor), with addition as append and multiplication defined with `fix`. Checked: factorial
+0..6 (720 takes 0.3 s) and Fibonacci 0..6 and 10 (55). No arithmetic intrinsics are involved.
 Host-stack limit: `length` works on 50 elements and overflows Python's default stack at 100,
 because this evaluator recurses in the host; the machine needs its own continuation.
 

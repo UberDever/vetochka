@@ -131,3 +131,38 @@ def test_lists_held_in_variables_are_their_trees():
 
 def test_fix_makes_lambdas_recursive_without_a_recursive_binding():
     assert [shown(v) for v in results("fix")] == ["[{s}, {s}, {s}]", "[{a}, {b}, {c}, {d}]"]
+
+
+def count(value):
+    """Length of a unary numeral, walking its spine through rewriting."""
+    total = 0
+    current = ev.rewrite(value)
+    while current.tree is not None:
+        assert isinstance(current.tree, ev.Fork)
+        assert ev.rewrite(ev.at(current.tree.left, current.env)).tree == b"s"
+        total += 1
+        current = ev.rewrite(ev.at(current.tree.right, current.env))
+    return total
+
+
+@pytest.mark.parametrize("n, factorial, fibonacci", [
+    (0, 1, 0), (1, 1, 1), (2, 2, 1), (3, 6, 2), (4, 24, 3), (5, 120, 5), (6, 720, 8), (10, None, 55),
+])
+def test_factorial_and_fibonacci_with_fix(n, factorial, fibonacci):
+    import sys
+    from programs import numeral
+
+    # The evaluator recurses in Python; the depth here is a host limit, not a language one.
+    old = sys.getrecursionlimit()
+    sys.setrecursionlimit(100_000)
+    try:
+        text = expand(PROGRAMS["arith"])
+        # Factorial of 10 would be 3,628,800 unary digits; give it 0 when it is not checked.
+        text = text.replace("<F>", numeral(n if factorial is not None else 0))
+        value = ev.run(ev.parse(text.replace("<N>", numeral(n))))
+        out1, out2 = [ev.rewrite(ev.at(item, value.env)) for item in ev.elements(value.tree)]
+        if factorial is not None:
+            assert count(out1) == factorial
+        assert count(out2) == fibonacci
+    finally:
+        sys.setrecursionlimit(old)

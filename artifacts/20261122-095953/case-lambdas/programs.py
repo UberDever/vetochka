@@ -232,6 +232,72 @@ PROGRAMS = {
   ~[$v2, [[{$}], $a1, [{c}, {d}]]]
  ], [$v1, $v2]]
 """,
+    # Factorial and Fibonacci with `fix`, over unary numbers: `~` is zero and `~[{s}, n]` is the
+    # successor of `n`, so a number is a list of `{s}`. Addition is append; multiplication and
+    # both functions are made recursive with `fix`. `<F>` and `<N>` are the inputs to factorial and
+    # Fibonacci.
+    "arith": """
+[[{:binder}], [
+  ~[$fix, [[{:lambda}], ~, [[$f]],
+     ~[[{:all}],
+       [[{:binder}], [
+          ~[$w, [[{:lambda}], ~, [[$x], [$v]],
+                  ~[[{:all}, {:all}],
+                    [[{:binder}], [
+                       ~[$self, [[{$}], $x, $x]],
+                       ~[$fs, [[{$}], $f, $self]],
+                       ~[$r, [[{$}], $fs, $v]]
+                    ], $r]]]],
+          ~[$g, [[{$}], $w, $w]]
+       ], $g]]]],
+  ~[$addf, [[{:lambda}], ~, [[$rec.1], [$h.1, $t.1], [$ys]],
+     ~[[{:all}, {:leaf}, {:all}], $ys],
+     ~[[{:all}, {:fork}, {:all}],
+       [[{:binder}], [
+          ~[$p0, [[{$}], $rec.1, $t.1]],
+          ~[$rest, [[{$}], $p0, $ys]]
+       ], ~[$h.1, $rest]]]]],
+  ~[$add, [[{$}], $fix, $addf]],
+  ~[$mulf, [[{:lambda}], ~, [[$rec.2], [$h.2, $t.2], [$m]],
+     ~[[{:all}, {:leaf}, {:all}], ~],
+     ~[[{:all}, {:fork}, {:all}],
+       [[{:binder}], [
+          ~[$p1, [[{$}], $rec.2, $t.2]],
+          ~[$p2, [[{$}], $p1, $m]],
+          ~[$a1, [[{$}], $add, $m]],
+          ~[$r1, [[{$}], $a1, $p2]]
+       ], $r1]]]],
+  ~[$mul, [[{$}], $fix, $mulf]],
+  ~[$factf, [[{:lambda}], ~, [[$rec.3], [$h.3, $t.3]],
+     ~[[{:all}, {:leaf}], [{s}]],
+     ~[[{:all}, {:fork}],
+       [[{:binder}], [
+          ~[$p3, [[{$}], $rec.3, $t.3]],
+          ~[$m1, [[{$}], $mul, ~[$h.3, $t.3]]],
+          ~[$r2, [[{$}], $m1, $p3]]
+       ], $r2]]]],
+  ~[$fact, [[{$}], $fix, $factf]],
+  ~[$fibf, [[{:lambda}], ~, [[$rec.4], [$h.4, $t.4]],
+     ~[[{:all}, {:leaf}], ~],
+     ~[[{:all}, {:fork}],
+       [[{:binder}], [
+          ~[$r3, [[{$}],
+                  [[{:lambda}], ~, [[$h.5, $t.5]],
+                    ~[[{:leaf}], [{s}]],
+                    ~[[{:fork}],
+                      [[{:binder}], [
+                         ~[$f1, [[{$}], $rec.4, $t.4]],
+                         ~[$f2, [[{$}], $rec.4, $t.5]],
+                         ~[$a2, [[{$}], $add, $f1]],
+                         ~[$r4, [[{$}], $a2, $f2]]
+                      ], $r4]]],
+                  $t.4]]
+       ], $r3]]]],
+  ~[$fib, [[{$}], $fix, $fibf]],
+  ~[$out1, [[{$}], $fact, <F>]],
+  ~[$out2, [[{$}], $fib, <N>]]
+ ], [$out1, $out2]]
+""",
     # Errors.
     "no-match": """
 [[{:binder}], [
@@ -261,8 +327,16 @@ PROGRAMS = {
 }
 
 
+def numeral(n):
+    """The unary numeral for n: `~` or a list of n `{s}` fruits."""
+    return "[" + ", ".join(["{s}"] * n) + "]" if n else "~"
+
+
 if __name__ == "__main__":
     out = Path(__file__).with_name("programs")
     out.mkdir(exist_ok=True)
     for name, template in PROGRAMS.items():
-        (out / f"{name}.v0").write_text(expand(template).strip() + "\n")
+        text = expand(template).strip()
+        if name == "arith":
+            text = text.replace("<F>", numeral(5)).replace("<N>", numeral(5))
+        (out / f"{name}.v0").write_text(text + "\n")
