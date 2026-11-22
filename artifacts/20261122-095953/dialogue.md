@@ -8,7 +8,8 @@ Ledger lives here, not ./dialogue/, per AGENTS.md artifact placement.
 
 ## 0. Framing
 
-Pending: question, stakes, reversibility, depth mode.
+Depth: user selects a light dialogue with the user; the agent runs the full colloquium on its own and records it here.
+Question: pending (user's last message was cut off after "a policy that is").
 
 Agent-raised candidate topic (not yet accepted by user):
 - [assumption] (21.11.26, 0) identity lookup needs stable private bytes; (19.11.26, 14) says private bytes may change on any action. Conflict unless identity forks are exempt.
@@ -22,3 +23,6 @@ Agent-raised candidate topic (not yet accepted by user):
 ## 6. Cruxes
 ## 7. Decision
 ## Transcript notes
+
+- Agent objected: identity lookup needs stable private bytes; hand-built identities can collide.
+- User: "unstable" means user programs get no guarantee on these bytes when they use them directly. Forging is the same: a program can coincide with the current implementation, but that is unreliable and nasty; this is a policy. Agent concedes both objections (refuted by clarifying scope: user contract vs implementation). Logged as (22.11.26, 0).
