@@ -91,3 +91,4 @@ New findings:
 - Crux K1: must compile-time code see the authored clause matrix in v0 (favors C1/C3), or is a vf-level record enough (favors C2)?
 - Open: name vs fruit-literal pattern ambiguity: if a head `{x}` is a name, a fruit literal pattern needs a marker.
 - User: too rigorous for this stage; write less. Agent: short replies, one point or question at a time.
+- User picks C1, shape patterns only; M cases x N params; default whole-tree binding; discriminative patterns, any order; mixing shape and general in one position is an error; binders are identifiers. Logged (22.11.26, 11). K1 resolved toward C1. O6 resolved: binders carry identity.
