@@ -176,3 +176,7 @@ At the user's request the 22.11.26 section was condensed from 35 to 16 entries b
 - User: free in-place fruit. Logged (22.11.26, 21) with agent proposal to preload one-byte fruits as known fruits.
 - User: rename out-of-line -> unknown fruit; asked registry capacity. Folded into (22.11.26, 21).
 - User: short registry reach is plenty; v0 keeps byte offsets. Folded into (22.11.26, 21). User asked to commit and update the PR.
+
+### Topic 7: compile a small program to v0, in v0, and run it in v0
+
+- User program: `def[f][x] do x; end`, `def[g][y] do y; end`, `g(f({42}))`. `def` appears nowhere in the log or specs. Agent asked scoping questions before starting.
