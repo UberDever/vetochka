@@ -92,3 +92,7 @@ New findings:
 - Open: name vs fruit-literal pattern ambiguity: if a head `{x}` is a name, a fruit literal pattern needs a marker.
 - User: too rigorous for this stage; write less. Agent: short replies, one point or question at a time.
 - User picks C1, shape patterns only; M cases x N params; default whole-tree binding; discriminative patterns, any order; mixing shape and general in one position is an error; binders are identifiers. Logged (22.11.26, 11). K1 resolved toward C1. O6 resolved: binders carry identity.
+- Note (user, ledger only): case-lambdas have many corner cases; rigorous specification pending.
+- User sketch logged (22.11.26, 12): `[[{:lambda}], <ps>, ~[[~[{:all}, <id>], ~[{:fork}, <id1>, <id2>], ...], expr], ...]`.
+- Agent: `~[{:fork}, <id1>, <id2>]` has three elements; a pair holds two. Needs `[{:fork}, id1, id2]` or `~[{:fork}, ~[id1, id2]]`.
+- Agent: with order-free cases, after k < N arguments several cases can still match; private state needs the set of surviving cases, not one branch.
