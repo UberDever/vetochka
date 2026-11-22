@@ -138,3 +138,4 @@ Agent proposal (from snapshot grammar: `\[..]` closure_head, `?` triage, `~[a, b
 
 - User: no ASI amendment; the devlog will be replayed when the syntax chapter is revised.
 - Agent rewrote artifacts/20261120-172943/force.vf as `force.vf` here (not run). Triage applications become applied case-lambdas; tag-of destructures its parameter directly; forcing binders kept as in the original. Every multiline lambda sits inside brackets or parens, so ASI does not interfere.
+- Agent: `force-end.vf` applies `end.` (20.11.26, 6) with the reading: close every open block up to the nearest enclosing delimiter, or all at top level. Not run.
