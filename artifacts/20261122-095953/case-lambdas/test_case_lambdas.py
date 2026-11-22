@@ -38,7 +38,7 @@ def test_shapes_bind_by_operand_shape_and_complete_one_partial_application_three
 
 def test_partial_application_stores_count_header_and_shares_cases():
     f, g, *_ = results("shapes")
-    assert ev.static_kind(g.tree) == b":lambda"
+    assert ev.kind(g) == b":lambda"
     assert ev.display(g.tree.right.left) == "~[{:private}, ~{01}]"
     header = g.tree.right.right.left
     assert isinstance(header, ev.Term) and header.env is f.env
@@ -47,7 +47,9 @@ def test_partial_application_stores_count_header_and_shares_cases():
         (generated("a", "8000"),),
         (generated("l", "8001"), generated("r", "8002")),
     ]
-    assert g.tree.right.right.right is f.tree.right.right.right
+    # Shared, either raw or as a term node wrapping the same subtree.
+    cases = g.tree.right.right.right
+    assert getattr(cases, "tree", cases) is f.tree.right.right.right
 
 
 def test_case_selection_waits_for_the_last_argument():
@@ -77,6 +79,8 @@ def test_partial_application_to_identifier_data_keeps_its_own_declarations():
 
 def test_ablation_without_the_defining_header_environment_breaks_that_program(monkeypatch):
     monkeypatch.setattr(ev, "WRAP_HEADER", False)
+    # The second application reads `p` through its own binding and declares the argument's
+    # identifier instead, so the row that inspects `p` finds no binding for it.
     with pytest.raises(ev.VError, match="not bound"):
         ev.run(program("identifier-argument"))
 
@@ -108,16 +112,13 @@ def test_unique_issues_fresh_identities_per_call():
     assert ev.is_identifier(first) and ev.is_identifier(second)
 
 
-def test_reflective_reentry_rewrites_a_bound_declaration_to_its_value():
-    # Inside `k`, `p`'s identity is bound to `{arg}`, so a lambda declaring it declares `{arg}`.
-    with pytest.raises(ev.VError, match="declaration must be an identifier"):
-        ev.run(program("reflect"))
-
-
-def test_reflective_reentry_with_an_identifier_argument_declares_that_identifier():
-    pid, out = results("reflect-identifier")
-    assert ev.static_kind(pid.tree) == b":id" and pid.tree == elements_p(pid)
-    assert shown(out) == "{z}"
+def test_reflective_reentry_shadows_instead_of_rewriting_the_declaration():
+    # Declarations are read without looking at the places a term was carried through, so the
+    # lambda built inside `k` redeclares `p`'s identity and returns its own argument.
+    for name in ("reflect", "reflect-identifier"):
+        pid, out = results(name)
+        assert ev.is_identifier(pid.tree)
+        assert shown(out) == "{z}"
 
 
 def elements_p(pid):
@@ -166,3 +167,15 @@ def test_factorial_and_fibonacci_with_fix(n, factorial, fibonacci):
         assert count(out2) == fibonacci
     finally:
         sys.setrecursionlimit(old)
+
+
+def test_declarations_that_look_outward_break_recursion(monkeypatch):
+    def declaration(term):
+        declared = ev.rewrite(term, holes=True)
+        if not (isinstance(declared, ev.Term) and ev.is_identifier(declared.tree)):
+            raise ev.VError("a declaration must be an identifier")
+        return declared.tree
+
+    monkeypatch.setattr(ev, "declaration", declaration)
+    with pytest.raises(ev.VError, match="declaration must be an identifier"):
+        results("fix")

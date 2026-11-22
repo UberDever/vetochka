@@ -12,7 +12,7 @@ programs to `programs/*.v0`.
 from pathlib import Path
 import re
 
-GLOBALS = {"unique": "f0"}
+GLOBALS = {"unique": "f0", "fruit-equal": "f1", "source": "f2"}
 PLACEHOLDER = re.compile(r"\$([A-Za-z][A-Za-z0-9-]*)(\.[0-9]+)?")
 
 
