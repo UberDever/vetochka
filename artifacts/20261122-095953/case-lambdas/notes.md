@@ -10,7 +10,7 @@ Run: `python3 -m pytest -q -p no:cacheprovider` from this directory. 18 checks p
   as both declaration and body occurrence; applying the result to `{hello}` returns `{hello}`.
 - `shapes`: a case-lambda with header `[[a], [l, r]]` built from generated identifiers. One partial
   application `g = f({p})` completes three times: fork, fruit, and leaf rows each select.
-  `g` stores count `01`, its rewritten header in an empty environment, and the original cases (shared).
+  `g` stores count `01`, the original header in its defining environment, and the original cases (both shared).
 - `two-positions`: rows `[fork, leaf]` and `[fork, fruit]` both survive the first argument; the second decides.
 - `overlap`: first matching row in written order wins.
 - `binder`: a binder held in a fork is extracted by a case-lambda (not run), then a clause forces it.
@@ -25,8 +25,8 @@ Run: `python3 -m pytest -q -p no:cacheprovider` from this directory. 18 checks p
   occurrence stood and is rewritten in that environment; an unbound identifier is a hole.
   New program `observe`: inside `f`, which declares generated `X`, shape inspection of the
   fork child `x` gives `{fruit}`. The evaluator before this change gave `{fork}`.
-- The header is rewritten at the first application and stored in the partial application as a
-  term with an empty environment. Without the wrap, `identifier-argument` fails: the second
+- A partial application keeps the header as a term in the lambda's defining environment, which
+  excludes the lambda's own parameters (22.11.26, 34), and shares the header tree. Without that, `identifier-argument` fails: the second
   application rewrites `p` through its own binding to the argument (ablation test).
 - Reflective re-entry (`reflect`, `reflect-identifier`): `p`'s declaration `P` is taken out of
   `k` from outside, where it is a hole, passed back into `k`, and used as the declaration of a

@@ -154,3 +154,5 @@ Agent proposal (from snapshot grammar: `\[..]` closure_head, `?` triage, `~[a, b
 - User: apply rewriting to structure. Done; 18 checks; old evaluator fails `spines`. Logged (22.11.26, 33).
 - User: the rule extends envs, not only replaces; do others do that? Agent (from recall, unverified): explicit substitution composition M[s][t] = M[s o t] (lambda-sigma, Abadi-Cardelli-Curien-Levy 1991); contextual modal type theory metavariables instantiated by substitutions (Nanevski-Pfenning-Pientka 2008), matching the holes lens; Kernel eval with constructed environments (Shutt); sets-of-scopes identifier binding (Flatt 2016). Open: precedence; spike lets parameters override the foreign env.
 - User: precedence follows from unique ids; no separate rule.
+- User: header env = defining env without own params, not empty. Applied; 18 checks. Logged (22.11.26, 34), supersedes (29).
+- User: `unique` lets the language express cycles without tying the knot. Agent reading pending user confirmation (below).

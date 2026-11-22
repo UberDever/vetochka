@@ -41,7 +41,8 @@ def test_partial_application_stores_count_header_and_shares_cases():
     assert ev.static_kind(g.tree) == b":lambda"
     assert ev.display(g.tree.right.left) == "~[{:private}, ~{01}]"
     header = g.tree.right.right.left
-    assert isinstance(header, ev.Term) and header.env == {}
+    assert isinstance(header, ev.Term) and header.env is f.env
+    assert header.tree is f.tree.right.right.left
     assert ev.read_header(header) == [
         (generated("a", "8000"),),
         (generated("l", "8001"), generated("r", "8002")),
@@ -74,7 +75,7 @@ def test_partial_application_to_identifier_data_keeps_its_own_declarations():
     assert shown(value) == "~[" + ev.display(generated("i", "8000")) + ", {w}]"
 
 
-def test_ablation_without_the_empty_header_environment_breaks_that_program(monkeypatch):
+def test_ablation_without_the_defining_header_environment_breaks_that_program(monkeypatch):
     monkeypatch.setattr(ev, "WRAP_HEADER", False)
     with pytest.raises(ev.VError, match="not bound"):
         ev.run(program("identifier-argument"))

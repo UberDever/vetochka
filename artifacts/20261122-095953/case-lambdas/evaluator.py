@@ -26,9 +26,10 @@ Rules implemented, with their log sources:
   bound identifier is the tree it rewrites to. When an occurrence rewrites to identifier data,
   that identifier sits where the occurrence was and is rewritten in the occurrence's environment.
   Execution, shape inspection, and display all use this one rule (`rewrite`).
-- A lambda's header is rewritten at its first application and then wrapped in an empty
-  environment (22.11.26, 29), so a partial application's own bindings cannot rewrite its
-  declarations. A tree may hold such a wrapped term as a node, as cells hold CLOSURE refs.
+- A partial application keeps its header as a term in the lambda's defining environment, which
+  excludes the lambda's own parameters (22.11.26, 34). Header occurrences can still name values
+  from that environment, and the partial application's bindings cannot rewrite its
+  declarations. A tree may hold such a term as a node, as cells hold CLOSURE refs.
 
 - An authored lambda carries `~` in its private-state slot (22.11.26, 31).
 - Every position of a lambda or binder, including list tails, cases, and clauses, is read
@@ -66,7 +67,7 @@ class Intrinsic:
 
 LIMIT = 10_000
 SHAPES = (b":leaf", b":fork", b":fruit", b":all")
-WRAP_HEADER = True  # ablation switch: False keeps the raw header in a partial application
+WRAP_HEADER = True  # ablation switch: False reads the header in the partial application's env
 
 
 # ---------------------------------------------------------------- trees
@@ -425,7 +426,9 @@ def apply_lambda(callee, argument):
     count += 1
     if count < len(positions):
         if WRAP_HEADER:
-            stored = Term(tree_list([tree_list(list(names)) for names in positions]), {})
+            # The header keeps the environment it was defined in, without this lambda's own
+            # parameters (22.11.26, 34); a partial application shares the header tree.
+            stored = header
         else:
             stored = node(header, callee.env)
         tree = Fork(
