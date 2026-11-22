@@ -1,0 +1,50 @@
+# Case-lambda construction experiment
+
+Task: (22.11.26, 12). Fresh throwaway evaluator `evaluator.py`; programs in `programs.py`
+(expanded v0 in `programs/`); checks in `test_case_lambdas.py`.
+Run: `python3 -m pytest -q -p no:cacheprovider` from this directory. 18 checks pass.
+
+## What runs
+
+- `builder`: a lambda receives one identifier from `unique({x})` and returns a lambda that uses it
+  as both declaration and body occurrence; applying the result to `{hello}` returns `{hello}`.
+- `shapes`: a case-lambda with header `[[a], [l, r]]` built from generated identifiers. One partial
+  application `g = f({p})` completes three times: fork, fruit, and leaf rows each select.
+  `g` stores count `01`, the original header in its defining environment, and the original cases (both shared).
+- `two-positions`: rows `[fork, leaf]` and `[fork, fruit]` both survive the first argument; the second decides.
+- `overlap`: first matching row in written order wins.
+- `binder`: a binder held in a fork is extracted by a case-lambda (not run), then a clause forces it.
+  Clauses bind in order: `~[{v}, {v}]`.
+- `identity`: two generated `{x}` identifiers stay distinct bindings.
+- Errors: no matching row, `{:fork}` at a one-name position, a short row, a lambda without cases.
+
+## Adjusted after (22.11.26, 13) and (22.11.26, 14)
+
+- One rule, `rewrite`, serves execution, shape inspection, and display. An occurrence bound in its
+  environment rewrites to its value; identifier data reached that way stands where the
+  occurrence stood and is rewritten in that environment; an unbound identifier is a hole.
+  New program `observe`: inside `f`, which declares generated `X`, shape inspection of the
+  fork child `x` gives `{fruit}`. The evaluator before this change gave `{fork}`.
+- A partial application keeps the header as a term in the lambda's defining environment, which
+  excludes the lambda's own parameters (22.11.26, 14), and shares the header tree. Without that, `identifier-argument` fails: the second
+  application rewrites `p` through its own binding to the argument (ablation test).
+- Reflective re-entry (`reflect`, `reflect-identifier`): `p`'s declaration `P` is taken out of
+  `k` from outside, where it is a hole, passed back into `k`, and used as the declaration of a
+  lambda built inside `k`. There `P` is bound, so it rewrites to its value: with `{arg}` the
+  build fails ("a declaration must be an identifier"); with a generated identifier `I` the
+  lambda declares `I` and returns its argument. This follows from (22.11.26, 13): inside its
+  scope a bound identifier is its value and cannot be reused as a declaration.
+
+## Settled choices
+
+- An authored lambda carries `~` in its private-state slot (22.11.26, 3).
+- Every position of a lambda or binder, list tails, cases, and clauses included, is read through
+  `rewrite` (22.11.26, 13). Program `spines`: a case list, a partially applied lambda's cases, and
+  a binder's clause list held in variables all work; the evaluator that read them literally
+  failed with "expected a proper list". A case or clause read from another context still sees
+  the lambda's parameters or the binder's earlier clauses.
+
+## Not covered
+
+Pending-parameter masking when shape inspection reads a partial lambda's cases (21.11.26, 3);
+intrinsic operands under shape rows beyond `{:all}`; tail calls; the cells layout.
