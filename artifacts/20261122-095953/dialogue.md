@@ -129,3 +129,5 @@ Agent proposal (from snapshot grammar: `\[..]` closure_head, `?` triage, `~[a, b
 - header param: identifier (one name) or `~[l, r]` (two names); `?[...]` row of shapes `leaf`, `fork`, `fruit`, `_` + block.
 - `\[x] do x end` unchanged: no rows = one all-wildcard case.
 - `?` prefix needed: `[_, fork] do ... end` would parse as a list with a loose block postfix.
+- User: `_` is an ordinary identifier; row heads hold symbols; no `do end`; `\[]` is a prefix form; after `?[]` expect one expression; no plain expression once a row is present. Logged (22.11.26, 20).
+- Agent: (a) `:fork` already parses as a label-less labeled expression; symbol spelling needed (`{:fork}` works today). (b) ASI ends an expression at newline, so rows on later lines would end the lambda. (c) Nested case-lambdas: trailing rows attach to the innermost lambda (dangling else).
