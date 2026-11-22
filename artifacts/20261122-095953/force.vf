@@ -7,11 +7,11 @@
     ?[{:all}]  ~] do
 =[executable-tag? = \[tag]
     =[equal = fruit-equal[tag, {$}]] do
-    =[result = (\[e]
+    =[result = (\[~[e, r]]
         ?[{:fruit}] e
         ?[{:fork}]  ~
         ?[{:leaf}]  =[equal = fruit-equal[tag, {:binder}]] do
-            =[result = (\[e]
+            =[result = (\[~[e, r]]
                 ?[{:fruit}] e
                 ?[{:fork}]  ~
                 ?[{:leaf}]  =[equal = fruit-equal[tag, {:id}]] do
@@ -24,7 +24,7 @@
 =[worker = \[self, term]
     =[tag = tag-of(term)] do
     =[executable = executable-tag?(tag)] do
-    =[result = (\[e]
+    =[result = (\[~[e, r]]
         ?[{:leaf}]  =[value = term] do value end
         ?[{:fork}]  ~
         ?[{:fruit}] =[next = term] do

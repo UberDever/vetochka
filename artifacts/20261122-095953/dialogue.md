@@ -142,3 +142,4 @@ Agent proposal (from snapshot grammar: `\[..]` closure_head, `?` triage, `~[a, b
 - User: binder body is one expression, so `=[...] expr` without `do end`; sequential clauses can hold the work and the body is the result. Agent agrees; `force-flat.vf` (not run) assumes clauses bind in order (let*), as the snapshot example `=[x: .., y: x + ..]` implies, and that each clause forces its value. Not logged; awaiting confirmation.
 - User confirms; `end.` is a proposal, not a feature. Logged (22.11.26, 22). Agent: with lambda and binder bodies as expressions, `end.` only applies to explicit `do` blocks.
 - User: forcing by binders already logged; (22.11.26, 22) fixed to cite (23.10.26, 3). Keep `end.` in mind, never present as a feature.
+- User: `\[e]` with a `{:fork}` row breaks (22.11.26, 18); agent had violated its own logged rule. Fixed in force.vf, force-end.vf, force-flat.vf by widening to `\[~[e, r]]`, keeping fork -> `~` as in the original.
