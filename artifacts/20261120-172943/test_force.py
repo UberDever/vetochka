@@ -1,6 +1,6 @@
 import unittest
 
-from spike import force, run
+from spike import Term, apply, display, force, inspect, parse, run
 
 
 class ForceTests(unittest.TestCase):
@@ -74,6 +74,27 @@ class ForceTests(unittest.TestCase):
             with self.subTest(subject=subject, name=name):
                 body = "[[{:id}], {%s}]" % name
                 self.assertEqual(run(template % (body, body, body, subject)), expected)
+
+    def test_triage_leaves_pending_lambda_parameters_as_identifiers(self):
+        left = Term(parse("[[{:triage}], [{lhs}, {rhs}], ~, [[{:id}], {lhs}], ~]"), {})
+        right = Term(parse("[[{:triage}], [{lhs}, {rhs}], ~, [[{:id}], {rhs}], ~]"), {})
+        callee = Term(
+            parse("[[{:lambda}], [{x}, {y}], ~[[[{:id}], {x}], [[{:id}], {y}]]]"),
+            {b"x": Term(b"outer-x", {}), b"y": Term(b"outer-y", {})},
+        )
+        partial = apply(callee, Term(b"supplied-x", {}))
+        complete = apply(partial, Term(b"supplied-y", {}))
+        cases = (
+            ("unapplied", apply(left, apply(right, apply(right, callee))),
+             ("[[{:id}], {x}]", "[[{:id}], {y}]")),
+            ("partial", apply(left, apply(right, apply(right, partial))),
+             ("{supplied-x}", "[[{:id}], {y}]")),
+            ("complete", complete, ("{supplied-x}", "{supplied-y}")),
+        )
+        for state, body, expected in cases:
+            with self.subTest(state=state):
+                observed = tuple(display(inspect(apply(pick, body)).tree) for pick in (left, right))
+                self.assertEqual(observed, expected)
 
 
 if __name__ == "__main__":
