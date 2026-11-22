@@ -105,3 +105,20 @@ def test_unique_issues_fresh_identities_per_call():
     second = unique.apply(ev.Term(b"x", {}))
     assert first != second
     assert ev.is_identifier(first) and ev.is_identifier(second)
+
+
+def test_reflective_reentry_rewrites_a_bound_declaration_to_its_value():
+    # Inside `k`, `p`'s identity is bound to `{arg}`, so a lambda declaring it declares `{arg}`.
+    with pytest.raises(ev.VError, match="declaration must be an identifier"):
+        ev.run(program("reflect"))
+
+
+def test_reflective_reentry_with_an_identifier_argument_declares_that_identifier():
+    pid, out = results("reflect-identifier")
+    assert ev.static_kind(pid.tree) == b":id" and pid.tree == elements_p(pid)
+    assert shown(out) == "{z}"
+
+
+def elements_p(pid):
+    # `p` is the third identifier the simulated parser issued in this program.
+    return ev.make_identifier(b"p", bytes.fromhex("03"))

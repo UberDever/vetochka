@@ -132,6 +132,48 @@ PROGRAMS = {
   ~[$r, [[{$}], $f, {arg}]]
  ], $r]
 """,
+    # Reflective re-entry: take `p`'s declaration out of `k` from outside, pass it back into
+    # `k`, and use it as the declaration of a lambda built inside `k`, where `p` is bound.
+    # `reflect` binds `p` to a fruit; `reflect-identifier` binds it to a generated identifier.
+    "reflect": """
+[[{:binder}], [
+  ~[$k, [[{:lambda}], ~, [[$p], [$hdr]],
+          ~[[{:all}, {:all}],
+            [[{:binder}], [
+              ~[$g, [[{:lambda}], ~, [[$hdr]], ~[[{:all}], $hdr]]],
+              ~[$o, [[{$}], $g, {z}]]
+            ], $o]]]],
+  ~[$tl, [[{:lambda}], ~, [[$h, $t]], ~[[{:fork}], $t]]],
+  ~[$hd, [[{:lambda}], ~, [[$h2, $t2]], ~[[{:fork}], $h2]]],
+  ~[$s1, [[{$}], $tl, $k]],
+  ~[$s2, [[{$}], $tl, $s1]],
+  ~[$hl, [[{$}], $hd, $s2]],
+  ~[$pos, [[{$}], $hd, $hl]],
+  ~[$pid, [[{$}], $hd, $pos]],
+  ~[$k1, [[{$}], $k, {arg}]],
+  ~[$out, [[{$}], $k1, $pid]]
+ ], [$pid, $out]]
+""",
+    "reflect-identifier": """
+[[{:binder}], [
+  ~[$i, [[{$}], $unique, {i}]],
+  ~[$k, [[{:lambda}], ~, [[$p], [$hdr]],
+          ~[[{:all}, {:all}],
+            [[{:binder}], [
+              ~[$g, [[{:lambda}], ~, [[$hdr]], ~[[{:all}], $hdr]]],
+              ~[$o, [[{$}], $g, {z}]]
+            ], $o]]]],
+  ~[$tl, [[{:lambda}], ~, [[$h, $t]], ~[[{:fork}], $t]]],
+  ~[$hd, [[{:lambda}], ~, [[$h2, $t2]], ~[[{:fork}], $h2]]],
+  ~[$s1, [[{$}], $tl, $k]],
+  ~[$s2, [[{$}], $tl, $s1]],
+  ~[$hl, [[{$}], $hd, $s2]],
+  ~[$pos, [[{$}], $hd, $hl]],
+  ~[$pid, [[{$}], $hd, $pos]],
+  ~[$k1, [[{$}], $k, $i]],
+  ~[$out, [[{$}], $k1, $pid]]
+ ], [$pid, $out]]
+""",
     # Errors.
     "no-match": """
 [[{:binder}], [

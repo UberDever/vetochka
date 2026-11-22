@@ -150,3 +150,4 @@ Agent proposal (from snapshot grammar: `\[..]` closure_head, `?` triage, `~[a, b
 - User: write fresh; unique stub OK; a vetochka program builds the trees. Done in case-lambdas/ (14 checks pass). Logged (22.11.26, 27); task (22.11.26, 26) checked. Open choices C1-C4 in case-lambdas/notes.md.
 - User: wrap header in empty env (logged (22.11.26, 29)); identifiers are a rewriting optimization: holes vs already-rewritten trees, bound ids cannot be quoted (logged (22.11.26, 28)); inconsistency was in the throwaway case-lambda evaluator, not worth fixing.
 - Experiment adjusted to (22.11.26, 28)-(22.11.26, 29); 15 checks; red-green on `observe` (old {fork}, new {fruit}). Logged (22.11.26, 30).
+- User: C1 fine (logged (22.11.26, 31)); asked about C4; asked to try the reflective hole: done, logged (22.11.26, 32).

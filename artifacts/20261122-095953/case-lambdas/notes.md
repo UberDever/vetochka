@@ -2,7 +2,7 @@
 
 Task: (22.11.26, 26). Fresh throwaway evaluator `evaluator.py`; programs in `programs.py`
 (expanded v0 in `programs/`); checks in `test_case_lambdas.py`.
-Run: `python3 -m pytest -q -p no:cacheprovider` from this directory. 15 checks pass.
+Run: `python3 -m pytest -q -p no:cacheprovider` from this directory. 17 checks pass.
 
 ## What runs
 
@@ -28,13 +28,18 @@ Run: `python3 -m pytest -q -p no:cacheprovider` from this directory. 15 checks p
 - The header is rewritten at the first application and stored in the partial application as a
   term with an empty environment. Without the wrap, `identifier-argument` fails: the second
   application rewrites `p` through its own binding to the argument (ablation test).
-- Remaining hole: a declaration whose identity is already bound where the header is first read
-  rewrites to that value. Ordinary programs do not reach that; reflective code that rebuilds a
-  lambda inside its own body can.
+- Reflective re-entry (`reflect`, `reflect-identifier`): `p`'s declaration `P` is taken out of
+  `k` from outside, where it is a hole, passed back into `k`, and used as the declaration of a
+  lambda built inside `k`. There `P` is bound, so it rewrites to its value: with `{arg}` the
+  build fails ("a declaration must be an identifier"); with a generated identifier `I` the
+  lambda declares `I` and returns its argument. This follows from (22.11.26, 28): inside its
+  scope a bound identifier is its value and cannot be reused as a declaration.
 
 ## Choices the log does not settle
 
-- C1. An authored lambda carries `~` in its private-state slot.
+C1 (`~` as an authored lambda's private state) is accepted at (22.11.26, 31).
+
+
 - C4. Spines, cases, and clauses are read as literal trees; only identifiers and shape symbols go
   through context.
 
