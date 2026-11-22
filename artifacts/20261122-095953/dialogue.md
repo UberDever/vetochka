@@ -115,3 +115,4 @@ New findings:
 - User accepts grouped header. Logged (22.11.26, 18). User asks whether discrimination is needed here.
 - Agent: group length (one or two ids) discriminates; ids are already tagged trees. Rule: a fork shape on a one-name position is an error.
 - User: length is enough. Folded into (22.11.26, 18).
+- User: no triage form remains; private state = count. Logged (22.11.26, 19). Spec 02_v0.md still lists Triage and {:triage}; edit only on request.
