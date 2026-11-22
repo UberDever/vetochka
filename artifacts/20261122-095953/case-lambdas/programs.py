@@ -107,7 +107,7 @@ PROGRAMS = {
  ], $r]
 """,
     # A parsed two-parameter lambda partially applied to identifier data. Its second
-    # application must still see its own declarations, not the argument (choice C2).
+    # application must still see its own declarations, not the argument (22.11.26, 29).
     "identifier-argument": """
 [[{:binder}], [
   ~[$i, [[{$}], $unique, {i}]],
@@ -117,6 +117,20 @@ PROGRAMS = {
   ~[$k1, [[{$}], $k, $i]],
   ~[$out, [[{$}], $k1, {w}]]
  ], $out]
+""",
+    # Shape inspection sees the rewritten tree: inside `f`, which declares the generated `X`,
+    # the fork child `x` rewrites through `X` to the argument fruit, as execution does.
+    "observe": """
+[[{:binder}], [
+  ~[$x, [[{$}], $unique, {x}]],
+  ~[$kind, [[{:lambda}], ~, [[$a, $b]],
+             ~[[{:leaf}], {leaf}], ~[[{:fork}], {fork}], ~[[{:fruit}], {fruit}]]],
+  ~[$first, [[{:lambda}], ~, [[$h, $t]],
+              ~[[{:fork}], [[{:binder}], [~[$o, [[{$}], $kind, $h]]], $o]]]],
+  ~[$f, [[{:lambda}], ~, [[$x]],
+          ~[[{:all}], [[{:binder}], [~[$o.2, [[{$}], $first, ~[$x, {k}]]]], $o.2]]]],
+  ~[$r, [[{$}], $f, {arg}]]
+ ], $r]
 """,
     # Errors.
     "no-match": """

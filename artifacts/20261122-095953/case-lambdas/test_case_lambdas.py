@@ -11,7 +11,7 @@ def program(name):
 def results(name):
     """Run a program whose body is a list of identifiers; return their values."""
     value = ev.run(program(name))
-    return [ev.resolve(ev.Term(item, value.env), value.env) for item in ev.elements(value.tree)]
+    return [ev.rewrite(ev.at(item, value.env)) for item in ev.elements(value.tree)]
 
 
 def shown(value):
@@ -40,7 +40,9 @@ def test_partial_application_stores_count_header_and_shares_cases():
     f, g, *_ = results("shapes")
     assert ev.static_kind(g.tree) == b":lambda"
     assert ev.display(g.tree.right.left) == "~[{:private}, ~{01}]"
-    assert ev.literal_header(g.tree.right.right.left) == [
+    header = g.tree.right.right.left
+    assert isinstance(header, ev.Term) and header.env == {}
+    assert ev.read_header(header) == [
         (generated("a", "8000"),),
         (generated("l", "8001"), generated("r", "8002")),
     ]
@@ -72,10 +74,14 @@ def test_partial_application_to_identifier_data_keeps_its_own_declarations():
     assert shown(value) == "~[" + ev.display(generated("i", "8000")) + ", {w}]"
 
 
-def test_ablation_rereading_the_header_through_bindings_breaks_that_program(monkeypatch):
-    monkeypatch.setattr(ev, "REREAD_HEADER", True)
+def test_ablation_without_the_empty_header_environment_breaks_that_program(monkeypatch):
+    monkeypatch.setattr(ev, "WRAP_HEADER", False)
     with pytest.raises(ev.VError, match="not bound"):
         ev.run(program("identifier-argument"))
+
+
+def test_shape_inspection_sees_the_rewritten_tree():
+    assert shown(ev.run(program("observe"))) == "{fruit}"
 
 
 @pytest.mark.parametrize(

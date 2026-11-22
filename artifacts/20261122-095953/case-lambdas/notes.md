@@ -2,7 +2,7 @@
 
 Task: (22.11.26, 26). Fresh throwaway evaluator `evaluator.py`; programs in `programs.py`
 (expanded v0 in `programs/`); checks in `test_case_lambdas.py`.
-Run: `python3 -m pytest -q -p no:cacheprovider` from this directory. 14 checks pass.
+Run: `python3 -m pytest -q -p no:cacheprovider` from this directory. 15 checks pass.
 
 ## What runs
 
@@ -18,19 +18,23 @@ Run: `python3 -m pytest -q -p no:cacheprovider` from this directory. 14 checks p
 - `identity`: two generated `{x}` identifiers stay distinct bindings.
 - Errors: no matching row, `{:fork}` at a one-name position, a short row, a lambda without cases.
 
+## Adjusted after (22.11.26, 28) and (22.11.26, 29)
+
+- One rule, `rewrite`, serves execution, shape inspection, and display. An occurrence bound in its
+  environment rewrites to its value; identifier data reached that way stands where the
+  occurrence stood and is rewritten in that environment; an unbound identifier is a hole.
+  New program `observe`: inside `f`, which declares generated `X`, shape inspection of the
+  fork child `x` gives `{fruit}`. The evaluator before this change gave `{fork}`.
+- The header is rewritten at the first application and stored in the partial application as a
+  term with an empty environment. Without the wrap, `identifier-argument` fails: the second
+  application rewrites `p` through its own binding to the argument (ablation test).
+- Remaining hole: a declaration whose identity is already bound where the header is first read
+  rewrites to that value. Ordinary programs do not reach that; reflective code that rebuilds a
+  lambda inside its own body can.
+
 ## Choices the log does not settle
 
 - C1. An authored lambda carries `~` in its private-state slot.
-- C2. Declarations (header names, binder names) are read through context, so a program can put
-  an identifier it computed there. A partial application stores the header it read, as literal
-  identifier trees. Without storing it, `identifier-argument` fails: the second application
-  re-reads `p` through its own binding and finds the argument. The ablation test shows this.
-  Remaining hole: a declaration whose identity is already bound where it is read resolves to
-  that value. Ordinary programs do not reach that; reflective code that rebuilds a lambda inside
-  its own body can.
-- C3. When an occurrence resolves to identifier data, that identifier is looked up again in the
-  execution environment (19.11.26, 16). Generated bodies depend on it. Issued identities keep it
-  from capturing unrelated names.
 - C4. Spines, cases, and clauses are read as literal trees; only identifiers and shape symbols go
   through context.
 

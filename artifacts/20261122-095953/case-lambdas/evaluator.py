@@ -22,16 +22,17 @@ Rules implemented, with their log sources:
   each right-hand side is forced one step (23.10.26, 3), (20.11.26, 4).
 - Shape inspection never forces (20.11.26, 3).
 
-Choices this experiment had to make (not decided in the log; see notes.md):
+- Identifiers are a rewriting optimization (22.11.26, 28). An unbound identifier is a hole; a
+  bound identifier is the tree it rewrites to. When an occurrence rewrites to identifier data,
+  that identifier sits where the occurrence was and is rewritten in the occurrence's environment.
+  Execution, shape inspection, and display all use this one rule (`rewrite`).
+- A lambda's header is rewritten at its first application and then wrapped in an empty
+  environment (22.11.26, 29), so a partial application's own bindings cannot rewrite its
+  declarations. A tree may hold such a wrapped term as a node, as cells hold CLOSURE refs.
+
+Choices this experiment still makes without a log decision (see notes.md):
 
 - C1. An authored lambda has a leaf `~` in its private-state slot (count zero).
-- C2. Declaration positions (header identifiers, binder declarations) are read through the
-  term's context, so a program can place an identifier it got from `unique` there. A partial
-  application stores the header it read as literal identifier trees, so later applications do
-  not re-read declarations through the bindings they have added.
-- C3. Runtime-built identifiers resolve in their execution environment (19.11.26, 16): when an
-  occurrence resolves to identifier data, that identifier is looked up again in the
-  environment where execution takes place.
 - C4. The lambda and binder spines, cases, and clauses are read as literal trees; only identifiers
   and shape symbols are read through context.
 """
@@ -67,7 +68,7 @@ class Intrinsic:
 
 LIMIT = 10_000
 SHAPES = (b":leaf", b":fork", b":fruit", b":all")
-REREAD_HEADER = False  # ablation switch for C2: re-read the header through context every time
+WRAP_HEADER = True  # ablation switch: False keeps the raw header in a partial application
 
 
 # ---------------------------------------------------------------- trees
@@ -195,33 +196,35 @@ def display(tree):
 # ---------------------------------------------------------------- context
 
 
-def view(value):
-    """Follow identifier aliases through each term's own environment. Does not force."""
+def at(node, env):
+    """A tree node read in `env`; a node that is already a term keeps its own environment."""
+    return node if isinstance(node, Term) else Term(node, env)
+
+
+def rewrite(value):
+    """Rewrite bound identifiers to their trees; stop at a hole or a non-identifier. Never forces.
+
+    Following an occurrence bound in its own environment moves to its value. If that value is
+    identifier data unbound in its own environment, it stands where the occurrence stood, so it
+    is rewritten in the occurrence's environment (22.11.26, 28).
+    """
+    place = None
     for _ in range(LIMIT):
         if not (isinstance(value, Term) and not value.unset and is_identifier(value.tree)):
             return value
         key = identity(value.tree)
-        if key not in value.env:
-            return value
-        following = value.env[key]
-        if following is value:
+        following = value.env.get(key)
+        if following is not None and following is not value:
+            place = value.env
+        elif place is not None and place.get(key) not in (None, value):
+            following = place[key]
+        else:
             return value
         value = following
     raise VError("identifier cycle")
 
 
-def resolve(value, execution_env):
-    """`view`, then look runtime-built identifier data up in the execution environment (C3)."""
-    for _ in range(LIMIT):
-        value = view(value)
-        if isinstance(value, Term) and not value.unset and is_identifier(value.tree):
-            key = identity(value.tree)
-            following = execution_env.get(key)
-            if following is not None and following is not value:
-                value = following
-                continue
-        return value
-    raise VError("identifier cycle")
+view = rewrite
 
 
 def shape(value):
@@ -237,7 +240,7 @@ def shape(value):
 
 def children(value):
     value = view(value)
-    return Term(value.tree.left, value.env), Term(value.tree.right, value.env)
+    return at(value.tree.left, value.env), at(value.tree.right, value.env)
 
 
 def unset(name):
@@ -263,7 +266,7 @@ def operand(term):
     if kind == b":id":
         if not is_identifier(term.tree):
             raise VError("malformed identifier")
-        return resolve(term, term.env)
+        return rewrite(term)
     return term
 
 
@@ -277,13 +280,13 @@ def enter(term):
             raise VError("malformed identifier")
         if identity(term.tree) not in term.env:
             raise VError("unbound identifier")
-        return resolve(term, term.env)
+        return rewrite(term)
     return term
 
 
 def step(term):
     """Force a binder right-hand side: perform its operation once."""
-    value = resolve(term, term.env)
+    value = rewrite(term)
     if isinstance(value, Intrinsic):
         return value
     kind = static_kind(value.tree)
@@ -325,18 +328,8 @@ def read_header(term):
     header = view(term)
     positions = []
     for item in elements(header.tree):
-        position = view(Term(item, header.env))
-        names = tuple(declaration(Term(name, position.env)) for name in elements(position.tree))
-        positions.append(names)
-    return positions
-
-
-def literal_header(tree):
-    positions = []
-    for item in elements(tree):
-        names = tuple(elements(item))
-        if not all(is_identifier(name) for name in names):
-            raise VError("malformed stored header")
+        position = view(at(item, header.env))
+        names = tuple(declaration(at(name, position.env)) for name in elements(position.tree))
         positions.append(names)
     return positions
 
@@ -374,17 +367,17 @@ def apply_lambda(callee, argument):
         raise VError("a lambda needs a header and at least one case")
     tag, state, header, *cases = items
     count = progress(state)
-    if count == 0 or REREAD_HEADER:
-        positions = read_header(Term(header, callee.env))
-    else:
-        positions = literal_header(header)
+    positions = read_header(at(header, callee.env))
     check_header(positions)
     if count >= len(positions):
         raise VError("malformed lambda progress")
     env = bind(callee.env, positions[count], argument)
     count += 1
     if count < len(positions):
-        stored = tree_list([tree_list(list(names)) for names in positions])
+        if WRAP_HEADER:
+            stored = Term(tree_list([tree_list(list(names)) for names in positions]), {})
+        else:
+            stored = header
         shared_cases = callee.tree.right.right.right
         return Term(Fork(tag, Fork(private_count(count), Fork(stored, shared_cases))), env)
     return select(positions, cases, env)
@@ -414,10 +407,10 @@ def select(positions, cases, env):
     for case in cases:
         if not isinstance(case, Fork):
             raise VError("a case is a pair of a shape row and an expression")
-        row = view(Term(case.left, env))
+        row = view(at(case.left, env))
         shapes = []
         for item in elements(row.tree):
-            symbol = view(Term(item, row.env))
+            symbol = view(at(item, row.env))
             if not (isinstance(symbol, Term) and symbol.tree in SHAPES):
                 raise VError("a shape row holds shape symbols")
             shapes.append(symbol.tree)
@@ -458,7 +451,7 @@ def run_binder(term):
     for clause in clauses:
         if not isinstance(clause, Fork):
             raise VError("a clause is a pair of a declaration and an expression")
-        key = identity(declaration(Term(clause.left, env)))
+        key = identity(declaration(at(clause.left, env)))
         env = env | {key: step(Term(clause.right, env))}
     return enter(Term(body, env))
 
@@ -472,15 +465,15 @@ def materialize(value, depth=0):
         raise VError("result too deep to display")
     if isinstance(value, Intrinsic):
         return ("<intrinsic " + value.name + ">").encode()
-    value = resolve(value, value.env)
+    value = rewrite(value)
     if isinstance(value, Intrinsic):
         return ("<intrinsic " + value.name + ">").encode()
     tree = value.tree
     if value.unset or is_identifier(tree) or not isinstance(tree, Fork):
         return tree
     return Fork(
-        materialize(Term(tree.left, value.env), depth + 1),
-        materialize(Term(tree.right, value.env), depth + 1),
+        materialize(at(tree.left, value.env), depth + 1),
+        materialize(at(tree.right, value.env), depth + 1),
     )
 
 
