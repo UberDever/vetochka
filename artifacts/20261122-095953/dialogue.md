@@ -114,3 +114,4 @@ New findings:
 - Agent: if a position's id count comes from each case's shape, the same id means different things per case, which reopens the partial-triage problem of (22.11.26, 15). If it comes from all cases together, adding a case can shift every later name. Suggest grouped header per position. Not logged.
 - User accepts grouped header. Logged (22.11.26, 18). User asks whether discrimination is needed here.
 - Agent: group length (one or two ids) discriminates; ids are already tagged trees. Rule: a fork shape on a one-name position is an error.
+- User: length is enough. Folded into (22.11.26, 18).
