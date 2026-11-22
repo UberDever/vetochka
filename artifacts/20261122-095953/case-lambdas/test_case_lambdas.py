@@ -127,3 +127,7 @@ def elements_p(pid):
 
 def test_lists_held_in_variables_are_their_trees():
     assert [shown(v) for v in results("spines")] == ["{a}", "~[{1}, {2}]", "{w}"]
+
+
+def test_fix_makes_lambdas_recursive_without_a_recursive_binding():
+    assert [shown(v) for v in results("fix")] == ["[{s}, {s}, {s}]", "[{a}, {b}, {c}, {d}]"]

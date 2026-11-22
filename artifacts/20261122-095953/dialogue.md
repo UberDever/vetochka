@@ -167,3 +167,4 @@ At the user's request the 22.11.26 section was condensed from 35 to 16 entries b
 ### Topic 6: what is left before implementing v0; CESK abstract or specific
 
 - Agent list and recommendation given in chat (abstract machine normative; cells, known fruits, ZINC batching as refinements checked by differential tests). Not logged; awaiting user.
+- User: CESK implemented in code as in the spec, crosstest; logged (22.11.26, 16). fix experiment done, logged (22.11.26, 17). Store question answered in chat.

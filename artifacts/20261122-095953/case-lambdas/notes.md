@@ -2,7 +2,7 @@
 
 Task: (22.11.26, 12). Fresh throwaway evaluator `evaluator.py`; programs in `programs.py`
 (expanded v0 in `programs/`); checks in `test_case_lambdas.py`.
-Run: `python3 -m pytest -q -p no:cacheprovider` from this directory. 18 checks pass.
+Run: `python3 -m pytest -q -p no:cacheprovider` from this directory. 19 checks pass.
 
 ## What runs
 
@@ -34,6 +34,16 @@ Run: `python3 -m pytest -q -p no:cacheprovider` from this directory. 18 checks p
   build fails ("a declaration must be an identifier"); with a generated identifier `I` the
   lambda declares `I` and returns its argument. This follows from (22.11.26, 13): inside its
   scope a bound identifier is its value and cannot be reused as a declaration.
+
+## Recursion with `fix`
+
+Program `fix`: `fix = \[f] =[w = \[x, v] =[self = x(x), fs = f(self), r = fs(v)] r, g = w(w)] g`
+(written here in vf; the program is lowered v0). It turns any lambda whose first parameter is the
+recursive reference into the recursive function: `length([{a}, {b}, {c}])` gives `[{s}, {s}, {s}]`,
+and a two-argument `append` gives `[{a}, {b}, {c}, {d}]`. Each call rebuilds the reference as a fresh
+partial application `w(w)`, so no binding refers to itself and no cyclic structure is built.
+Host-stack limit: `length` works on 50 elements and overflows Python's default stack at 100,
+because this evaluator recurses in the host; the machine needs its own continuation.
 
 ## Settled choices
 

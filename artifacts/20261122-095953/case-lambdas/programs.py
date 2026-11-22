@@ -196,6 +196,42 @@ PROGRAMS = {
   ~[$v3, $b]
  ], [$v1, $v2, $v3]]
 """,
+    # Recursion without a recursive binder. `fix` takes a lambda whose first parameter is the
+    # recursive reference and returns the recursive function. Self-application rebuilds that
+    # reference as a fresh partial application on each call, so no binding refers to itself.
+    # `len` uses it with one more parameter; `app` with two more.
+    "fix": """
+[[{:binder}], [
+  ~[$fix, [[{:lambda}], ~, [[$f]],
+     ~[[{:all}],
+       [[{:binder}], [
+          ~[$w, [[{:lambda}], ~, [[$x], [$v]],
+                  ~[[{:all}, {:all}],
+                    [[{:binder}], [
+                       ~[$self, [[{$}], $x, $x]],
+                       ~[$fs, [[{$}], $f, $self]],
+                       ~[$r, [[{$}], $fs, $v]]
+                    ], $r]]]],
+          ~[$g, [[{$}], $w, $w]]
+       ], $g]]]],
+  ~[$len, [[{:lambda}], ~, [[$rec], [$h, $t]],
+     ~[[{:all}, {:leaf}], ~],
+     ~[[{:all}, {:fork}], [[{:binder}], [~[$n, [[{$}], $rec, $t]]], ~[{s}, $n]]],
+     ~[[{:all}, {:fruit}], {not-a-list}]]],
+  ~[$length, [[{$}], $fix, $len]],
+  ~[$v1, [[{$}], $length, [{a}, {b}, {c}]]],
+  ~[$app, [[{:lambda}], ~, [[$rec.2], [$h.2, $t.2], [$ys]],
+     ~[[{:all}, {:leaf}, {:all}], $ys],
+     ~[[{:all}, {:fork}, {:all}],
+       [[{:binder}], [
+          ~[$part, [[{$}], $rec.2, $t.2]],
+          ~[$rest, [[{$}], $part, $ys]]
+       ], ~[$h.2, $rest]]]]],
+  ~[$append, [[{$}], $fix, $app]],
+  ~[$a1, [[{$}], $append, [{a}, {b}]]],
+  ~[$v2, [[{$}], $a1, [{c}, {d}]]]
+ ], [$v1, $v2]]
+""",
     # Errors.
     "no-match": """
 [[{:binder}], [
