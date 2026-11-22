@@ -1,0 +1,29 @@
+=[tag-of = \[~[head, body]]
+        ?[{:fork}] =[result = (\[~[tag, rest]]
+            ?[{:fork}] =[result = (\[r]
+                ?[{:leaf}] tag
+                ?[{:all}]  ~)(rest)] result
+            ?[{:all}]  ~)(head)] result
+        ?[{:all}]  ~,
+  executable-tag? = \[tag]
+        =[equal = fruit-equal[tag, {$}],
+          result = (\[e]
+            ?[{:fruit}] e
+            ?[{:fork}]  ~
+            ?[{:leaf}]  =[equal = fruit-equal[tag, {:binder}],
+                          result = (\[e]
+                            ?[{:fruit}] e
+                            ?[{:fork}]  ~
+                            ?[{:leaf}]  =[equal = fruit-equal[tag, {:id}],
+                                          result = (\[e]
+                                            ?[{:fruit}] e
+                                            ?[{:all}]   ~)(equal)] result)(equal)] result)(equal)] result,
+  worker = \[self, term]
+        =[tag = tag-of(term),
+          executable = executable-tag?(tag),
+          result = (\[e]
+            ?[{:leaf}]  =[value = term] value
+            ?[{:fork}]  ~
+            ?[{:fruit}] =[next = term, continue = self(self), result = continue(next)] result)(executable)] result,
+  force = worker(worker)]
+force
