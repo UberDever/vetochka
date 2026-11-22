@@ -116,3 +116,16 @@ New findings:
 - Agent: group length (one or two ids) discriminates; ids are already tagged trees. Rule: a fork shape on a one-name position is an error.
 - User: length is enough. Folded into (22.11.26, 18).
 - User: no triage form remains; private state = count. Logged (22.11.26, 19). Spec 02_v0.md still lists Triage and {:triage}; edit only on request.
+
+### Topic 3: vf syntax for case-lambdas
+
+Agent proposal (from snapshot grammar: `\[..]` closure_head, `?` triage, `~[a, b]` nyad):
+
+    \[n, ~[l, r]]
+        ?[_, fork] do f(l, r) end
+        ?[_, leaf] do n end
+        ?[_, _]    do fallback end
+
+- header param: identifier (one name) or `~[l, r]` (two names); `?[...]` row of shapes `leaf`, `fork`, `fruit`, `_` + block.
+- `\[x] do x end` unchanged: no rows = one all-wildcard case.
+- `?` prefix needed: `[_, fork] do ... end` would parse as a list with a loose block postfix.
