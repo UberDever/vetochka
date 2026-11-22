@@ -102,3 +102,6 @@ New findings:
 - User: worried about devlog noise. Agent review: 14 entries today; (22.11.26, 5) and (22.11.26, 13) were low value; drafts (3), (4) could have stayed in the ledger. IDs cannot be removed. From now on: devlog gets decisions and surviving questions only; drafts and agent critique stay here.
 - User agrees on matching at saturation; "lambda superposition, dead and alive until settled"; CLOSURE installed on the whole lambda. Logged (22.11.26, 14).
 - Agent: no real superposition: arguments sit in a positional buffer in private state; nothing binds until the match picks a case.
+- User: triage on partial lambdas breaks with per-case names (cannot tell which ids are bound). Moves to a general signature: `[[{:all}, id1], [{:triage}, id1, id2]]`; each body lists expected shapes for the triage params, e.g. `[{:fork}, {:leaf}, {:fruit}]`. Logged (22.11.26, 15), supersedes (12), obsoletes (13).
+- Agent: fixed names per position restore per-argument env extension; the positional buffer from round (14) is no longer needed.
+- Agent point: no wildcard shape in a case; a body indifferent to one triage position needs 3 duplicate cases. Allowing `{:all}` as a shape wildcard reintroduces overlap, hence case order.
