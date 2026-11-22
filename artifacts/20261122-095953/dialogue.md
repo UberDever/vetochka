@@ -78,3 +78,15 @@ New findings:
 - User (3): agent misread; N clauses = N-ary lambda. O7 refuted. Unary nesting withdrawn by user: better sharing but materializes lambdas in place, against ZINC; keep multi-param with COW. Logged (22.11.26, 7). O8 moot (private-state still holds progress).
 - User (4): unclear. Agent to restate O9 with an example.
 - New question Q1: what do statements of clause i < N do? Run when argument i arrives (staged), or only the last clause's body runs?
+
+#### Round 4
+
+- User: no statements, only an expression; agent should have reminded. O3 resolved by user; agent concedes it let O3 drop. Logged (22.11.26, 8).
+- User: naive composition of multi-param lambdas with patterns explodes (3^N); how do pattern calculi and pattern-matching languages handle it? Baseline: listed cases only, error on others. Logged (22.11.26, 9).
+- Agent survey: `patterns-survey.md`, logged (22.11.26, 10).
+- Candidates (palette, no ranking):
+  - C1 clause matrix in core: lambda = N params, ordered rows of N patterns plus one body each; first match wins; no match is an error. Tree keeps authored structure.
+  - C2 one-level core: keep a unary three-arm shape split (today's triage, or a lambda clause); vf lowers multi-arg and nested patterns to nested splits (decision tree). Core stays small; structure is erased.
+  - C3 failure as value: Jay-style `p -> s | r`; each case is a separate unary value; alternatives compose by extension; an unhandled failure at the top is an error.
+- Crux K1: must compile-time code see the authored clause matrix in v0 (favors C1/C3), or is a vf-level record enough (favors C2)?
+- Open: name vs fruit-literal pattern ambiguity: if a head `{x}` is a name, a fruit literal pattern needs a marker.
