@@ -205,3 +205,4 @@ At the user's request the 22.11.26 section was condensed from 35 to 16 entries b
 - Agent: implemented the scheme; fixed order leak with simultaneous substitution per activation; all 37 cases pass; scheme.md. Logged (22.11.26, 32).
 - User: unset-name error yes (performance argument first); hidden partial arguments bearable. Logged (22.11.26, 33).
 - User: unset check on mention (folded into (22.11.26, 33)). Agent proposed identity table, kind 100 (22.11.26, 34).
+- Agent: identity_table.py, typed sketch of heap and identity table; self-check passes.
