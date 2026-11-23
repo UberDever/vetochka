@@ -183,3 +183,4 @@ At the user's request the 22.11.26 section was condensed from 35 to 16 entries b
 - Experiment done: compile_v0.py; user program -> {42}; probe -> {7}; hole rule generalized to all places on the chain (fallback, holes only); declarations never look outward; reflective case now shadows. Logged (22.11.26, 22); question to user about the shadowing.
 - User: a hole is an unbound identifier (data under triage, error under execution); no "where"; only lambdas. Agent restated the problems as an evaluator bug in composing delayed substitutions; reflective shadowing matches substitution. Logged (22.11.26, 23).
 - User: was the problem in the compiled source program? Agent: no; flattened generated code runs under the old rule ({42}, {7}). Folded into (22.11.26, 23).
+- User: (a); rule: deferred substitution must behave exactly as in-place rewriting; asked for the env rule the agent built and for prior art (Might: A-normalization, CESK; others). Logged (22.11.26, 24).
