@@ -187,3 +187,4 @@ At the user's request the 22.11.26 section was condensed from 35 to 16 entries b
 - Agent: research note substitution-machines.md; logged (22.11.26, 25). Asked to allow matt.might.net to read the primary articles.
 - Read Might CESK and ANF directly after environment change; note and (22.11.26, 25) updated.
 - User: shadowing applies to lambdas and binders alike (general). Logged (22.11.26, 26). Asked again about the fallback bit.
+- User: why a hack for a standard case? Agent: closure machines are capture-avoiding; in-place rewriting captures inserted holes (context filling); standard fit is composition with shadowing. Folded into (22.11.26, 25).
