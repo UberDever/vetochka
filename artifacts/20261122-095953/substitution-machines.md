@@ -1,6 +1,6 @@
 # Deferred substitution that behaves exactly as rewriting
 
-User rule (22.11.26, 24): substitution is deferred, but it must behave exactly as if trees were
+User rule (23.11.26, 0): substitution is deferred, but it must behave exactly as if trees were
 rewritten in place.
 
 ## What the throwaway evaluator does now (ad hoc)
@@ -76,7 +76,7 @@ stops at binders that redeclare an identity it replaces.
 - The production machine implements explicit-substitution composition in place of the
   evaluator's places and fallback, and is cross-tested against the reference machine.
 
-## Shadowing (confirmed by the user, (22.11.26, 26))
+## Shadowing (confirmed by the user, (23.11.26, 0))
 
 Rewriting in place stops at any lambda or binder that redeclares the identity being substituted
 (capture avoidance). `fix` needs it: inside a call of `w`, `w`'s own tree appears as a value and

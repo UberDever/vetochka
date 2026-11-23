@@ -1,14 +1,14 @@
 # Reference machine (throwaway)
 
 `machine.py`: v0 with substitution as literal rewriting, so it behaves as in-place rewriting by
-construction (22.11.26, 24). No environment: the state is a control tree, a store, and a stack
+construction (23.11.26, 0). No environment: the state is a control tree, a store, and a stack
 of `bind` frames. `test_reference.py`: 27 checks, including cross-tests against the throwaway
 evaluator in `../case-lambdas/`. Run `python3 -m pytest -q -p no:cacheprovider` here.
 
 ## Rules as implemented
 
 - `subst` replaces substituted identifiers by their values, inserting values as they are.
-- General shadowing (22.11.26, 26): identifiers written directly in a lambda's header positions,
+- General shadowing (23.11.26, 0): identifiers written directly in a lambda's header positions,
   or as a binder clause's left side, are declarations; rewriting leaves them alone and stops
   replacing those identities inside the lambda's cases, or in the binder's later clauses and body.
   Anything else in those slots (an occurrence standing for a whole header or clause list, or a

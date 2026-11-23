@@ -1,5 +1,5 @@
 """The current scheme as a variant of the reference machine: capture-avoiding substitution with
-private priming (22.11.26, 31), and unset names as an execution error (proposed). Throwaway.
+private priming (23.11.26, 0), and unset names as an execution error (proposed). Throwaway.
 
 - Shadowing: rewriting stops at a lambda or binder that declares the identity being substituted.
 - Capture avoidance: when values are rewritten into the scope of a declaration whose identity

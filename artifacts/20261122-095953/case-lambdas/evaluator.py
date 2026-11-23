@@ -357,7 +357,7 @@ def enter(term):
         if identity(term.tree) not in term.env:
             raise VError("unbound identifier")
         value = rewrite(term)
-        # A binder runs however it is reached (22.11.26, 24).
+        # A binder runs however it is reached (23.11.26, 0).
         if isinstance(value, Term) and kind(value) == b":binder":
             return run_binder(value)
         return value

@@ -1,7 +1,7 @@
-"""Sketch: the heap and the identity table (proposal (22.11.26, 34)). Throwaway, runnable.
+"""Sketch: the heap and the identity table (proposal (23.11.26, 6)). Throwaway, runnable.
 
 Only identities and environments are modelled; forks, fruits, CLOSURE records and long refs
-follow the cells layout (19.11.26, 4), (19.11.26, 10), (22.11.26, 20), (22.11.26, 21).
+follow the cells layout (19.11.26, 4), (19.11.26, 10), (22.11.26, 20), (22.11.26, 20).
 """
 
 from dataclasses import dataclass, field

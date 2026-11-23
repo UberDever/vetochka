@@ -62,7 +62,7 @@ def test_first_matching_case_wins():
 
 def test_binder_taken_out_of_its_wrapper_runs():
     # `unbox`'s body rewrites to the binder, and entering a body runs a binder however it is
-    # reached (22.11.26, 24), so `b` is already the binder's result.
+    # reached (23.11.26, 0), so `b` is already the binder's result.
     b, res = results("binder")
     assert shown(b) == "~[{v}, {v}]"
     assert shown(res) == "~[{v}, {v}]"

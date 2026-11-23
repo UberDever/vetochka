@@ -1,6 +1,6 @@
 # Declarations versus usages: three solutions compared
 
-Question (22.11.26, 29): after rewriting, a nested lambda written in the code and one inserted as
+Question (23.11.26, 2): after rewriting, a nested lambda written in the code and one inserted as
 a value look the same, so a rule that only looks at the tree cannot tell a computed declaration
 (`mk`) from a real one (compose). The user proposed three ways out. Each is implemented as a
 variant of the reference machine in `variants.py`, and the catalogue in `catalogue.py` runs on
@@ -10,7 +10,7 @@ all of them (`python3 run_catalogue.py`, about 10 s, writes `results.md`).
 
 | variant | what declares | what is rewritten | shadowing |
 |---|---|---|---|
-| base | an identifier in a declaration slot | identifiers | general (22.11.26, 26) |
+| base | an identifier in a declaration slot | identifiers | general (23.11.26, 0) |
 | roles (1) | `~[{:decl}, ID]` in a slot | `~[{:use}, ID]` only; a plain `ID` is inert | by `{:decl}` |
 | provenance (2) | an identifier in a slot | identifiers; every inserted fork is sealed | only at seals: a seal protects what lambdas and binders inside it declare; written code has none |
 | fresh (3) | an identifier in a slot | identifiers | none; a lambda's first application and a binder's start give every declaration in its tree a fresh identity |
@@ -92,7 +92,7 @@ rewriting in place does, and no variant changes it.
   without markers, compose, `fix`, holes, F2, and plain-text persistence.
 - The renaming has to be deep: activating a lambda also renames the declarations of nested
   lambdas and binders in its tree. Renaming only the lambda's own parameters fails compose, as
-  argued in (22.11.26, 29): the inserted inner lambda would share its parameter with the outer
+  argued in (23.11.26, 2): the inserted inner lambda would share its parameter with the outer
   one. Within one declaration's scope a repeat is a usage, so D4 is an error.
 - Identity bytes change on every activation (E1 shows `~{02}` becoming `~{00 00 80 04}`).
   Spellings stay; the bytes were never guaranteed (22.11.26, 0).

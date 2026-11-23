@@ -1,9 +1,9 @@
 """Five variants of the reference machine, differing only in how declarations and usages are
 told apart. Throwaway; see comparison.md.
 
-All variants rewrite literally (22.11.26, 24) and share the steps of ../reference-machine/machine.py.
+All variants rewrite literally (23.11.26, 0) and share the steps of ../reference-machine/machine.py.
 
-- base        identifiers in declaration slots declare; general shadowing (22.11.26, 26).
+- base        identifiers in declaration slots declare; general shadowing (23.11.26, 0).
 - roles       solution 1: a declaration is `~[{:decl}, ID]`, a usage `~[{:use}, ID]`, and a plain
               `ID` (what `unique` returns) is inert data. Only usages are rewritten; `{:decl}`
               slots declare and shadow.

@@ -227,7 +227,7 @@ COMPILER = let([
     ("$m-w", app(lam([["$m-bs", "$m-at"]], case(["fork"],
         pair("{code}", lst("[{:binder}]", "$m-bs", "$m-at")))), "$m-p")),
     # Taking the generated binder out of its wrapper enters it, and entering runs a binder
-    # however it is reached (22.11.26, 24); so the wrapper is the code output.
+    # however it is reached (23.11.26, 0); so the wrapper is the code output.
     ("$m-result", app("$tail", "$m-w")),
 ], lst("$m-w", "$m-result"))
 

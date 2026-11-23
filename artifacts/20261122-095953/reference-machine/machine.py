@@ -3,14 +3,14 @@
 Substitution is literal rewriting: applying a lambda or running a binder copies the tree with the
 bound identities replaced. There is no environment, so the machine is C, S, K: a control tree,
 a store, and a stack of continuation frames. It behaves as in-place rewriting by construction
-(22.11.26, 24), which is what deferred implementations are tested against.
+(23.11.26, 0), which is what deferred implementations are tested against.
 
 Trees: `None` is a leaf, `bytes` a fruit, `Fork` a fork.
 
 Rewriting (`subst`)
 - An identifier `[[{:id}], {name}, ~[{:private}, <identity>]]` whose identity is substituted is
   replaced by the value; the value is inserted as it is, not rewritten further by the same step.
-- General shadowing (22.11.26, 26): a lambda's declarations are the identifiers written directly
+- General shadowing (23.11.26, 0): a lambda's declarations are the identifiers written directly
   in its header positions; a binder clause's declaration is the identifier written as its left
   side. Rewriting does not replace those, and stops replacing a declared identity inside the
   lambda's cases, or in a binder's later clauses and body.
@@ -20,7 +20,7 @@ Rewriting (`subst`)
   when run.
 
 Steps
-- `enter t`: a binder runs, however it was reached (22.11.26, 24); anything else is returned.
+- `enter t`: a binder runs, however it was reached (23.11.26, 0); anything else is returned.
 - `run b`: force the first clause's right-hand side with a `bind` frame on the stack.
 - `force t`: an application `[[{$}], callee, operand]` applies; a binder runs; a hole is an error;
   anything else is a value. Operands are passed as trees, never forced.
