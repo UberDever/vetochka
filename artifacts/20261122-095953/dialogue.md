@@ -192,3 +192,4 @@ At the user's request the 22.11.26 section was condensed from 35 to 16 entries b
 - User: hole scoping intended (logged (22.11.26, 27) as decision). Reference machine: throwaway; the user will write the real one by hand.
 - Reference machine built (reference-machine/); 27 checks; logged (22.11.26, 28) with the header-position question.
 - User proposal: first occurrence declares, repeats are usages. Agent: breaks fix as stated; works with fresh identities per instantiation (CESK fresh addresses). Logged (22.11.26, 29); discussing.
+- User: no shadowing at all? explain mk. Agent: retracts; compose g(g(id)) needs shadowing (tested); mk and compose same shape; explicit marker needed. Folded into (22.11.26, 29).
