@@ -190,3 +190,4 @@ At the user's request the 22.11.26 section was condensed from 35 to 16 entries b
 - User: why a hack for a standard case? Agent: closure machines are capture-avoiding; in-place rewriting captures inserted holes (context filling); standard fit is composition with shadowing. Folded into (22.11.26, 25).
 - User: did we introduce dynamic scoping? Agent: for holes only, keyed by unique identities; ordinary code lexical. Logged (22.11.26, 27) as question.
 - User: hole scoping intended (logged (22.11.26, 27) as decision). Reference machine: throwaway; the user will write the real one by hand.
+- Reference machine built (reference-machine/); 27 checks; logged (22.11.26, 28) with the header-position question.

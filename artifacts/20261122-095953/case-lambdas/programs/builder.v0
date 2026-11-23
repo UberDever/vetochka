@@ -1,5 +1,5 @@
 [[{:binder}], [
-  ~[[[{:id}], {x}, ~[{:private}, ~{01}]], [[{$}], [[{:id}], {unique}, ~[{:private}, ~{f0}]], {x}]],
+  ~[[[{:id}], {x}, ~[{:private}, ~{01}]], [[{$}], [[{:id}], {unique}, ~[{:private}, ~{f0}]], [{x}]]],
   ~[[[{:id}], {mk}, ~[{:private}, ~{02}]], [[{:lambda}], ~, [[[[{:id}], {decl}, ~[{:private}, ~{03}]]], [[[{:id}], {body}, ~[{:private}, ~{04}]]]],
           ~[[{:all}, {:all}], [[{:lambda}], ~, [[[[{:id}], {decl}, ~[{:private}, ~{03}]]]], ~[[{:all}], [[{:id}], {body}, ~[{:private}, ~{04}]]]]]]],
   ~[[[{:id}], {mk1}, ~[{:private}, ~{05}]], [[{$}], [[{:id}], {mk}, ~[{:private}, ~{02}]], [[{:id}], {x}, ~[{:private}, ~{01}]]]],

@@ -356,7 +356,11 @@ def enter(term):
     if is_identifier(term.tree) and not term.unset:
         if identity(term.tree) not in term.env:
             raise VError("unbound identifier")
-        return rewrite(term)
+        value = rewrite(term)
+        # A binder runs however it is reached (22.11.26, 24).
+        if isinstance(value, Term) and kind(value) == b":binder":
+            return run_binder(value)
+        return value
     if kind(term) == b":binder":
         return run_binder(term)
     return term
@@ -592,7 +596,11 @@ def global_env():
     counter = iter(range(0x8000, 0x10000))
 
     def unique(argument):
-        name = view(argument)
+        # Arguments come as a list (12.11.26, 11): unique([{name}]).
+        parts = items(argument)
+        if len(parts) != 1:
+            raise VError("unique takes one argument")
+        name = view(parts[0])
         if not (isinstance(name, Term) and isinstance(name.tree, bytes)):
             raise VError("unique expects a name fruit")
         return make_identifier(name.tree, next(counter).to_bytes(2, "big"))

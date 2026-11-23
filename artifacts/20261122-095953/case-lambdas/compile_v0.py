@@ -18,8 +18,8 @@ Lowering, done by the v0 program:
 - `do e1; ...; en end` keeps the clauses of every expression and the value of the last;
 - the program becomes one binder: all clauses in order, with the last atom as the body.
 
-The program returns `[code, result]`: the generated binder as data, and the result of a clause
-that forces it.
+The program returns `[~[{code}, binder], result]`: the generated binder held as data in a
+wrapper, and the result of taking it out, which runs it.
 """
 
 import evaluator as ev
@@ -118,7 +118,7 @@ CALL = let([
     ("$c-p1", app("$c-c1", "$c-ce")),
     ("$c-c2", app("$c-rec", "$c-scope")),
     ("$c-p2", app("$c-c2", "$c-ae")),
-    ("$c-t", app("$unique", "{t}")),
+    ("$c-t", app("$unique", lst("{t}"))),
     ("$c-r4", app(lam([["$c-b1", "$c-a1"]], case(["fork"], let([
         ("$c-r5", app(lam([["$c-b2", "$c-a2"]], case(["fork"], let([
             ("$c-ap1", app("$append", "$c-b1")),
@@ -177,13 +177,16 @@ CDEF = lam([["$f-scope"], ["$f-k", "$f-rest"]], case(["all", "fork"], let([
     ("$f-r2", app("$tail", "$f-r1")),
     ("$f-body", app("$head", "$f-r2")),
     ("$f-pn", app("$head", "$f-ps")),
-    ("$f-fid", app("$unique", "$f-nm")),
-    ("$f-pid", app("$unique", "$f-pn")),
+    ("$f-fid", app("$unique", lst("$f-nm"))),
+    ("$f-pid", app("$unique", lst("$f-pn"))),
     ("$f-inner", pair(pair("$f-pn", "$f-pid"), "$f-scope")),
     ("$f-c1", app("$compile", "$f-inner")),
     ("$f-pr", app("$f-c1", "$f-body")),
     ("$f-case", app("$close", "$f-pr")),
-    ("$f-lam", lst("[{:lambda}]", "~", lst(lst("$f-pid")), "$f-case")),
+    # The header is built as data: an identifier written in a header position is a declaration
+    # (general shadowing), so the computed declaration has to arrive with the whole header.
+    ("$f-hdr", lst(lst("$f-pid"))),
+    ("$f-lam", lst("[{:lambda}]", "~", "$f-hdr", "$f-case")),
     ("$f-cl", pair("$f-fid", "$f-lam")),
     ("$f-sc", pair(pair("$f-nm", "$f-fid"), "$f-scope")),
 ], pair("$f-cl", "$f-sc"))))
@@ -223,9 +226,10 @@ COMPILER = let([
     ("$m-p", app("$m-c", "$source")),
     ("$m-w", app(lam([["$m-bs", "$m-at"]], case(["fork"],
         pair("{code}", lst("[{:binder}]", "$m-bs", "$m-at")))), "$m-p")),
-    ("$m-code", app("$tail", "$m-w")),
-    ("$m-result", "$m-code"),
-], lst("$m-code", "$m-result"))
+    # Taking the generated binder out of its wrapper enters it, and entering runs a binder
+    # however it is reached (22.11.26, 24); so the wrapper is the code output.
+    ("$m-result", app("$tail", "$m-w")),
+], lst("$m-w", "$m-result"))
 
 
 # ---------------------------------------------------------------- sources (parsed trees)
@@ -301,7 +305,8 @@ def compiler_text():
 def compile_and_run(source_text):
     """Run the v0 compiler on a parsed source tree; return (generated code, result)."""
     value = ev.run(ev.parse(compiler_text()), source=ev.parse(source_text))
-    code, result = [ev.rewrite(ev.at(item, value.env)) for item in ev.elements(value.tree)]
+    wrapper, result = [ev.rewrite(ev.at(item, value.env)) for item in ev.elements(value.tree)]
+    code = ev.rewrite(ev.sub(wrapper, wrapper.tree.right))
     return code, result
 
 

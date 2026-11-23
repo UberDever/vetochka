@@ -60,9 +60,11 @@ def test_first_matching_case_wins():
     assert [shown(v) for v in results("overlap")] == ["{first}", "{any}", "{any}"]
 
 
-def test_binder_built_as_data_runs_only_when_a_clause_forces_it():
+def test_binder_taken_out_of_its_wrapper_runs():
+    # `unbox`'s body rewrites to the binder, and entering a body runs a binder however it is
+    # reached (22.11.26, 24), so `b` is already the binder's result.
     b, res = results("binder")
-    assert ev.static_kind(b.tree) == b":binder"
+    assert shown(b) == "~[{v}, {v}]"
     assert shown(res) == "~[{v}, {v}]"
 
 
@@ -106,8 +108,8 @@ def test_errors(name, message):
 def test_unique_issues_fresh_identities_per_call():
     env = ev.global_env()
     unique = env[ev.UNIQUE_KEY]
-    first = unique.apply(ev.Term(b"x", {}))
-    second = unique.apply(ev.Term(b"x", {}))
+    first = unique.apply(ev.Term(ev.parse("[{x}]"), {}))
+    second = unique.apply(ev.Term(ev.parse("[{x}]"), {}))
     assert first != second
     assert ev.is_identifier(first) and ev.is_identifier(second)
 
