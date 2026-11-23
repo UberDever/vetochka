@@ -194,3 +194,8 @@ At the user's request the 22.11.26 section was condensed from 35 to 16 entries b
 - User proposal: first occurrence declares, repeats are usages. Agent: breaks fix as stated; works with fresh identities per instantiation (CESK fresh addresses). Logged (22.11.26, 29); discussing.
 - User: no shadowing at all? explain mk. Agent: retracts; compose g(g(id)) needs shadowing (tested); mk and compose same shape; explicit marker needed. Folded into (22.11.26, 29).
 - User: the hurdle is provenance. Agent: yes; choice between plain rewriting (no provenance) and provenance as semantics (sealed insertions = closures). Folded into (22.11.26, 29).
+
+### Topic 8: three solutions for declaration vs usage
+
+- User: compare (1) explicit roles, (2) provenance, (3) fresh identifiers on activation, over all term interactions. Roles: unique returns a plain id; cons {:decl} or {:use} onto it. Provenance may be invisible if persistence gets a text form that differs by provenance. Cost argued, not measured.
+- Agent plan: five variants of the reference machine (base, roles, provenance, fresh, fresh+shadowing) and a program catalogue run on all.
