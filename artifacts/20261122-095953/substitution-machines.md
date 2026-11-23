@@ -76,9 +76,9 @@ stops at binders that redeclare an identity it replaces.
 - The production machine implements explicit-substitution composition in place of the
   evaluator's places and fallback, and is cross-tested against the reference machine.
 
-## The one rule to confirm
+## Shadowing (confirmed by the user, (22.11.26, 26))
 
-Rewriting in place must stop at a binder that redeclares the identity being substituted
+Rewriting in place stops at any lambda or binder that redeclares the identity being substituted
 (capture avoidance). `fix` needs it: inside a call of `w`, `w`'s own tree appears as a value and
 declares `self` again; substituting the outer `self` into it would replace the inner binder's
 declaration and occurrences.
