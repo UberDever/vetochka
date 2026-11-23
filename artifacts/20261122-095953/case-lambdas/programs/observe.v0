@@ -1,5 +1,5 @@
 [[{:binder}], [
-  ~[[[{:id}], {x}, ~[{:private}, ~{01}]], [[{$}], [[{:id}], {unique}, ~[{:private}, ~{f0}]], {x}]],
+  ~[[[{:id}], {x}, ~[{:private}, ~{01}]], [[{$}], [[{:id}], {unique}, ~[{:private}, ~{f0}]], [{x}]]],
   ~[[[{:id}], {kind}, ~[{:private}, ~{02}]], [[{:lambda}], ~, [[[[{:id}], {a}, ~[{:private}, ~{03}]], [[{:id}], {b}, ~[{:private}, ~{04}]]]],
              ~[[{:leaf}], {leaf}], ~[[{:fork}], {fork}], ~[[{:fruit}], {fruit}]]],
   ~[[[{:id}], {first}, ~[{:private}, ~{05}]], [[{:lambda}], ~, [[[[{:id}], {h}, ~[{:private}, ~{06}]], [[{:id}], {t}, ~[{:private}, ~{07}]]]],

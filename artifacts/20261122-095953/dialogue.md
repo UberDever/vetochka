@@ -163,3 +163,50 @@ Agent proposal (from snapshot grammar: `\[..]` closure_head, `?` triage, `~[a, b
 
 At the user's request the 22.11.26 section was condensed from 35 to 16 entries before the session ended; references in this record and the experiment files were remapped. Old to new: 0->0, 1->0, 2->1, 3->3, 4->3, 5->2, 6->2, 7->5, 8->3, 9->6, 10->6, 11->3, 12->3, 13->3, 14->4, 15->5, 16->3, 17->4, 18->3, 19->3, 20->7, 21->7, 22->8, 23->9, 24->10, 25->11, 26->12, 27->15, 28->13, 29->14, 30->15, 31->3, 32->15, 33->13, 34->14. The pre-condensation log is in git history (commit 8f1c60c).
 - User: yes, align format.md with the condensing rule. Added the session exception to devlog/format.md.
+
+### Topic 6: what is left before implementing v0; CESK abstract or specific
+
+- Agent list and recommendation given in chat (abstract machine normative; cells, known fruits, ZINC batching as refinements checked by differential tests). Not logged; awaiting user.
+- User: CESK implemented in code as in the spec, crosstest; logged (22.11.26, 16). fix experiment done, logged (22.11.26, 17). Store question answered in chat.
+- User: factorial and Fibonacci. Done over unary numerals in `arith`; 27 checks. Folded into (22.11.26, 17).
+- User: store keys are addresses `[[{:address}], <private-part>]`; agent misread earlier. Logged (22.11.26, 18).
+- User on whole-value binding in a split: third name in a fork position vs rebuilding `~[h, t]`; leans to rebuilding. Agent analysis in chat; awaiting choice.
+- User: log the fork direction (rebuild `~[h, t]`). Logged (22.11.26, 19).
+- User: anything nonref can end a long ref; no ref cycles hoped. Logged (22.11.26, 20) with the agent finding on acyclicity.
+- User: free in-place fruit. Logged (22.11.26, 20) with agent proposal to preload one-byte fruits as known fruits.
+- User: rename out-of-line -> unknown fruit; asked registry capacity. Folded into (22.11.26, 20).
+- User: short registry reach is plenty; v0 keeps byte offsets. Folded into (22.11.26, 20). User asked to commit and update the PR.
+
+### Topic 7: compile a small program to v0, in v0, and run it in v0
+
+- User program: `def[f][x] do x; end`, `def[g][y] do y; end`, `g(f({42}))`. `def` appears nowhere in the log or specs. Agent asked scoping questions before starting.
+- Experiment done: compile_v0.py; user program -> {42}; probe -> {7}; hole rule generalized to all places on the chain (fallback, holes only); declarations never look outward; reflective case now shadows. Logged (22.11.26, 21); question to user about the shadowing.
+- User: a hole is an unbound identifier (data under triage, error under execution); no "where"; only lambdas. Agent restated the problems as an evaluator bug in composing delayed substitutions; reflective shadowing matches substitution. Logged (23.11.26, 7).
+- User: was the problem in the compiled source program? Agent: no; flattened generated code runs under the old rule ({42}, {7}). Folded into (23.11.26, 7).
+- User: (a); rule: deferred substitution must behave exactly as in-place rewriting; asked for the env rule the agent built and for prior art (Might: A-normalization, CESK; others). Logged (23.11.26, 0).
+- Agent: research note substitution-machines.md; logged (23.11.26, 7). Asked to allow matt.might.net to read the primary articles.
+- Read Might CESK and ANF directly after environment change; note and (23.11.26, 7) updated.
+- User: shadowing applies to lambdas and binders alike (general). Logged (23.11.26, 0). Asked again about the fallback bit.
+- User: why a hack for a standard case? Agent: closure machines are capture-avoiding; in-place rewriting captures inserted holes (context filling); standard fit is composition with shadowing. Folded into (23.11.26, 7).
+- User: did we introduce dynamic scoping? Agent: for holes only, keyed by unique identities; ordinary code lexical. Logged (23.11.26, 0) as question.
+- User: hole scoping intended (logged (23.11.26, 0) as decision). Reference machine: throwaway; the user will write the real one by hand.
+- Reference machine built (reference-machine/); 27 checks; logged (23.11.26, 7) with the header-position question.
+- User proposal: first occurrence declares, repeats are usages. Agent: breaks fix as stated; works with fresh identities per instantiation (CESK fresh addresses). Logged (23.11.26, 2); discussing.
+- User: no shadowing at all? explain mk. Agent: retracts; compose g(g(id)) needs shadowing (tested); mk and compose same shape; explicit marker needed. Folded into (23.11.26, 2).
+- User: the hurdle is provenance. Agent: yes; choice between plain rewriting (no provenance) and provenance as semantics (sealed insertions = closures). Folded into (23.11.26, 2).
+
+### Topic 8: three solutions for declaration vs usage
+
+- User: compare (1) explicit roles, (2) provenance, (3) fresh identifiers on activation, over all term interactions. Roles: unique returns a plain id; cons {:decl} or {:use} onto it. Provenance may be invisible if persistence gets a text form that differs by provenance. Cost argued, not measured.
+- Agent plan: five variants of the reference machine (base, roles, provenance, fresh, fresh+shadowing) and a program catalogue run on all.
+- Ran the catalogue on five variants; comparison.md; logged (23.11.26, 2); recommendation fresh identities.
+- User: capture-avoiding substitution; asked for the fresh-identifier rule and scheme. Logged (23.11.26, 0).
+- User: priming, kept private. Folded into (23.11.26, 0).
+- Agent: implemented the scheme; fixed order leak with simultaneous substitution per activation; all 37 cases pass; scheme.md. Logged (23.11.26, 7).
+- User: unset-name error yes (performance argument first); hidden partial arguments bearable. Logged (23.11.26, 3).
+- User: unset check on mention (folded into (23.11.26, 3)). Agent proposed identity table, kind 100 (23.11.26, 6).
+- Agent: identity_table.py, typed sketch of heap and identity table; self-check passes.
+
+## Second condensation (23.11.26)
+
+Entries (22.11.26, 16)-(22.11.26, 34) condensed: 16-19 kept; 20+21 -> (22.11.26, 20); 22 -> (22.11.26, 21); work of 23.11 moved to a new 23.11.26 section: 23,25,28,32 -> (23.11.26, 7); 24,26,27,31 -> (23.11.26, 0); 29,30 -> (23.11.26, 2); 33 -> (23.11.26, 3); 34 -> (23.11.26, 6). (22.11.26, 14) marked superseded by (23.11.26, 1). References in this record and the artifacts were remapped. handoff.md summarises the state.

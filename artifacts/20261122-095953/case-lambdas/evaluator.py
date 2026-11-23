@@ -23,8 +23,9 @@ Rules implemented, with their log sources:
 - Shape inspection never forces (20.11.26, 3).
 
 - Identifiers are a rewriting optimization (22.11.26, 13). An unbound identifier is a hole; a
-  bound identifier is the tree it rewrites to. When an occurrence rewrites to identifier data,
-  that identifier sits where the occurrence was and is rewritten in the occurrence's environment.
+  bound identifier is the tree it rewrites to. A hole reached through occurrences stands where
+  they stood, so it is looked up in every place the chain passed through, innermost first; a
+  returned tree remembers those places for its own holes. Declarations never look outward.
   Execution, shape inspection, and display all use this one rule (`rewrite`).
 - A partial application keeps its header as a term in the lambda's defining environment, which
   excludes the lambda's own parameters (22.11.26, 14). Header occurrences can still name values
@@ -57,6 +58,9 @@ class Term:
     tree: object
     env: dict
     unset: bool = False  # an unset pattern name, held as identifier data
+    # Places this tree was carried through, consulted only for holes (identifier data unbound
+    # in `env`); later places override earlier ones.
+    fallback: dict | None = None
 
 
 @dataclass(frozen=True, eq=False)
@@ -67,6 +71,7 @@ class Intrinsic:
 
 LIMIT = 10_000
 SHAPES = (b":leaf", b":fork", b":fruit", b":all")
+INHERIT_PLACES = True  # ablation switch: False restores the last-place rule
 WRAP_HEADER = True  # ablation switch: False reads the header in the partial application's env
 
 
@@ -200,13 +205,48 @@ def at(node, env):
     return node if isinstance(node, Term) else Term(node, env)
 
 
-def rewrite(value):
+def sub(parent, node):
+    """A child node of the term `parent`, read in its environment and with its fallback."""
+    return node if isinstance(node, Term) else Term(node, parent.env, fallback=parent.fallback)
+
+
+def rewrite(value, holes=True):
     """Rewrite bound identifiers to their trees; stop at a hole or a non-identifier. Never forces.
 
-    Following an occurrence bound in its own environment moves to its value. If that value is
-    identifier data unbound in its own environment, it stands where the occurrence stood, so it
-    is rewritten in the occurrence's environment (22.11.26, 13).
+    A bound occurrence rewrites to its value. A hole, identifier data unbound in its own
+    environment, stands where the occurrences that led to it stood, so it is looked up in those
+    places, innermost first (22.11.26, 13). Every place a chain passes through is remembered as
+    the result's fallback, so holes deeper in a returned tree see them too. Declarations are
+    read with `holes=False`. With `INHERIT_PLACES` off, only identifier data is re-read, and
+    only in the environment of the last occurrence followed (the earlier rule).
     """
+    if not INHERIT_PLACES:
+        return rewrite_last_place(value)
+    places = dict(value.fallback or {}) if isinstance(value, Term) else {}
+    moved = False
+    for _ in range(LIMIT):
+        if not isinstance(value, Term):
+            return value
+        if value.unset or not is_identifier(value.tree):
+            if moved and places:
+                return Term(value.tree, value.env, value.unset, places)
+            return value
+        key = identity(value.tree)
+        following = value.env.get(key)
+        if following is not None and following is not value:
+            places = places | value.env
+        elif holes and places.get(key) not in (None, value):
+            following = places[key]
+        else:
+            return value
+        if isinstance(following, Term) and following.fallback:
+            places = places | following.fallback
+        value = following
+        moved = True
+    raise VError("identifier cycle")
+
+
+def rewrite_last_place(value):
     place = None
     for _ in range(LIMIT):
         if not (isinstance(value, Term) and not value.unset and is_identifier(value.tree)):
@@ -239,7 +279,7 @@ def shape(value):
 
 def children(value):
     value = view(value)
-    return at(value.tree.left, value.env), at(value.tree.right, value.env)
+    return sub(value, value.tree.left), sub(value, value.tree.right)
 
 
 def unset(name):
@@ -248,7 +288,7 @@ def unset(name):
 
 def declaration(term):
     """Read a declaration position through context (C2)."""
-    declared = view(term)
+    declared = rewrite(term, holes=False)
     if not (isinstance(declared, Term) and is_identifier(declared.tree)):
         raise VError("a declaration must be an identifier")
     return declared.tree
@@ -272,8 +312,8 @@ def spine(term):
             return cells
         if not isinstance(current.tree, Fork):
             raise VError("expected a proper list")
-        rest = view(at(current.tree.right, current.env))
-        cells.append((at(current.tree.left, current.env), rest))
+        rest = view(sub(current, current.tree.right))
+        cells.append((sub(current, current.tree.left), rest))
         current = rest
     raise VError("list too long")
 
@@ -291,11 +331,11 @@ def kind(value):
         return b":id"
     if not isinstance(value.tree, Fork):
         return None
-    head = view(at(value.tree.left, value.env))
+    head = view(sub(value, value.tree.left))
     if not (isinstance(head, Term) and isinstance(head.tree, Fork)):
         return None
-    name = view(at(head.tree.left, head.env))
-    rest = view(at(head.tree.right, head.env))
+    name = view(sub(head, head.tree.left))
+    rest = view(sub(head, head.tree.right))
     if isinstance(name, Term) and isinstance(name.tree, bytes) and isinstance(rest, Term):
         if rest.tree is None:
             return name.tree
@@ -316,7 +356,11 @@ def enter(term):
     if is_identifier(term.tree) and not term.unset:
         if identity(term.tree) not in term.env:
             raise VError("unbound identifier")
-        return rewrite(term)
+        value = rewrite(term)
+        # A binder runs however it is reached (23.11.26, 0).
+        if isinstance(value, Term) and kind(value) == b":binder":
+            return run_binder(value)
+        return value
     if kind(term) == b":binder":
         return run_binder(term)
     return term
@@ -409,7 +453,9 @@ def parameters(env, positions):
 
 def node(term, env):
     """A tree node for `term` inside a tree read in `env`: raw when the context agrees."""
-    return term.tree if term.env is env and not term.unset else term
+    if term.env is env and not term.unset and not term.fallback:
+        return term.tree
+    return term
 
 
 def apply_lambda(callee, argument):
@@ -430,7 +476,7 @@ def apply_lambda(callee, argument):
             # parameters (22.11.26, 14); a partial application shares the header tree.
             stored = header
         else:
-            stored = node(header, callee.env)
+            stored = header.tree  # read again in the partial application's environment
         tree = Fork(
             node(tag, callee.env),
             Fork(private_count(count), Fork(stored, node(cases_rest, callee.env))),
@@ -466,7 +512,7 @@ def select(positions, cases, env):
         if not (isinstance(case, Term) and isinstance(case.tree, Fork)):
             raise VError("a case is a pair of a shape row and an expression")
         shapes = []
-        for item in items(at(case.tree.left, case.env)):
+        for item in items(sub(case, case.tree.left)):
             symbol = view(item)
             if not (isinstance(symbol, Term) and symbol.tree in SHAPES):
                 raise VError("a shape row holds shape symbols")
@@ -476,9 +522,9 @@ def select(positions, cases, env):
         for expected, names in zip(shapes, positions):
             if expected == b":fork" and len(names) == 1:
                 raise VError("{:fork} needs a two-name position")
-        body = at(case.tree.right, case.env)
+        body = sub(case, case.tree.right)
         # A case read from another context still sees this lambda's parameters.
-        rows.append((shapes, Term(body.tree, body.env | params, body.unset)))
+        rows.append((shapes, Term(body.tree, body.env | params, body.unset, body.fallback)))
 
     actual = {}
 
@@ -513,10 +559,10 @@ def run_binder(term):
             raise VError("a clause is a pair of a declaration and an expression")
         # Clauses read from another context still see the bindings made so far.
         scope = clause.env | made
-        key = identity(declaration(Term(clause.tree.left, scope)))
-        made[key] = step(Term(clause.tree.right, scope))
+        key = identity(declaration(Term(clause.tree.left, scope, fallback=clause.fallback)))
+        made[key] = step(Term(clause.tree.right, scope, fallback=clause.fallback))
     body_scope = body.env | made
-    return enter(Term(body.tree, body_scope, body.unset))
+    return enter(Term(body.tree, body_scope, body.unset, body.fallback))
 
 
 # ---------------------------------------------------------------- results
@@ -535,8 +581,8 @@ def materialize(value, depth=0):
     if value.unset or is_identifier(tree) or not isinstance(tree, Fork):
         return tree
     return Fork(
-        materialize(at(tree.left, value.env), depth + 1),
-        materialize(at(tree.right, value.env), depth + 1),
+        materialize(sub(value, tree.left), depth + 1),
+        materialize(sub(value, tree.right), depth + 1),
     )
 
 
@@ -550,17 +596,46 @@ def global_env():
     counter = iter(range(0x8000, 0x10000))
 
     def unique(argument):
-        name = view(argument)
+        # Arguments come as a list (12.11.26, 11): unique([{name}]).
+        parts = items(argument)
+        if len(parts) != 1:
+            raise VError("unique takes one argument")
+        name = view(parts[0])
         if not (isinstance(name, Term) and isinstance(name.tree, bytes)):
             raise VError("unique expects a name fruit")
         return make_identifier(name.tree, next(counter).to_bytes(2, "big"))
 
-    return {UNIQUE_KEY: Intrinsic("unique", unique)}
+    def fruit_equal(argument):
+        # Temporary boolean convention from the force spike: a fruit for true, a leaf for false.
+        operands = [view(item) for item in items(argument)]
+        if len(operands) != 2:
+            raise VError("fruit-equal expects a list of two values")
+        first, second = operands
+        if all(isinstance(o, Term) and isinstance(o.tree, bytes) for o in operands):
+            if first.tree == second.tree:
+                return b"true"
+        return None
+
+    return {
+        UNIQUE_KEY: Intrinsic("unique", unique),
+        FRUIT_EQUAL_KEY: Intrinsic("fruit-equal", fruit_equal),
+    }
 
 
-def run(tree):
-    """Enter a whole program and return the raw result value."""
-    return enter(Term(tree, global_env()))
+FRUIT_EQUAL_KEY = b"\xf1"
+SOURCE_KEY = b"\xf2"
+
+
+def run(tree, source=None):
+    """Enter a whole program and return the raw result value.
+
+    `source`, when given, is a tree bound to the global `source` (identity `~{f2}`), standing in
+    for the output of a parser run by the host.
+    """
+    env = global_env()
+    if source is not None:
+        env[SOURCE_KEY] = Term(source, {})
+    return enter(Term(tree, env))
 
 
 def run_display(tree):

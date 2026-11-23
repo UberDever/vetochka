@@ -2,7 +2,7 @@
 
 Task: (22.11.26, 12). Fresh throwaway evaluator `evaluator.py`; programs in `programs.py`
 (expanded v0 in `programs/`); checks in `test_case_lambdas.py`.
-Run: `python3 -m pytest -q -p no:cacheprovider` from this directory. 18 checks pass.
+Run: `python3 -m pytest -q -p no:cacheprovider` from this directory. 30 checks pass (`test_case_lambdas.py`, `test_compile_v0.py`).
 
 ## What runs
 
@@ -35,6 +35,19 @@ Run: `python3 -m pytest -q -p no:cacheprovider` from this directory. 18 checks p
   lambda declares `I` and returns its argument. This follows from (22.11.26, 13): inside its
   scope a bound identifier is its value and cannot be reused as a declaration.
 
+## Recursion with `fix`
+
+Program `fix`: `fix = \[f] =[w = \[x, v] =[self = x(x), fs = f(self), r = fs(v)] r, g = w(w)] g`
+(written here in vf; the program is lowered v0). It turns any lambda whose first parameter is the
+recursive reference into the recursive function: `length([{a}, {b}, {c}])` gives `[{s}, {s}, {s}]`,
+and a two-argument `append` gives `[{a}, {b}, {c}, {d}]`. Each call rebuilds the reference as a fresh
+partial application `w(w)`, so no binding refers to itself and no cyclic structure is built.
+Program `arith`: factorial and Fibonacci over unary numerals (`~` is zero, `~[{s}, n]` is a
+successor), with addition as append and multiplication defined with `fix`. Checked: factorial
+0..6 (720 takes 0.3 s) and Fibonacci 0..6 and 10 (55). No arithmetic intrinsics are involved.
+Host-stack limit: `length` works on 50 elements and overflows Python's default stack at 100,
+because this evaluator recurses in the host; the machine needs its own continuation.
+
 ## Settled choices
 
 - An authored lambda carries `~` in its private-state slot (22.11.26, 3).
@@ -48,3 +61,42 @@ Run: `python3 -m pytest -q -p no:cacheprovider` from this directory. 18 checks p
 
 Pending-parameter masking when shape inspection reads a partial lambda's cases (21.11.26, 3);
 intrinsic operands under shape rows beyond `{:all}`; tail calls; the cells layout.
+
+## Compiling to v0, in v0, and running it in v0
+
+`compile_v0.py` assembles one v0 program, the compiler. The runner hands it a parsed source tree
+as the global `source` (identity `~{f2}`); `fruit-equal` (`~{f1}`) is a temporary host intrinsic
+returning a fruit or a leaf. The compiler resolves names through a scope list of
+`~[name, id]`, issues identifiers with `unique`, turns each `def` into a binder clause, gives
+each call a fresh temporary clause (ANF), and keeps `do` blocks' clauses with the last value.
+The same program then forces the generated binder.
+
+    def[f][x] do x; end
+    def[g][y] do y; end
+    g(f({42}))
+
+compiles to
+
+    =[f#8000 = \[x#8001] ?[{:all}] x#8001, g#8002 = \[y#8003] ?[{:all}] y#8003,
+      t#8004 = f#8000(42), t#8005 = g#8002(t#8004)] t#8005
+
+and runs to `{42}`. A probe whose generated body is a binder that uses the parameter,
+`def[h][z] do f(z); f(z); end`, runs `h({7})` to `{7}`.
+
+Findings:
+
+- The earlier hole rule (look a hole up only where the last occurrence stood) cannot run the
+  generated code: the callee `F` of a generated clause is reached through `a1` in the clause's
+  scope and then `$c-id` in the compiler's environment, and only the first of those places binds
+  `F` (ablation test). Holes now consult every place along the chain, innermost first, and a
+  returned tree keeps those places as a fallback for its own holes.
+- Merging whole environments instead (every hop gives `(tree, P | E)`) is wrong: one declaration
+  is bound once per activation, so merged environments leak a recursive activation's bindings
+  into the next and capture its declarations; it also timed out the suite. The fallback holds
+  places but is consulted only for holes.
+- Declarations must not look outward: letting them consult the fallback breaks `fix` and the
+  compiler with "a declaration must be an identifier" (test). As a consequence the reflective
+  case now shadows: a lambda built inside `k` from `k`'s own declaration redeclares it and
+  returns its own argument `{z}`, where the last-place rule rewrote it to `k`'s argument.
+- Returning a generated binder from a case body would run it at compile time, so the compiler
+  returns a lambda's case pair; holding code as data needs a wrapper.

@@ -12,7 +12,7 @@ programs to `programs/*.v0`.
 from pathlib import Path
 import re
 
-GLOBALS = {"unique": "f0"}
+GLOBALS = {"unique": "f0", "fruit-equal": "f1", "source": "f2", "new": "f3", "get": "f4", "set": "f5"}
 PLACEHOLDER = re.compile(r"\$([A-Za-z][A-Za-z0-9-]*)(\.[0-9]+)?")
 
 
@@ -35,7 +35,7 @@ PROGRAMS = {
     # and the occurrence of the lambda it returns.
     "builder": """
 [[{:binder}], [
-  ~[$x, [[{$}], $unique, {x}]],
+  ~[$x, [[{$}], $unique, [{x}]]],
   ~[$mk, [[{:lambda}], ~, [[$decl], [$body]],
           ~[[{:all}, {:all}], [[{:lambda}], ~, [[$decl]], ~[[{:all}], $body]]]]],
   ~[$mk1, [[{$}], $mk, $x]],
@@ -47,9 +47,9 @@ PROGRAMS = {
     # completed three times with a fork, a fruit, and a leaf.
     "shapes": """
 [[{:binder}], [
-  ~[$a, [[{$}], $unique, {a}]],
-  ~[$l, [[{$}], $unique, {l}]],
-  ~[$r, [[{$}], $unique, {r}]],
+  ~[$a, [[{$}], $unique, [{a}]]],
+  ~[$l, [[{$}], $unique, [{l}]]],
+  ~[$r, [[{$}], $unique, [{r}]]],
   ~[$f, [[{:lambda}], ~, [[$a], [$l, $r]],
           ~[[{:all}, {:fork}], ~[$a, ~[$l, $r]]],
           ~[[{:all}, {:fruit}], ~[$a, $l]],
@@ -89,8 +89,8 @@ PROGRAMS = {
     # A binder held as data inside a fork, extracted by a case-lambda, then run by a clause.
     "binder": """
 [[{:binder}], [
-  ~[$y, [[{$}], $unique, {y}]],
-  ~[$z, [[{$}], $unique, {z}]],
+  ~[$y, [[{$}], $unique, [{y}]]],
+  ~[$z, [[{$}], $unique, [{z}]]],
   ~[$box, ~[{box}, [[{:binder}], [~[$y, {v}], ~[$z, ~[$y, $y]]], $z]]],
   ~[$unbox, [[{:lambda}], ~, [[$h, $t]], ~[[{:fork}], $t]]],
   ~[$b, [[{$}], $unbox, $box]],
@@ -100,8 +100,8 @@ PROGRAMS = {
     # Two generated identifiers with the same spelling stay distinct bindings.
     "identity": """
 [[{:binder}], [
-  ~[$x, [[{$}], $unique, {x}]],
-  ~[$x.2, [[{$}], $unique, {x}]],
+  ~[$x, [[{$}], $unique, [{x}]]],
+  ~[$x.2, [[{$}], $unique, [{x}]]],
   ~[$f, [[{:lambda}], ~, [[$x]], ~[[{:all}], ~[$x, $x.2]]]],
   ~[$r, [[{$}], $f, {arg}]]
  ], $r]
@@ -110,7 +110,7 @@ PROGRAMS = {
     # application must still see its own declarations, not the argument (22.11.26, 14).
     "identifier-argument": """
 [[{:binder}], [
-  ~[$i, [[{$}], $unique, {i}]],
+  ~[$i, [[{$}], $unique, [{i}]]],
   ~[$k, [[{:lambda}], ~, [[$p], [$q]],
           ~[[{:leaf}, {:all}], {leaf}],
           ~[[{:all}, {:all}], ~[$p, $q]]]],
@@ -122,7 +122,7 @@ PROGRAMS = {
     # the fork child `x` rewrites through `X` to the argument fruit, as execution does.
     "observe": """
 [[{:binder}], [
-  ~[$x, [[{$}], $unique, {x}]],
+  ~[$x, [[{$}], $unique, [{x}]]],
   ~[$kind, [[{:lambda}], ~, [[$a, $b]],
              ~[[{:leaf}], {leaf}], ~[[{:fork}], {fork}], ~[[{:fruit}], {fruit}]]],
   ~[$first, [[{:lambda}], ~, [[$h, $t]],
@@ -156,7 +156,7 @@ PROGRAMS = {
 """,
     "reflect-identifier": """
 [[{:binder}], [
-  ~[$i, [[{$}], $unique, {i}]],
+  ~[$i, [[{$}], $unique, [{i}]]],
   ~[$k, [[{:lambda}], ~, [[$p], [$hdr]],
           ~[[{:all}, {:all}],
             [[{:binder}], [
@@ -179,8 +179,8 @@ PROGRAMS = {
     # a binder (held as data, then forced) whose clause list is the variable `cl`.
     "spines": """
 [[{:binder}], [
-  ~[$x, [[{$}], $unique, {x}]],
-  ~[$x.2, [[{$}], $unique, {x}]],
+  ~[$x, [[{$}], $unique, [{x}]]],
+  ~[$x.2, [[{$}], $unique, [{x}]]],
   ~[$cases, [~[[{:all}], $x]]],
   ~[$f, ~[[{:lambda}], ~[~, ~[[[$x]], $cases]]]],
   ~[$v1, [[{$}], $f, {a}]],
@@ -188,13 +188,115 @@ PROGRAMS = {
   ~[$f2, ~[[{:lambda}], ~[~, ~[[[$x], [$x.2]], $cases2]]]],
   ~[$g2, [[{$}], $f2, {1}]],
   ~[$v2, [[{$}], $g2, {2}]],
-  ~[$y, [[{$}], $unique, {y}]],
+  ~[$y, [[{$}], $unique, [{y}]]],
   ~[$cl, [~[$y, {w}]]],
   ~[$box, ~[{box}, [[{:binder}], $cl, $y]]],
   ~[$unbox, [[{:lambda}], ~, [[$h, $t]], ~[[{:fork}], $t]]],
   ~[$b, [[{$}], $unbox, $box]],
   ~[$v3, $b]
  ], [$v1, $v2, $v3]]
+""",
+    # Recursion without a recursive binder. `fix` takes a lambda whose first parameter is the
+    # recursive reference and returns the recursive function. Self-application rebuilds that
+    # reference as a fresh partial application on each call, so no binding refers to itself.
+    # `len` uses it with one more parameter; `app` with two more.
+    "fix": """
+[[{:binder}], [
+  ~[$fix, [[{:lambda}], ~, [[$f]],
+     ~[[{:all}],
+       [[{:binder}], [
+          ~[$w, [[{:lambda}], ~, [[$x], [$v]],
+                  ~[[{:all}, {:all}],
+                    [[{:binder}], [
+                       ~[$self, [[{$}], $x, $x]],
+                       ~[$fs, [[{$}], $f, $self]],
+                       ~[$r, [[{$}], $fs, $v]]
+                    ], $r]]]],
+          ~[$g, [[{$}], $w, $w]]
+       ], $g]]]],
+  ~[$len, [[{:lambda}], ~, [[$rec], [$h, $t]],
+     ~[[{:all}, {:leaf}], ~],
+     ~[[{:all}, {:fork}], [[{:binder}], [~[$n, [[{$}], $rec, $t]]], ~[{s}, $n]]],
+     ~[[{:all}, {:fruit}], {not-a-list}]]],
+  ~[$length, [[{$}], $fix, $len]],
+  ~[$v1, [[{$}], $length, [{a}, {b}, {c}]]],
+  ~[$app, [[{:lambda}], ~, [[$rec.2], [$h.2, $t.2], [$ys]],
+     ~[[{:all}, {:leaf}, {:all}], $ys],
+     ~[[{:all}, {:fork}, {:all}],
+       [[{:binder}], [
+          ~[$part, [[{$}], $rec.2, $t.2]],
+          ~[$rest, [[{$}], $part, $ys]]
+       ], ~[$h.2, $rest]]]]],
+  ~[$append, [[{$}], $fix, $app]],
+  ~[$a1, [[{$}], $append, [{a}, {b}]]],
+  ~[$v2, [[{$}], $a1, [{c}, {d}]]]
+ ], [$v1, $v2]]
+""",
+    # Factorial and Fibonacci with `fix`, over unary numbers: `~` is zero and `~[{s}, n]` is the
+    # successor of `n`, so a number is a list of `{s}`. Addition is append; multiplication and
+    # both functions are made recursive with `fix`. `<F>` and `<N>` are the inputs to factorial and
+    # Fibonacci.
+    "arith": """
+[[{:binder}], [
+  ~[$fix, [[{:lambda}], ~, [[$f]],
+     ~[[{:all}],
+       [[{:binder}], [
+          ~[$w, [[{:lambda}], ~, [[$x], [$v]],
+                  ~[[{:all}, {:all}],
+                    [[{:binder}], [
+                       ~[$self, [[{$}], $x, $x]],
+                       ~[$fs, [[{$}], $f, $self]],
+                       ~[$r, [[{$}], $fs, $v]]
+                    ], $r]]]],
+          ~[$g, [[{$}], $w, $w]]
+       ], $g]]]],
+  ~[$addf, [[{:lambda}], ~, [[$rec.1], [$h.1, $t.1], [$ys]],
+     ~[[{:all}, {:leaf}, {:all}], $ys],
+     ~[[{:all}, {:fork}, {:all}],
+       [[{:binder}], [
+          ~[$p0, [[{$}], $rec.1, $t.1]],
+          ~[$rest, [[{$}], $p0, $ys]]
+       ], ~[$h.1, $rest]]]]],
+  ~[$add, [[{$}], $fix, $addf]],
+  ~[$mulf, [[{:lambda}], ~, [[$rec.2], [$h.2, $t.2], [$m]],
+     ~[[{:all}, {:leaf}, {:all}], ~],
+     ~[[{:all}, {:fork}, {:all}],
+       [[{:binder}], [
+          ~[$p1, [[{$}], $rec.2, $t.2]],
+          ~[$p2, [[{$}], $p1, $m]],
+          ~[$a1, [[{$}], $add, $m]],
+          ~[$r1, [[{$}], $a1, $p2]]
+       ], $r1]]]],
+  ~[$mul, [[{$}], $fix, $mulf]],
+  ~[$factf, [[{:lambda}], ~, [[$rec.3], [$h.3, $t.3]],
+     ~[[{:all}, {:leaf}], [{s}]],
+     ~[[{:all}, {:fork}],
+       [[{:binder}], [
+          ~[$p3, [[{$}], $rec.3, $t.3]],
+          ~[$m1, [[{$}], $mul, ~[$h.3, $t.3]]],
+          ~[$r2, [[{$}], $m1, $p3]]
+       ], $r2]]]],
+  ~[$fact, [[{$}], $fix, $factf]],
+  ~[$fibf, [[{:lambda}], ~, [[$rec.4], [$h.4, $t.4]],
+     ~[[{:all}, {:leaf}], ~],
+     ~[[{:all}, {:fork}],
+       [[{:binder}], [
+          ~[$r3, [[{$}],
+                  [[{:lambda}], ~, [[$h.5, $t.5]],
+                    ~[[{:leaf}], [{s}]],
+                    ~[[{:fork}],
+                      [[{:binder}], [
+                         ~[$f1, [[{$}], $rec.4, $t.4]],
+                         ~[$f2, [[{$}], $rec.4, $t.5]],
+                         ~[$a2, [[{$}], $add, $f1]],
+                         ~[$r4, [[{$}], $a2, $f2]]
+                      ], $r4]]],
+                  $t.4]]
+       ], $r3]]]],
+  ~[$fib, [[{$}], $fix, $fibf]],
+  ~[$out1, [[{$}], $fact, <F>]],
+  ~[$out2, [[{$}], $fib, <N>]]
+ ], [$out1, $out2]]
 """,
     # Errors.
     "no-match": """
@@ -225,8 +327,16 @@ PROGRAMS = {
 }
 
 
+def numeral(n):
+    """The unary numeral for n: `~` or a list of n `{s}` fruits."""
+    return "[" + ", ".join(["{s}"] * n) + "]" if n else "~"
+
+
 if __name__ == "__main__":
     out = Path(__file__).with_name("programs")
     out.mkdir(exist_ok=True)
     for name, template in PROGRAMS.items():
-        (out / f"{name}.v0").write_text(expand(template).strip() + "\n")
+        text = expand(template).strip()
+        if name == "arith":
+            text = text.replace("<F>", numeral(5)).replace("<N>", numeral(5))
+        (out / f"{name}.v0").write_text(text + "\n")
