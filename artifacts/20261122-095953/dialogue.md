@@ -202,3 +202,4 @@ At the user's request the 22.11.26 section was condensed from 35 to 16 entries b
 - Ran the catalogue on five variants; comparison.md; logged (22.11.26, 30); recommendation fresh identities.
 - User: capture-avoiding substitution; asked for the fresh-identifier rule and scheme. Logged (22.11.26, 31).
 - User: priming, kept private. Folded into (22.11.26, 31).
+- Agent: implemented the scheme; fixed order leak with simultaneous substitution per activation; all 37 cases pass; scheme.md. Logged (22.11.26, 32).
