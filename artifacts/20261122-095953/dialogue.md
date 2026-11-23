@@ -193,3 +193,4 @@ At the user's request the 22.11.26 section was condensed from 35 to 16 entries b
 - Reference machine built (reference-machine/); 27 checks; logged (22.11.26, 28) with the header-position question.
 - User proposal: first occurrence declares, repeats are usages. Agent: breaks fix as stated; works with fresh identities per instantiation (CESK fresh addresses). Logged (22.11.26, 29); discussing.
 - User: no shadowing at all? explain mk. Agent: retracts; compose g(g(id)) needs shadowing (tested); mk and compose same shape; explicit marker needed. Folded into (22.11.26, 29).
+- User: the hurdle is provenance. Agent: yes; choice between plain rewriting (no provenance) and provenance as semantics (sealed insertions = closures). Folded into (22.11.26, 29).
