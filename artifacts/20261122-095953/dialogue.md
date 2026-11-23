@@ -201,3 +201,4 @@ At the user's request the 22.11.26 section was condensed from 35 to 16 entries b
 - Agent plan: five variants of the reference machine (base, roles, provenance, fresh, fresh+shadowing) and a program catalogue run on all.
 - Ran the catalogue on five variants; comparison.md; logged (22.11.26, 30); recommendation fresh identities.
 - User: capture-avoiding substitution; asked for the fresh-identifier rule and scheme. Logged (22.11.26, 31).
+- User: priming, kept private. Folded into (22.11.26, 31).
