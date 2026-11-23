@@ -185,3 +185,4 @@ At the user's request the 22.11.26 section was condensed from 35 to 16 entries b
 - User: was the problem in the compiled source program? Agent: no; flattened generated code runs under the old rule ({42}, {7}). Folded into (22.11.26, 23).
 - User: (a); rule: deferred substitution must behave exactly as in-place rewriting; asked for the env rule the agent built and for prior art (Might: A-normalization, CESK; others). Logged (22.11.26, 24).
 - Agent: research note substitution-machines.md; logged (22.11.26, 25). Asked to allow matt.might.net to read the primary articles.
+- Read Might CESK and ANF directly after environment change; note and (22.11.26, 25) updated.

@@ -22,15 +22,32 @@ This is not exactly rewriting:
   hole and the place that would fill it.
 It passes the 30 checks, but it is a reinvention with corner cases.
 
-## Prior art (from web search summaries; primary texts not read, matt.might.net is blocked here)
+## Prior art
 
-- Matt Might, "Machine-based interpreters" (CESK): the environment maps variables to addresses,
-  the store maps addresses to values; lambdas become closures `(lambda, env)`. Source code is
-  fixed; a closure's environment only ever applies to that closure's own body.
-  https://matt.might.net/articles/cesk-machines
-- Matt Might, "A-Normal Form": atomic vs complex expressions; non-atomic subexpressions are
-  let-bound or in tail position; lambdas count as atomic because building a closure has no
-  effect. https://matt.might.net/articles/a-normalization/
+Read directly (fetched 23.11.26):
+
+- Matt Might, "Writing an interpreter, CESK-style", https://matt.might.net/articles/cesk-machines
+  - State `(exp, ρ, σ, κ)`. `ρ : Var ⇀ Addr`, `σ : Addr ⇀ Value`; lookup is `σ(ρ(v))`.
+  - Values: void, integers, booleans, `clo(lam, ρ)`, `cont(κ)`. `A(lam, ρ, σ) = clo(lam, ρ)`.
+  - Call: evaluate callee and arguments atomically, then
+    `applyproc(clo((λ (v1..vn) body), ρ), vals, σ, κ) = (body, ρ[vi ↦ ai], σ[ai ↦ vali], κ)`
+    with fresh addresses `ai`.
+  - `let`: push `letk(v, body, ρ, κ)`; returning an atomic value applies the continuation,
+    binding `v` at a fresh address in the saved `ρ`.
+  - `set!` overwrites `σ(ρ(v))`; `letrec` extends `ρ` first and evaluates the right-hand sides
+    in the extended environment.
+  - An environment is only ever applied to the expression under evaluation, and a closure's
+    environment only to its own body. Environments are never composed, and no value has a free
+    variable waiting for a binder outside it: a closure captures an environment covering all of
+    its free variables, and programs cannot build code.
+- Matt Might, "A-Normal Form", https://matt.might.net/articles/a-normalization/
+  - Atomic expressions terminate and have no side effects, control effects, or errors; lambdas
+    are atomic. Complex expressions are let-bound or in tail position.
+  - The Flanagan et al. normalizer: `normalize M k` with `normalize-name` naming every
+    non-atomic result with a fresh `gensym` let-binding. Our v0 compiler does the same, with
+    `unique` as `gensym`.
+
+From web-search summaries (primary texts not read):
 - Van Horn and Might, "Abstracting Abstract Machines": store-allocated bindings and
   continuations. https://www.ccs.neu.edu/home/dvanhorn/pubs/vanhorn-might-jfp12.pdf
 - Biernacka and Danvy, "A Concrete Framework for Environment Machines" (TOCL 2007): calculi of
@@ -45,7 +62,8 @@ It passes the 30 checks, but it is a reinvention with corner cases.
 ## Why vetochka needs more than CESK
 
 In CESK the code is fixed: values are closures, and an environment is only ever applied to its
-closure's body. Vetochka programs build code from values at run time (code is data). When such
+closure's body. Vetochka values are trees that can hold holes, and a program can place such a
+tree inside a binder or lambda that it builds around it (code is data). When such
 code runs, the pending substitutions of its parts must compose, and that is what explicit
 substitution calculi provide: a closure `M[s]` under a further substitution `t` becomes
 `M[s ∘ t]`, where `(s ∘ t)(x) = s(x)[t]` for `x` in `s`, and `t(x)` otherwise; substitution
@@ -57,3 +75,10 @@ stops at binders that redeclare an identity it replaces.
   rewriting by construction.
 - The production machine implements explicit-substitution composition in place of the
   evaluator's places and fallback, and is cross-tested against the reference machine.
+
+## The one rule to confirm
+
+Rewriting in place must stop at a binder that redeclares the identity being substituted
+(capture avoidance). `fix` needs it: inside a call of `w`, `w`'s own tree appears as a value and
+declares `self` again; substituting the outer `self` into it would replace the inner binder's
+declaration and occurrences.
