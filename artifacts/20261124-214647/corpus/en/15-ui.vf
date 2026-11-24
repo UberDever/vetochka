@@ -1,0 +1,14 @@
+# a UI tree: deep nesting, small inline blocks
+window ~title{Settings}:
+    column ~gap(8):
+        text({Volume})
+        slider ~min(0) ~max(100) ~value(volume) ~on_change ~v:
+            volume = v
+            save(settings)
+        ;;
+        row :
+            button({Cancel}) ~on_click: close(window) ;;
+            button({OK}) ~on_click: apply(settings) ; close(window) ;;
+        ;;
+    ;;
+;;

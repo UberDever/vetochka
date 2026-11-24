@@ -1,0 +1,10 @@
+# a query appliance: clauses are symbols followed by blocks
+report = from(orders) ~o ...
+    ~where: o[.total] > 100 ;; ...
+    ~group: o[.customer] ;; ...
+    ~select: [~customer(o[.customer]), ~spent(sum(o[.total]))] ;;
+
+audit = from(events) ~e ~where:
+    e[.kind] == ~login
+    e[.failed]
+;; ~order: e[.time] ;; ~limit(50)

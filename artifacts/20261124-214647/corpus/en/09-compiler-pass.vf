@@ -1,0 +1,23 @@
+# vmeta: passes over terms; the row form is v0 code with its own meaning
+names = \[self, ~[head, rest], acc]
+    ?[~all, ~fork, ~all] self(self, rest, self(self, head, acc))
+    ?[~all, ~fruit, ~all] acc
+    ?[~all, ~leaf, ~all] acc
+
+pass ~collect_fn_names ~over(module):
+    found := []
+    walk(module) ~node:
+        if(is_fn(node)):
+            push(found, node[.name])
+        ;;
+    ;;
+    found
+;;
+
+pass ~forbid_malloc ~over(module):
+    walk(module) ~node:
+        if(is_call(node, ~malloc)):
+            report(node, {use an allocator parameter})
+        ;;
+    ;;
+;;

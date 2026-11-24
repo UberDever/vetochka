@@ -1,0 +1,23 @@
+# declarative data: structures, enums, configuration
+struct ~Particle[]:
+    position :: vec3
+    velocity :: vec3
+    lifetime :: f32
+;;
+
+enum ~Level[]:
+    ~debug
+    ~info
+    ~warning
+    ~error
+;;
+
+config ~name(server):
+    ~host{0.0.0.0}
+    ~port(8080)
+    ~tls[~cert{server.pem}, ~key{server.key}]
+    limits :
+        ~connections(1024)
+        ~body_bytes(1048576)
+    ;;
+;;

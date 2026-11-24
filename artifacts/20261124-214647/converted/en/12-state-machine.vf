@@ -1,0 +1,23 @@
+# a state machine with event handlers
+machine(door):
+    state(closed):
+        on ~open: goto(opening) ;;
+        on ~lock: goto(locked) ;;
+    ;;
+    state(opening):
+        ~enter: start_motor() ;;
+        on ~done:
+            stop_motor()
+            goto(opened)
+        ;;
+    ;;
+    state(locked):
+        on ~unlock(\[code]:
+            if(code == secret):
+                goto(closed)
+            ;; ~else:
+                alarm()
+            ;;
+        ;;)
+    ;;
+;;

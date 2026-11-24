@@ -1,0 +1,18 @@
+# functional style in vf: symbol-named blocks, not v0 lambdas
+squares = map(xs) ~x: x * x ;;
+evens = filter(xs) ~x: x % 2 == 0 ;;
+total = fold(xs, 0) ~acc ~x: acc + x ;;
+
+fn ~compose[f, g] ~ret(fn):
+    fn ~composed[x]: f(g(x)) ;;
+;;
+
+fn ~mean[xs :: list(f64)] ~ret(f64):
+    sum := fold(xs, f64{0}) ~a ~b: a + b ;;
+    sum / len(xs)
+;;
+
+parsed = map(lines) ~line: parse_int(line) ;;
+valid = filter(parsed) ~n: n >= 0 ;;
+scaled = map(valid) ~n: n * 10 ;;
+result = fold(scaled, 0) ~a ~b: a + b ;;

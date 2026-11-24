@@ -1,0 +1,20 @@
+# concurrency: actors and message loops
+counter = spawn :
+    count := 0
+    loop :
+        receive(message):
+            case ~increment[]: count += 1 ;;
+            case ~get[reply_to]:
+                send(reply_to, count)
+            ;;
+            case ~stop[]:
+                break()
+            ;;
+        ;;
+    ;;
+;;
+
+parallel(tasks) ~each(\[task]:
+    result := run(task)
+    send(collector, result)
+;;)

@@ -1,0 +1,10 @@
+# a query appliance: clauses as labels with block or lambda payloads
+report = from(orders) ...
+    ~where(\[o] o[.total] > 100) ...
+    ~group(\[o] o[.customer]) ...
+    ~select(\[g] [~customer(g[.key]), ~spent(sum(g, \[o] o[.total]))])
+
+audit = from(events) ~where:
+    kind == {login}
+    failed
+;; ~order: time ;; ~limit(50)

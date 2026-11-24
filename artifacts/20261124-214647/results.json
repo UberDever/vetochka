@@ -1,0 +1,274 @@
+{
+ "parse": {
+  "en/01-guards": "ok",
+  "en/02-branching": "ok",
+  "en/03-functional": "ok",
+  "en/04-callbacks": "ok",
+  "en/05-core-rows": "ok",
+  "en/06-match": "ok",
+  "en/07-data": "ok",
+  "en/08-resources": "ok",
+  "en/09-compiler-pass": "ok",
+  "en/10-build": "ok",
+  "en/11-tests": "ok",
+  "en/12-state-machine": "ok",
+  "en/13-query": "ok",
+  "en/14-actors": "ok",
+  "en/15-ui": "ok",
+  "en/16-small-forms": "ok",
+  "en/17-deep-nesting": "ok",
+  "ru/01-guards": "ok",
+  "ru/02-branching": "ok",
+  "ru/03-functional": "ok",
+  "ru/04-callbacks": "ok",
+  "ru/05-core-rows": "ok",
+  "ru/06-match": "ok",
+  "ru/07-data": "ok",
+  "ru/08-resources": "ok",
+  "ru/09-compiler-pass": "ok",
+  "ru/10-build": "ok",
+  "ru/11-tests": "ok",
+  "ru/12-state-machine": "ok",
+  "ru/13-query": "ok",
+  "ru/14-actors": "ok",
+  "ru/15-ui": "ok",
+  "ru/16-small-forms": "ok",
+  "ru/17-deep-nesting": "ok",
+  "zh/01-guards": "ok",
+  "zh/02-branching": "ok",
+  "zh/03-functional": "ok",
+  "zh/04-callbacks": "ok",
+  "zh/05-core-rows": "ok",
+  "zh/06-match": "ok",
+  "zh/07-data": "ok",
+  "zh/08-resources": "ok",
+  "zh/09-compiler-pass": "ok",
+  "zh/10-build": "ok",
+  "zh/11-tests": "ok",
+  "zh/12-state-machine": "ok",
+  "zh/13-query": "ok",
+  "zh/14-actors": "ok",
+  "zh/15-ui": "ok",
+  "zh/16-small-forms": "ok",
+  "zh/17-deep-nesting": "ok",
+  "probes/en": "ok",
+  "probes/ru": "ok",
+  "probes/zh": "ok"
+ },
+ "shape": {
+  "01-guards": "same",
+  "02-branching": "same",
+  "03-functional": "same",
+  "04-callbacks": "same",
+  "05-core-rows": "same",
+  "06-match": "same",
+  "07-data": "same",
+  "08-resources": "same",
+  "09-compiler-pass": "same",
+  "10-build": "same",
+  "11-tests": "same",
+  "12-state-machine": "same",
+  "13-query": "same",
+  "14-actors": "same",
+  "15-ui": "same",
+  "16-small-forms": "same",
+  "17-deep-nesting": "same"
+ },
+ "size": {
+  "en": {
+   "chars": 7876,
+   "columns": 7876,
+   "old_chars": 8027,
+   "old_columns": 8027,
+   "symbols": 144,
+   "blocks": 120
+  },
+  "ru": {
+   "chars": 9212,
+   "columns": 9212,
+   "old_chars": 9369,
+   "old_columns": 9369,
+   "symbols": 144,
+   "blocks": 120
+  },
+  "zh": {
+   "chars": 5713,
+   "columns": 7287,
+   "old_chars": 5879,
+   "old_columns": 7453,
+   "symbols": 144,
+   "blocks": 120
+  }
+ },
+ "mutations": {
+  "en": {
+   "drop ~ elsewhere": {
+    "local": 66,
+    "silent": 42
+   },
+   "old label habit": {
+    "local": 30
+   },
+   "glue opener after": {
+    "local": 119
+   },
+   "glue closer before": {
+    "local": 120
+   },
+   "glue closer after": {
+    "local": 97
+   },
+   "drop ~ before opener": {
+    "local": 36
+   },
+   "alternative on next line": {
+    "silent": 5
+   },
+   "glue opener before": {
+    "local": 13,
+    "tolerated": 1
+   }
+  },
+  "ru": {
+   "drop ~ elsewhere": {
+    "local": 66,
+    "silent": 42
+   },
+   "old label habit": {
+    "local": 30
+   },
+   "glue opener after": {
+    "local": 119
+   },
+   "glue closer before": {
+    "local": 120
+   },
+   "glue closer after": {
+    "local": 97
+   },
+   "drop ~ before opener": {
+    "local": 36
+   },
+   "alternative on next line": {
+    "silent": 5
+   },
+   "glue opener before": {
+    "local": 13,
+    "tolerated": 1
+   }
+  },
+  "zh": {
+   "drop ~ elsewhere": {
+    "local": 66,
+    "silent": 42
+   },
+   "old label habit": {
+    "local": 30
+   },
+   "glue opener after": {
+    "local": 119
+   },
+   "glue closer before": {
+    "local": 120
+   },
+   "glue closer after": {
+    "local": 97
+   },
+   "drop ~ before opener": {
+    "local": 36
+   },
+   "alternative on next line": {
+    "silent": 5
+   },
+   "glue opener before": {
+    "local": 13,
+    "tolerated": 1
+   }
+  }
+ },
+ "examples": {
+  "en": {
+   "alternative on next line / silent": [
+    "02-branching:10: ~else:",
+    "02-branching:31: ~else: -1 ;;",
+    "12-state-machine:19: ~else:",
+    "13-query:11: ~order: e[.time] ;; ~limit(50)"
+   ],
+   "drop ~ elsewhere / silent": [
+    "04-callbacks:12: on(button, click) ~event:",
+    "05-core-rows:3: ?[all, ~fork] self(self, left) + self(self, right) + 1",
+    "05-core-rows:3: ?[~all, fork] self(self, left) + self(self, right) + 1",
+    "05-core-rows:4: ?[all, ~fruit] 1"
+   ],
+   "glue opener before / tolerated": [
+    "16-small-forms:4: handlers = [: log({a}) ;;,: log({b}) ;;]"
+   ]
+  },
+  "ru": {
+   "alternative on next line / silent": [
+    "02-branching:10: ~иначе:",
+    "02-branching:31: ~иначе: -1 ;;",
+    "12-state-machine:19: ~иначе:",
+    "13-query:11: ~порядок: с[.время] ;; ~предел(50)"
+   ],
+   "drop ~ elsewhere / silent": [
+    "04-callbacks:12: при(кнопка, нажатие) ~событие:",
+    "05-core-rows:3: ?[all, ~fork] сам(сам, левое) + сам(сам, правое) + 1",
+    "05-core-rows:3: ?[~all, fork] сам(сам, левое) + сам(сам, правое) + 1",
+    "05-core-rows:4: ?[all, ~fruit] 1"
+   ],
+   "glue opener before / tolerated": [
+    "16-small-forms:4: обработчики = [: записать({а}) ;;,: записать({б}) ;;]"
+   ]
+  },
+  "zh": {
+   "alternative on next line / silent": [
+    "02-branching:10: ~否则:",
+    "02-branching:31: ~否则: -1 ;;",
+    "12-state-machine:19: ~否则:",
+    "13-query:11: ~排序: 件[.时间] ;; ~上限(50)"
+   ],
+   "drop ~ elsewhere / silent": [
+    "04-callbacks:12: 监听(按钮, 点击) ~事件:",
+    "05-core-rows:3: ?[all, ~fork] 自身(自身, 左) + 自身(自身, 右) + 1",
+    "05-core-rows:3: ?[~all, fork] 自身(自身, 左) + 自身(自身, 右) + 1",
+    "05-core-rows:4: ?[all, ~fruit] 1"
+   ],
+   "glue opener before / tolerated": [
+    "16-small-forms:4: 处理器 = [: 记录({甲}) ;;,: 记录({乙}) ;;]"
+   ]
+  }
+ },
+ "openers": {
+  "en": {
+   "glued after RPAREN": 47,
+   "glued after SYMBOL": 36,
+   "glued after RBRACK": 13,
+   "spaced after IDENT": 13,
+   "glued after STR": 7,
+   "glued after LPAREN": 2,
+   "glued after LBRACK": 1,
+   "spaced after COMMA": 1
+  },
+  "ru": {
+   "glued after RPAREN": 47,
+   "glued after SYMBOL": 36,
+   "glued after RBRACK": 13,
+   "spaced after IDENT": 13,
+   "glued after STR": 7,
+   "glued after LPAREN": 2,
+   "glued after LBRACK": 1,
+   "spaced after COMMA": 1
+  },
+  "zh": {
+   "glued after RPAREN": 47,
+   "glued after SYMBOL": 36,
+   "glued after RBRACK": 13,
+   "spaced after IDENT": 13,
+   "glued after STR": 7,
+   "glued after LPAREN": 2,
+   "glued after LBRACK": 1,
+   "spaced after COMMA": 1
+  }
+ }
+}

@@ -1,0 +1,28 @@
+# vsystem: tagged unions and a match appliance
+union ~Shape[]:
+    ~circle[radius :: f64]
+    ~rect[width :: f64, height :: f64]
+    ~empty[]
+;;
+
+fn ~area[shape :: Shape] ~ret(f64):
+    match(shape):
+        case ~circle[r]:
+            f64{3.14159} * r * r
+        ;;
+        case ~rect[w, h]:
+            w * h
+        ;;
+        case ~empty[]:
+            f64{0}
+        ;;
+    ;;
+;;
+
+fn ~describe[shape :: Shape] ~ret(str):
+    match(shape):
+        case ~circle[r]: format({circle of radius {}}, r) ;;
+        case ~rect[w, h]: format({{} by {} rectangle}, w, h) ;;
+        case ~empty[]: {nothing} ;;
+    ;;
+;;

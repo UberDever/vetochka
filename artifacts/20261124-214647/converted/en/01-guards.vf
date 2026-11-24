@@ -1,0 +1,29 @@
+# vsystem: a growable vector; guards return early
+fn ~reserve[T, v :: ptr(Vec(T)), wanted :: usize] ~ret(bool):
+    if(wanted <= v[.cap]):
+        return(true)
+    ;;
+    new_cap := max(wanted, max(v[.cap] * 2, 8))
+    new_data := mem[.alloc_array](v[.alloc], T, new_cap)
+    if(new_data == null):
+        return(false)
+    ;;
+    if(v[.data] != null):
+        mem[.copy](new_data, v[.data], v[.len])
+        mem[.free](v[.alloc], v[.data])
+    ;;
+    v[.data] = new_data
+    v[.cap] = new_cap
+    true
+;;
+
+fn ~push[T, v :: ptr(Vec(T)), value :: T] ~ret(bool):
+    if(v[.len] == v[.cap]):
+        if(!reserve(T, v, v[.len] + 1)):
+            return(false)
+        ;;
+    ;;
+    v[.data][v[.len]] = value
+    v[.len] += 1
+    true
+;;

@@ -1,0 +1,15 @@
+# a test appliance
+suite{vector}:
+    test{push grows the vector}:
+        v := init(i32, testing_allocator)
+        defer : free(i32, v) ;;
+        expect(push(i32, v, 7))
+        expect(v[.len] == 1)
+    ;;
+
+    test{get checks bounds}:
+        v := init(i32, testing_allocator)
+        defer : free(i32, v) ;;
+        expect_trap(: get(i32, v, 0) ;;)
+    ;;
+;;
