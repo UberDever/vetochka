@@ -1,0 +1,119 @@
+;; everyting below is imaginary
+
+def module: Example do:
+def fn: moving_average args: [values :: List[f64], window :: i64] ret: List[f64] do:
+    def ~var result = List[f64]()
+    for range: [i = u64(0), values.length()] do:
+        def let:
+            from = max(0, i - window + 1);
+            slice = values[range(from, i+1)];
+        var: sum = 0; end;
+        for each: [x, slice] do:
+            sum += x;
+        end;
+        result.append(sum / slice.length());
+    end;
+    return(result);
+end;
+print(moving_average([1, 2, 3, 4, 5], 3));
+end;
+
+
+def module: analytics.storage do:
+
+def type: user_id_t be: i64 end;
+def type: event_kind_t be: {click}; {view}; {purchase}; end;
+
+def struct: event_t be:
+    user_id: user_id_t
+    kind: event_kind_t
+    path: string
+    value: f64
+    timestamp: i64
+end;
+
+def struct: user_stats_t be:
+    views: i64;
+    clicks: i64;
+    purchases: i64;
+    total_value: f64;
+end;
+
+def fn: classify_path args: [path :: string] ret: string do:
+    if (path.starts_with({/docs/})) do:
+        return({docs});
+    end;
+    if (path.starts_with({/pricing/})) do:
+        return({pricing});
+    end;
+    return({other});
+end;
+
+def fn: score_event args: [event :: event_t] ret: f64 do:
+    def ~let base = 
+        match (event.kind) with:
+            case {click} ~do 1;
+            case {view} ~do f64(0.5);
+            case {purchase} ~do 20 + event.value;
+        end;
+    def ~let section_bonus =
+        if (classify_path(event.path) == {pricing}) do:
+            10;
+        else:
+            0;
+        end;
+    return(base + section_bonus);
+end;
+
+def fn: update_stats args: [stats :: user_stats_t, event :: event_t] ret: user_stats_t do:
+    def ~var result = stats;
+    match (event.kind) with:
+        case {click} ~do result.clicks += 1;
+        case {view} ~do result.views += 1;
+        case {purchase} do: result.purchases += 1; result.total_value += event.value; end
+    end;
+    return(result);
+end;
+
+def fn: process_batch args: [db :: database_t, events :: List[event_t]] ret: report_t do:
+    def var:
+        total_score = f32(0);
+        updated_users = set_t[user_id_t]();
+    end;
+    with [transaction(db)] do:
+        for each: [event, events] do:
+            def let: 
+                old_stats = db.users.get(event.user_id)
+                          .or(user_stats_t());
+                new_stats = update_stats(old_stats, event);
+            end;
+            db.users.put(event.user_id, new_stats);
+            db.events.append(event);
+            total_score += score_event(event);
+            updated_users.insert(event.user_id);
+        end;
+    end;
+    return(report_t call:
+        event_count = events.length();
+        user_count = updated_users.length();
+        total_score = total_score;
+        average_score = if (events.length() > 0) ~do total_score / events.length() ~else f32(0);
+    end);
+end;
+
+@route({POST}, {/api/events})
+def fn: do:
+    def let:
+        body = request.json();
+        events = parse_events(body);
+    end;
+    if (events.length() > 10000) do:
+        return(response.status(413).json(any_t call:
+            error = {Too many events};
+        end));
+    end;
+    def ~let report = process_batch(database.main, events);
+    return(response.json(report));
+end;
+
+end;
