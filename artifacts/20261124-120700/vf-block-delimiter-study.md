@@ -189,20 +189,19 @@ build |
 
 The same surface serves imperative and declarative constructs; frontends can assign different meaning to the application trees.
 
-### Conditional alternatives
+### Conditional alternatives: labeled blocks
 
-Two competing *frontend conventions* were tried, with no new vf syntax selected:
+The preferred tentative form treats `else:` / `иначе:` as an ordinary **label applied to the second block**, not a separate head or statement:
 
 ```vf
 if(ready) |
     send(packet)
-;;
-else |
+;; else: |
     retry()
 ;;
 ```
 
-The frontend would have to associate adjacent `if` and `else` expressions inside the block. Another proposed frontend convention would put the alternative in a labeled argument, but it needs grouping because label payloads are tight and blocks are loose. The exact spelling is unresolved. There is no built-in dangling-`else` rule.
+This is **not accepted by the retained grammar**: the existing `labeled_expression` only accepts a tight `argument_expression`, not an ungrouped block. Today the grouped form `else: (do retry() end)` is required. A *proposed* targeted grammar extension to accept `block | argument_expression` as a label payload would allow the above directly (and would also work for `else: do ... end`), with no reserved `else` and no parentheses. The design has not been approved or parser-tested. See [the Russian follow-up](russian-block-words-followup.md) for the analogous `иначе: тут ... всё` and the two delimiter strategies.
 
 ### Deep nesting and small blocks
 
