@@ -98,13 +98,13 @@ Examples are **illustrative** of vf's existing application, labeling, grouping, 
 
 ```vf
 fn transform: [xs :: list_t[i32]] ret: list_t[i32] |
-    map(xs, \\[x] x * x + 1)
+    map(xs, \[x] x * x + 1)
 ;;
 
 fn collect: [xs :: list_t[i32]] ret: list_t[i32] |
     let[result := []]
 
-    for_each(xs, \\[x] |
+    for_each(xs, \[x] |
         if(x > 10) |
             append(result, x)
         ;;
@@ -202,7 +202,7 @@ else |
 ;;
 ```
 
-The frontend would have to associate adjacent `if` and `else` expressions inside the block. Another variant embeds a labeled alternative through parentheses: `else: (| retry() ; ;)` is only schematic; the actual delimiter would need to be contiguous `;;`. This exposes how label payloads are tight, blocks are loose, and there is no built-in dangling-`else` rule.
+The frontend would have to associate adjacent `if` and `else` expressions inside the block. Another proposed frontend convention would put the alternative in a labeled argument, but it needs grouping because label payloads are tight and blocks are loose. The exact spelling is unresolved. There is no built-in dangling-`else` rule.
 
 ### Deep nesting and small blocks
 
