@@ -1,0 +1,23 @@
+;; declarative data: structures, enums, configuration
+struct Particle: [] do
+    position :: vec3
+    velocity :: vec3
+    lifetime :: f32
+end
+
+enum Level: [] do
+    debug
+    info
+    warning
+    error
+end
+
+config name: server do
+    host: {0.0.0.0}
+    port: 8080
+    tls: [cert: {server.pem}, key: {server.key}]
+    limits do
+        connections: 1024
+        body_bytes: 1048576
+    end
+end

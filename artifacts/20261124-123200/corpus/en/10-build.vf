@@ -1,0 +1,15 @@
+# build description: declarative nesting
+build |
+    target name: {app} kind: {executable} |
+        sources: [{src/main.vf}, {src/net.vf}]
+        optimize: {release}
+        depends: [{core}, {net}]
+    ;;
+    target name: {core} kind: {library} |
+        sources: glob({src/core/*.vf})
+    ;;
+    rule name: {no-raw-malloc} |
+        forbid: [malloc, realloc, free]
+        allow: [allocator]
+    ;;
+;;

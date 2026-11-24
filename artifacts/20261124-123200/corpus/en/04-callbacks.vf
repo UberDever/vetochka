@@ -1,0 +1,23 @@
+# callbacks: blocks inside calls end with `;;)`
+fn collect_big: [xs :: list(i32)] ret: list(i32) |
+    result := []
+    for_each(xs, \[x] |
+        if(x > 10) |
+            append(result, x)
+        ;;
+    ;;)
+    result
+;;
+
+on(button, {click}, \[event] |
+    log({clicked at}, event[.x], event[.y])
+    refresh(view)
+;;)
+
+with_retry(3, \[attempt] |
+    connect(server) on_error: \[err] |
+        log({attempt failed}, attempt, err)
+    ;;
+;;)
+
+timer = every(seconds(5), \[tick] | poll(queue) ;;)

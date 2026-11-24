@@ -14,7 +14,9 @@ User direction: forbid runs such as `x;;;;;` and generally gluing `;;`, while ke
 
 Agent-drafted rule (not yet confirmed by the user):
 
-> A block delimiter never touches the block's contents. On the outside, it may touch only a bracket or a comma.
+> A block delimiter never touches the block's contents. On the outside, it may touch only the bracket enclosing its block, or a comma.
+
+The first draft said "only a bracket or a comma", which admits `f(x)|`; "enclosing" excludes it, matching the table.
 
 | Text | Result |
 | --- | --- |

@@ -1,0 +1,10 @@
+# natural names that a word pair would reserve
+struct Span: [] |
+    start :: usize
+    end :: usize
+;;
+fn length: [s :: Span] ret: usize |
+    s[.end] - s[.start]
+;;
+scheduler = queue([])
+do(scheduler, task)

@@ -1,0 +1,11 @@
+;; v0 core: case-lambdas over tree shapes; no block delimiters at all
+size = \[self, ~[left, right]]
+    ?[{:all}, {:fork}] self(self, left) + self(self, right) + 1
+    ?[{:all}, {:fruit}] 1
+    ?[{:all}, {:leaf}] 0
+
+first = \[~[head, rest]]
+    ?[{:fork}] head
+    ?[{:all}] ~
+
+count = =[measure = \[tree] size(size, tree)] measure(~[~[~, ~], ~])

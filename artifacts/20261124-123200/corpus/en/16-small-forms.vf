@@ -1,0 +1,12 @@
+# small forms: empty, single-line, listed and grouped blocks; comments
+noop | ;;
+on_start | init() ;;
+handlers = [| log({a}) ;;, | log({b}) ;;]
+deferred = (| cleanup() ;;)
+pairs = [first: | a() ;;, second: | b() ;;]
+x = 1 # a trailing comment
+if(ready) | #| why |# go() ;;
+items = [1, #;old(2) 3]
+long_call(alpha, beta) ...
+    with: options | run() ;;
+fn add: [a :: i32, b :: i32] ret: i32 | a + b ;;

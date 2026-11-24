@@ -1,0 +1,16 @@
+;; deep nesting stress
+transaction(db) do
+    for_each(records) each: \[record] do
+        if(valid(record)) do
+            with_lock(mutex) do
+                retry(3) do
+                    if(exists(record)) do
+                        update(record)
+                    end else: do
+                        insert(record)
+                    end
+                end
+            end
+        end
+    end
+end

@@ -1,0 +1,31 @@
+;; conditionals with labeled alternatives, loops with early exits
+fn classify: [n :: i32] ret: str do
+    if(n < 0) do
+        {negative}
+    end elif: (n == 0) do
+        {zero}
+    end elif: (n < 10) do
+        {small}
+    end else: do
+        {large}
+    end
+end
+
+fn find_first: [xs :: slice(i32), target :: i32] ret: isize do
+    i := 0
+    while(i < len(xs)) do
+        if(xs[i] == target) do
+            return(i)
+        end
+        if(xs[i] < 0) do
+            i += 1
+            continue()
+        end
+        i += 1
+    end
+    -1
+end
+
+fn sign: [x :: i32] ret: i32 do
+    if(x > 0) do 1 end else: do -1 end
+end

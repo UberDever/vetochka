@@ -1,0 +1,14 @@
+# functional style: lambdas and binders take one expression, no blocks
+squares = map(xs, \[x] x * x)
+evens = filter(xs, \[x] x % 2 == 0)
+total = fold(xs, 0, \[acc, x] acc + x)
+
+compose = \[f, g] \[x] f(g(x))
+inc = \[x] x + 1
+twice = \[f] compose(f, f)
+
+mean = \[xs] =[sum = fold(xs, 0, \[a, b] a + b), count = len(xs)] sum / count
+
+pipeline = =[parsed = map(lines, parse_int),
+             valid = filter(parsed, \[n] n >= 0),
+             scaled = map(valid, \[n] n * 10)] fold(scaled, 0, \[a, b] a + b)

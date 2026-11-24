@@ -1,0 +1,23 @@
+;; a state machine with event handlers
+machine(door) do
+    state(closed) do
+        on open: do goto(opening) end
+        on lock: do goto(locked) end
+    end
+    state(opening) do
+        enter: do start_motor() end
+        on done: do
+            stop_motor()
+            goto(opened)
+        end
+    end
+    state(locked) do
+        on unlock: \[code] do
+            if(code == secret) do
+                goto(closed)
+            end else: do
+                alarm()
+            end
+        end
+    end
+end

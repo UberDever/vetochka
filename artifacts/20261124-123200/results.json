@@ -1,0 +1,1018 @@
+{
+ "programs": {},
+ "aggregate": {
+  "en · | ;;": {
+   "programs": 17,
+   "chars": 8027,
+   "columns": 8027,
+   "delimiters": 212,
+   "delimiter_columns": 318,
+   "tokens": 1863,
+   "closer_lines": 72,
+   "longest_closer_run": 6,
+   "lines": 346,
+   "failures": []
+  },
+  "en · do end": {
+   "programs": 17,
+   "chars": 8257,
+   "columns": 8257,
+   "delimiters": 212,
+   "delimiter_columns": 530,
+   "tokens": 1863,
+   "closer_lines": 72,
+   "longest_closer_run": 6,
+   "lines": 346,
+   "failures": []
+  },
+  "en · тут всё": {
+   "programs": 17,
+   "chars": 8363,
+   "columns": 8363,
+   "delimiters": 212,
+   "delimiter_columns": 636,
+   "tokens": 1863,
+   "closer_lines": 72,
+   "longest_closer_run": 6,
+   "lines": 346,
+   "failures": []
+  },
+  "en · тут всё/все": {
+   "programs": 17,
+   "chars": 8363,
+   "columns": 8363,
+   "delimiters": 212,
+   "delimiter_columns": 636,
+   "tokens": 1863,
+   "closer_lines": 72,
+   "longest_closer_run": 6,
+   "lines": 346,
+   "failures": []
+  },
+  "en · 开始 结束": {
+   "programs": 17,
+   "chars": 8151,
+   "columns": 8575,
+   "delimiters": 212,
+   "delimiter_columns": 848,
+   "tokens": 1863,
+   "closer_lines": 72,
+   "longest_closer_run": 6,
+   "lines": 346,
+   "failures": []
+  },
+  "en · 始 终": {
+   "programs": 17,
+   "chars": 7939,
+   "columns": 8151,
+   "delimiters": 212,
+   "delimiter_columns": 424,
+   "tokens": 1863,
+   "closer_lines": 72,
+   "longest_closer_run": 6,
+   "lines": 346,
+   "failures": []
+  },
+  "en · all pairs at once": {
+   "programs": 17,
+   "chars": 8257,
+   "columns": 8257,
+   "delimiters": 212,
+   "delimiter_columns": 530,
+   "tokens": 1863,
+   "closer_lines": 72,
+   "longest_closer_run": 6,
+   "lines": 346,
+   "failures": []
+  },
+  "ru · | ;;": {
+   "programs": 17,
+   "chars": 9369,
+   "columns": 9369,
+   "delimiters": 212,
+   "delimiter_columns": 318,
+   "tokens": 1863,
+   "closer_lines": 72,
+   "longest_closer_run": 6,
+   "lines": 346,
+   "failures": []
+  },
+  "ru · do end": {
+   "programs": 17,
+   "chars": 9599,
+   "columns": 9599,
+   "delimiters": 212,
+   "delimiter_columns": 530,
+   "tokens": 1863,
+   "closer_lines": 72,
+   "longest_closer_run": 6,
+   "lines": 346,
+   "failures": []
+  },
+  "ru · тут всё": {
+   "programs": 17,
+   "chars": 9705,
+   "columns": 9705,
+   "delimiters": 212,
+   "delimiter_columns": 636,
+   "tokens": 1863,
+   "closer_lines": 72,
+   "longest_closer_run": 6,
+   "lines": 346,
+   "failures": []
+  },
+  "ru · тут всё/все": {
+   "programs": 17,
+   "chars": 9705,
+   "columns": 9705,
+   "delimiters": 212,
+   "delimiter_columns": 636,
+   "tokens": 1863,
+   "closer_lines": 72,
+   "longest_closer_run": 6,
+   "lines": 346,
+   "failures": []
+  },
+  "ru · 开始 结束": {
+   "programs": 17,
+   "chars": 9493,
+   "columns": 9917,
+   "delimiters": 212,
+   "delimiter_columns": 848,
+   "tokens": 1863,
+   "closer_lines": 72,
+   "longest_closer_run": 6,
+   "lines": 346,
+   "failures": []
+  },
+  "ru · 始 终": {
+   "programs": 17,
+   "chars": 9281,
+   "columns": 9493,
+   "delimiters": 212,
+   "delimiter_columns": 424,
+   "tokens": 1863,
+   "closer_lines": 72,
+   "longest_closer_run": 6,
+   "lines": 346,
+   "failures": []
+  },
+  "ru · all pairs at once": {
+   "programs": 17,
+   "chars": 9705,
+   "columns": 9705,
+   "delimiters": 212,
+   "delimiter_columns": 636,
+   "tokens": 1863,
+   "closer_lines": 72,
+   "longest_closer_run": 6,
+   "lines": 346,
+   "failures": []
+  },
+  "zh · | ;;": {
+   "programs": 17,
+   "chars": 5879,
+   "columns": 7453,
+   "delimiters": 212,
+   "delimiter_columns": 318,
+   "tokens": 1863,
+   "closer_lines": 72,
+   "longest_closer_run": 6,
+   "lines": 346,
+   "failures": []
+  },
+  "zh · do end": {
+   "programs": 17,
+   "chars": 6109,
+   "columns": 7683,
+   "delimiters": 212,
+   "delimiter_columns": 530,
+   "tokens": 1863,
+   "closer_lines": 72,
+   "longest_closer_run": 6,
+   "lines": 346,
+   "failures": []
+  },
+  "zh · тут всё": {
+   "programs": 17,
+   "chars": 6215,
+   "columns": 7789,
+   "delimiters": 212,
+   "delimiter_columns": 636,
+   "tokens": 1863,
+   "closer_lines": 72,
+   "longest_closer_run": 6,
+   "lines": 346,
+   "failures": []
+  },
+  "zh · тут всё/все": {
+   "programs": 17,
+   "chars": 6215,
+   "columns": 7789,
+   "delimiters": 212,
+   "delimiter_columns": 636,
+   "tokens": 1863,
+   "closer_lines": 72,
+   "longest_closer_run": 6,
+   "lines": 346,
+   "failures": []
+  },
+  "zh · 开始 结束": {
+   "programs": 17,
+   "chars": 6003,
+   "columns": 8001,
+   "delimiters": 212,
+   "delimiter_columns": 848,
+   "tokens": 1863,
+   "closer_lines": 72,
+   "longest_closer_run": 6,
+   "lines": 346,
+   "failures": []
+  },
+  "zh · 始 终": {
+   "programs": 17,
+   "chars": 5791,
+   "columns": 7577,
+   "delimiters": 212,
+   "delimiter_columns": 424,
+   "tokens": 1863,
+   "closer_lines": 72,
+   "longest_closer_run": 6,
+   "lines": 346,
+   "failures": []
+  },
+  "zh · all pairs at once": {
+   "programs": 17,
+   "chars": 6003,
+   "columns": 8001,
+   "delimiters": 212,
+   "delimiter_columns": 848,
+   "tokens": 1863,
+   "closer_lines": 72,
+   "longest_closer_run": 6,
+   "lines": 346,
+   "failures": []
+  }
+ },
+ "mutations": {
+  "en · | ;;": {
+   "opener before": {
+    "local": 102,
+    "tolerated": 1
+   },
+   "opener after": {
+    "local": 104,
+    "distant": 1
+   },
+   "closer before": {
+    "local": 106
+   },
+   "closer after": {
+    "local": 83
+   }
+  },
+  "en · do end": {
+   "opener before": {
+    "distant": 19,
+    "local": 83,
+    "tolerated": 1
+   },
+   "opener after": {
+    "local": 78,
+    "distant": 27
+   },
+   "closer before": {
+    "local": 70,
+    "distant": 36
+   },
+   "closer after": {
+    "distant": 61,
+    "local": 22
+   }
+  },
+  "en · тут всё": {
+   "opener before": {
+    "distant": 19,
+    "local": 83,
+    "tolerated": 1
+   },
+   "opener after": {
+    "local": 78,
+    "distant": 27
+   },
+   "closer before": {
+    "local": 70,
+    "distant": 36
+   },
+   "closer after": {
+    "distant": 61,
+    "local": 22
+   }
+  },
+  "en · тут всё/все": {
+   "opener before": {
+    "distant": 19,
+    "local": 83,
+    "tolerated": 1
+   },
+   "opener after": {
+    "local": 78,
+    "distant": 27
+   },
+   "closer before": {
+    "local": 70,
+    "distant": 36
+   },
+   "closer after": {
+    "distant": 61,
+    "local": 22
+   }
+  },
+  "en · 开始 结束": {
+   "opener before": {
+    "distant": 19,
+    "local": 83,
+    "tolerated": 1
+   },
+   "opener after": {
+    "local": 78,
+    "distant": 27
+   },
+   "closer before": {
+    "local": 70,
+    "distant": 36
+   },
+   "closer after": {
+    "distant": 61,
+    "local": 22
+   }
+  },
+  "en · 始 终": {
+   "opener before": {
+    "distant": 19,
+    "local": 83,
+    "tolerated": 1
+   },
+   "opener after": {
+    "local": 78,
+    "distant": 27
+   },
+   "closer before": {
+    "local": 70,
+    "distant": 36
+   },
+   "closer after": {
+    "distant": 61,
+    "local": 22
+   }
+  },
+  "en · all pairs at once": {
+   "opener before": {
+    "distant": 19,
+    "local": 83,
+    "tolerated": 1
+   },
+   "opener after": {
+    "local": 78,
+    "distant": 27
+   },
+   "closer before": {
+    "local": 70,
+    "distant": 36
+   },
+   "closer after": {
+    "distant": 61,
+    "local": 22
+   }
+  },
+  "ru · | ;;": {
+   "opener before": {
+    "local": 102,
+    "tolerated": 1
+   },
+   "opener after": {
+    "local": 104,
+    "distant": 1
+   },
+   "closer before": {
+    "local": 106
+   },
+   "closer after": {
+    "local": 83
+   }
+  },
+  "ru · do end": {
+   "opener before": {
+    "distant": 19,
+    "local": 83,
+    "tolerated": 1
+   },
+   "opener after": {
+    "local": 78,
+    "distant": 27
+   },
+   "closer before": {
+    "local": 70,
+    "distant": 36
+   },
+   "closer after": {
+    "distant": 61,
+    "local": 22
+   }
+  },
+  "ru · тут всё": {
+   "opener before": {
+    "distant": 19,
+    "local": 83,
+    "tolerated": 1
+   },
+   "opener after": {
+    "local": 78,
+    "distant": 27
+   },
+   "closer before": {
+    "local": 70,
+    "distant": 36
+   },
+   "closer after": {
+    "distant": 61,
+    "local": 22
+   }
+  },
+  "ru · тут всё/все": {
+   "opener before": {
+    "distant": 19,
+    "local": 83,
+    "tolerated": 1
+   },
+   "opener after": {
+    "local": 78,
+    "distant": 27
+   },
+   "closer before": {
+    "local": 70,
+    "distant": 36
+   },
+   "closer after": {
+    "distant": 61,
+    "local": 22
+   }
+  },
+  "ru · 开始 结束": {
+   "opener before": {
+    "distant": 19,
+    "local": 83,
+    "tolerated": 1
+   },
+   "opener after": {
+    "local": 78,
+    "distant": 27
+   },
+   "closer before": {
+    "local": 70,
+    "distant": 36
+   },
+   "closer after": {
+    "distant": 61,
+    "local": 22
+   }
+  },
+  "ru · 始 终": {
+   "opener before": {
+    "distant": 19,
+    "local": 83,
+    "tolerated": 1
+   },
+   "opener after": {
+    "local": 78,
+    "distant": 27
+   },
+   "closer before": {
+    "local": 70,
+    "distant": 36
+   },
+   "closer after": {
+    "distant": 61,
+    "local": 22
+   }
+  },
+  "ru · all pairs at once": {
+   "opener before": {
+    "distant": 19,
+    "local": 83,
+    "tolerated": 1
+   },
+   "opener after": {
+    "local": 78,
+    "distant": 27
+   },
+   "closer before": {
+    "local": 70,
+    "distant": 36
+   },
+   "closer after": {
+    "distant": 61,
+    "local": 22
+   }
+  },
+  "zh · | ;;": {
+   "opener before": {
+    "local": 102,
+    "tolerated": 1
+   },
+   "opener after": {
+    "local": 104,
+    "distant": 1
+   },
+   "closer before": {
+    "local": 106
+   },
+   "closer after": {
+    "local": 83
+   }
+  },
+  "zh · do end": {
+   "opener before": {
+    "distant": 19,
+    "local": 83,
+    "tolerated": 1
+   },
+   "opener after": {
+    "local": 78,
+    "distant": 27
+   },
+   "closer before": {
+    "local": 70,
+    "distant": 36
+   },
+   "closer after": {
+    "distant": 61,
+    "local": 22
+   }
+  },
+  "zh · тут всё": {
+   "opener before": {
+    "distant": 19,
+    "local": 83,
+    "tolerated": 1
+   },
+   "opener after": {
+    "local": 78,
+    "distant": 27
+   },
+   "closer before": {
+    "local": 70,
+    "distant": 36
+   },
+   "closer after": {
+    "distant": 61,
+    "local": 22
+   }
+  },
+  "zh · тут всё/все": {
+   "opener before": {
+    "distant": 19,
+    "local": 83,
+    "tolerated": 1
+   },
+   "opener after": {
+    "local": 78,
+    "distant": 27
+   },
+   "closer before": {
+    "local": 70,
+    "distant": 36
+   },
+   "closer after": {
+    "distant": 61,
+    "local": 22
+   }
+  },
+  "zh · 开始 结束": {
+   "opener before": {
+    "distant": 19,
+    "local": 83,
+    "tolerated": 1
+   },
+   "opener after": {
+    "local": 78,
+    "distant": 27
+   },
+   "closer before": {
+    "local": 70,
+    "distant": 36
+   },
+   "closer after": {
+    "distant": 61,
+    "local": 22
+   }
+  },
+  "zh · 始 终": {
+   "opener before": {
+    "distant": 19,
+    "local": 83,
+    "tolerated": 1
+   },
+   "opener after": {
+    "local": 78,
+    "distant": 27
+   },
+   "closer before": {
+    "local": 70,
+    "distant": 36
+   },
+   "closer after": {
+    "distant": 61,
+    "local": 22
+   }
+  },
+  "zh · all pairs at once": {
+   "opener before": {
+    "distant": 19,
+    "local": 83,
+    "tolerated": 1
+   },
+   "opener after": {
+    "local": 78,
+    "distant": 27
+   },
+   "closer before": {
+    "local": 70,
+    "distant": 36
+   },
+   "closer after": {
+    "distant": 61,
+    "local": 22
+   }
+  }
+ },
+ "probes": {
+  "en · | ;;": "ok",
+  "en · do end": "error 7:8: block closer touches the block's contents",
+  "en · тут всё": "ok",
+  "en · тут всё/все": "ok",
+  "en · 开始 结束": "ok",
+  "en · 始 终": "ok",
+  "en · all pairs at once": "error 7:8: block closer touches the block's contents",
+  "ru · | ;;": "ok",
+  "ru · do end": "ok",
+  "ru · тут всё": "ok",
+  "ru · тут всё/все": "error 6:6: block closer touches the block's contents",
+  "ru · 开始 结束": "ok",
+  "ru · 始 终": "ok",
+  "ru · all pairs at once": "error 6:6: block closer touches the block's contents",
+  "zh · | ;;": "ok",
+  "zh · do end": "ok",
+  "zh · тут всё": "ok",
+  "zh · тут всё/все": "ok",
+  "zh · 开始 结束": "error 6:3: block opener touches the block's contents",
+  "zh · 始 终": "ok",
+  "zh · all pairs at once": "error 6:3: block opener touches the block's contents"
+ },
+ "typing": {
+  "en · | ;;": {
+   "half": 0,
+   "full": 0
+  },
+  "en · do end": {
+   "half": 0,
+   "full": 0
+  },
+  "en · тут всё": {
+   "half": 336,
+   "full": 336
+  },
+  "en · тут всё/все": {
+   "half": 336,
+   "full": 336
+  },
+  "en · 开始 结束": {
+   "half": 336,
+   "full": 345
+  },
+  "en · 始 终": {
+   "half": 336,
+   "full": 345
+  },
+  "en · all pairs at once": {
+   "half": 0,
+   "full": 0
+  },
+  "ru · | ;;": {
+   "half": 637,
+   "full": 637
+  },
+  "ru · do end": {
+   "half": 733,
+   "full": 733
+  },
+  "ru · тут всё": {
+   "half": 525,
+   "full": 525
+  },
+  "ru · тут всё/все": {
+   "half": 525,
+   "full": 525
+  },
+  "ru · 开始 结束": {
+   "half": 736,
+   "full": 806
+  },
+  "ru · 始 终": {
+   "half": 736,
+   "full": 806
+  },
+  "ru · all pairs at once": {
+   "half": 525,
+   "full": 525
+  },
+  "zh · | ;;": {
+   "half": 32,
+   "full": 1297
+  },
+  "zh · do end": {
+   "half": 362,
+   "full": 1297
+  },
+  "zh · тут всё": {
+   "half": 365,
+   "full": 1361
+  },
+  "zh · тут всё/все": {
+   "half": 365,
+   "full": 1361
+  },
+  "zh · 开始 结束": {
+   "half": 32,
+   "full": 1270
+  },
+  "zh · 始 终": {
+   "half": 32,
+   "full": 1270
+  },
+  "zh · all pairs at once": {
+   "half": 32,
+   "full": 1270
+  }
+ },
+ "mutation_examples": {
+  "en · | ;;": {
+   "distant": [
+    "02-branching:30: if(x > 0) | 1 ;; else: |-1 ;;"
+   ],
+   "tolerated": [
+    "16-small-forms:4: handlers = [| log({a}) ;;,| log({b}) ;;]"
+   ]
+  },
+  "en · do end": {
+   "distant": [
+    "01-guards:2: fn reserve: [T, v :: ptr(Vec(T)), wanted :: usize] ret: booldo",
+    "01-guards:5: endnew_cap := max(wanted, max(v[.cap] * 2, 8))",
+    "01-guards:10: endif(v[.data] != null) do",
+    "01-guards:14: endv[.data] = new_data",
+    "01-guards:17: trueend",
+    "01-guards:18: endfn push: [T, v :: ptr(Vec(T)), value :: T] ret: bool do"
+   ],
+   "tolerated": [
+    "16-small-forms:4: handlers = [do log({a}) end,do log({b}) end]"
+   ]
+  },
+  "en · тут всё": {
+   "distant": [
+    "01-guards:2: fn reserve: [T, v :: ptr(Vec(T)), wanted :: usize] ret: boolтут",
+    "01-guards:5: всёnew_cap := max(wanted, max(v[.cap] * 2, 8))",
+    "01-guards:10: всёif(v[.data] != null) тут",
+    "01-guards:14: всёv[.data] = new_data",
+    "01-guards:17: trueвсё",
+    "01-guards:18: всёfn push: [T, v :: ptr(Vec(T)), value :: T] ret: bool тут"
+   ],
+   "tolerated": [
+    "16-small-forms:4: handlers = [тут log({a}) всё,тут log({b}) всё]"
+   ]
+  },
+  "en · тут всё/все": {
+   "distant": [
+    "01-guards:2: fn reserve: [T, v :: ptr(Vec(T)), wanted :: usize] ret: boolтут",
+    "01-guards:5: всёnew_cap := max(wanted, max(v[.cap] * 2, 8))",
+    "01-guards:10: всёif(v[.data] != null) тут",
+    "01-guards:14: всёv[.data] = new_data",
+    "01-guards:17: trueвсё",
+    "01-guards:18: всёfn push: [T, v :: ptr(Vec(T)), value :: T] ret: bool тут"
+   ],
+   "tolerated": [
+    "16-small-forms:4: handlers = [тут log({a}) всё,тут log({b}) всё]"
+   ]
+  },
+  "en · 开始 结束": {
+   "distant": [
+    "01-guards:2: fn reserve: [T, v :: ptr(Vec(T)), wanted :: usize] ret: bool开始",
+    "01-guards:5: 结束new_cap := max(wanted, max(v[.cap] * 2, 8))",
+    "01-guards:10: 结束if(v[.data] != null) 开始",
+    "01-guards:14: 结束v[.data] = new_data",
+    "01-guards:17: true结束",
+    "01-guards:18: 结束fn push: [T, v :: ptr(Vec(T)), value :: T] ret: bool 开始"
+   ],
+   "tolerated": [
+    "16-small-forms:4: handlers = [开始 log({a}) 结束,开始 log({b}) 结束]"
+   ]
+  },
+  "en · 始 终": {
+   "distant": [
+    "01-guards:2: fn reserve: [T, v :: ptr(Vec(T)), wanted :: usize] ret: bool始",
+    "01-guards:5: 终new_cap := max(wanted, max(v[.cap] * 2, 8))",
+    "01-guards:10: 终if(v[.data] != null) 始",
+    "01-guards:14: 终v[.data] = new_data",
+    "01-guards:17: true终",
+    "01-guards:18: 终fn push: [T, v :: ptr(Vec(T)), value :: T] ret: bool 始"
+   ],
+   "tolerated": [
+    "16-small-forms:4: handlers = [始 log({a}) 终,始 log({b}) 终]"
+   ]
+  },
+  "en · all pairs at once": {
+   "distant": [
+    "01-guards:2: fn reserve: [T, v :: ptr(Vec(T)), wanted :: usize] ret: booldo",
+    "01-guards:5: endnew_cap := max(wanted, max(v[.cap] * 2, 8))",
+    "01-guards:10: endif(v[.data] != null) do",
+    "01-guards:14: endv[.data] = new_data",
+    "01-guards:17: trueend",
+    "01-guards:18: endfn push: [T, v :: ptr(Vec(T)), value :: T] ret: bool do"
+   ],
+   "tolerated": [
+    "16-small-forms:4: handlers = [do log({a}) end,do log({b}) end]"
+   ]
+  },
+  "ru · | ;;": {
+   "distant": [
+    "02-branching:30: если(х > 0) | 1 ;; иначе: |-1 ;;"
+   ],
+   "tolerated": [
+    "16-small-forms:4: обработчики = [| записать({а}) ;;,| записать({б}) ;;]"
+   ]
+  },
+  "ru · do end": {
+   "distant": [
+    "01-guards:2: функция зарезервировать: [Т, в :: указ(Вектор(Т)), нужно :: разм] результат: логdo",
+    "01-guards:5: endновая_ёмкость := макс(нужно, макс(в[.ёмкость] * 2, 8))",
+    "01-guards:10: endесли(в[.данные] != пусто) do",
+    "01-guards:14: endв[.данные] = новые_данные",
+    "01-guards:17: истинаend",
+    "01-guards:18: endфункция добавить: [Т, в :: указ(Вектор(Т)), значение :: Т] результат: лог do"
+   ],
+   "tolerated": [
+    "16-small-forms:4: обработчики = [do записать({а}) end,do записать({б}) end]"
+   ]
+  },
+  "ru · тут всё": {
+   "distant": [
+    "01-guards:2: функция зарезервировать: [Т, в :: указ(Вектор(Т)), нужно :: разм] результат: логтут",
+    "01-guards:5: всёновая_ёмкость := макс(нужно, макс(в[.ёмкость] * 2, 8))",
+    "01-guards:10: всёесли(в[.данные] != пусто) тут",
+    "01-guards:14: всёв[.данные] = новые_данные",
+    "01-guards:17: истинавсё",
+    "01-guards:18: всёфункция добавить: [Т, в :: указ(Вектор(Т)), значение :: Т] результат: лог тут"
+   ],
+   "tolerated": [
+    "16-small-forms:4: обработчики = [тут записать({а}) всё,тут записать({б}) всё]"
+   ]
+  },
+  "ru · тут всё/все": {
+   "distant": [
+    "01-guards:2: функция зарезервировать: [Т, в :: указ(Вектор(Т)), нужно :: разм] результат: логтут",
+    "01-guards:5: всёновая_ёмкость := макс(нужно, макс(в[.ёмкость] * 2, 8))",
+    "01-guards:10: всёесли(в[.данные] != пусто) тут",
+    "01-guards:14: всёв[.данные] = новые_данные",
+    "01-guards:17: истинавсё",
+    "01-guards:18: всёфункция добавить: [Т, в :: указ(Вектор(Т)), значение :: Т] результат: лог тут"
+   ],
+   "tolerated": [
+    "16-small-forms:4: обработчики = [тут записать({а}) всё,тут записать({б}) всё]"
+   ]
+  },
+  "ru · 开始 结束": {
+   "distant": [
+    "01-guards:2: функция зарезервировать: [Т, в :: указ(Вектор(Т)), нужно :: разм] результат: лог开始",
+    "01-guards:5: 结束новая_ёмкость := макс(нужно, макс(в[.ёмкость] * 2, 8))",
+    "01-guards:10: 结束если(в[.данные] != пусто) 开始",
+    "01-guards:14: 结束в[.данные] = новые_данные",
+    "01-guards:17: истина结束",
+    "01-guards:18: 结束функция добавить: [Т, в :: указ(Вектор(Т)), значение :: Т] результат: лог 开始"
+   ],
+   "tolerated": [
+    "16-small-forms:4: обработчики = [开始 записать({а}) 结束,开始 записать({б}) 结束]"
+   ]
+  },
+  "ru · 始 终": {
+   "distant": [
+    "01-guards:2: функция зарезервировать: [Т, в :: указ(Вектор(Т)), нужно :: разм] результат: лог始",
+    "01-guards:5: 终новая_ёмкость := макс(нужно, макс(в[.ёмкость] * 2, 8))",
+    "01-guards:10: 终если(в[.данные] != пусто) 始",
+    "01-guards:14: 终в[.данные] = новые_данные",
+    "01-guards:17: истина终",
+    "01-guards:18: 终функция добавить: [Т, в :: указ(Вектор(Т)), значение :: Т] результат: лог 始"
+   ],
+   "tolerated": [
+    "16-small-forms:4: обработчики = [始 записать({а}) 终,始 записать({б}) 终]"
+   ]
+  },
+  "ru · all pairs at once": {
+   "distant": [
+    "01-guards:2: функция зарезервировать: [Т, в :: указ(Вектор(Т)), нужно :: разм] результат: логтут",
+    "01-guards:5: всёновая_ёмкость := макс(нужно, макс(в[.ёмкость] * 2, 8))",
+    "01-guards:10: всёесли(в[.данные] != пусто) тут",
+    "01-guards:14: всёв[.данные] = новые_данные",
+    "01-guards:17: истинавсё",
+    "01-guards:18: всёфункция добавить: [Т, в :: указ(Вектор(Т)), значение :: Т] результат: лог тут"
+   ],
+   "tolerated": [
+    "16-small-forms:4: обработчики = [тут записать({а}) всё,тут записать({б}) всё]"
+   ]
+  },
+  "zh · | ;;": {
+   "distant": [
+    "02-branching:30: 如果(数 > 0) | 1 ;; 否则: |-1 ;;"
+   ],
+   "tolerated": [
+    "16-small-forms:4: 处理器 = [| 记录({甲}) ;;,| 记录({乙}) ;;]"
+   ]
+  },
+  "zh · do end": {
+   "distant": [
+    "01-guards:2: 函数 预留: [甲, 向 :: 指针(向量(甲)), 所需 :: 尺寸] 结果: 布尔do",
+    "01-guards:5: end新容量 := 最大(所需, 最大(向[.容量] * 2, 8))",
+    "01-guards:10: end如果(向[.数据] != 空值) do",
+    "01-guards:14: end向[.数据] = 新数据",
+    "01-guards:17: 真end",
+    "01-guards:18: end函数 推入: [甲, 向 :: 指针(向量(甲)), 值 :: 甲] 结果: 布尔 do"
+   ],
+   "tolerated": [
+    "16-small-forms:4: 处理器 = [do 记录({甲}) end,do 记录({乙}) end]"
+   ]
+  },
+  "zh · тут всё": {
+   "distant": [
+    "01-guards:2: 函数 预留: [甲, 向 :: 指针(向量(甲)), 所需 :: 尺寸] 结果: 布尔тут",
+    "01-guards:5: всё新容量 := 最大(所需, 最大(向[.容量] * 2, 8))",
+    "01-guards:10: всё如果(向[.数据] != 空值) тут",
+    "01-guards:14: всё向[.数据] = 新数据",
+    "01-guards:17: 真всё",
+    "01-guards:18: всё函数 推入: [甲, 向 :: 指针(向量(甲)), 值 :: 甲] 结果: 布尔 тут"
+   ],
+   "tolerated": [
+    "16-small-forms:4: 处理器 = [тут 记录({甲}) всё,тут 记录({乙}) всё]"
+   ]
+  },
+  "zh · тут всё/все": {
+   "distant": [
+    "01-guards:2: 函数 预留: [甲, 向 :: 指针(向量(甲)), 所需 :: 尺寸] 结果: 布尔тут",
+    "01-guards:5: всё新容量 := 最大(所需, 最大(向[.容量] * 2, 8))",
+    "01-guards:10: всё如果(向[.数据] != 空值) тут",
+    "01-guards:14: всё向[.数据] = 新数据",
+    "01-guards:17: 真всё",
+    "01-guards:18: всё函数 推入: [甲, 向 :: 指针(向量(甲)), 值 :: 甲] 结果: 布尔 тут"
+   ],
+   "tolerated": [
+    "16-small-forms:4: 处理器 = [тут 记录({甲}) всё,тут 记录({乙}) всё]"
+   ]
+  },
+  "zh · 开始 结束": {
+   "distant": [
+    "01-guards:2: 函数 预留: [甲, 向 :: 指针(向量(甲)), 所需 :: 尺寸] 结果: 布尔开始",
+    "01-guards:5: 结束新容量 := 最大(所需, 最大(向[.容量] * 2, 8))",
+    "01-guards:10: 结束如果(向[.数据] != 空值) 开始",
+    "01-guards:14: 结束向[.数据] = 新数据",
+    "01-guards:17: 真结束",
+    "01-guards:18: 结束函数 推入: [甲, 向 :: 指针(向量(甲)), 值 :: 甲] 结果: 布尔 开始"
+   ],
+   "tolerated": [
+    "16-small-forms:4: 处理器 = [开始 记录({甲}) 结束,开始 记录({乙}) 结束]"
+   ]
+  },
+  "zh · 始 终": {
+   "distant": [
+    "01-guards:2: 函数 预留: [甲, 向 :: 指针(向量(甲)), 所需 :: 尺寸] 结果: 布尔始",
+    "01-guards:5: 终新容量 := 最大(所需, 最大(向[.容量] * 2, 8))",
+    "01-guards:10: 终如果(向[.数据] != 空值) 始",
+    "01-guards:14: 终向[.数据] = 新数据",
+    "01-guards:17: 真终",
+    "01-guards:18: 终函数 推入: [甲, 向 :: 指针(向量(甲)), 值 :: 甲] 结果: 布尔 始"
+   ],
+   "tolerated": [
+    "16-small-forms:4: 处理器 = [始 记录({甲}) 终,始 记录({乙}) 终]"
+   ]
+  },
+  "zh · all pairs at once": {
+   "distant": [
+    "01-guards:2: 函数 预留: [甲, 向 :: 指针(向量(甲)), 所需 :: 尺寸] 结果: 布尔开始",
+    "01-guards:5: 结束新容量 := 最大(所需, 最大(向[.容量] * 2, 8))",
+    "01-guards:10: 结束如果(向[.数据] != 空值) 开始",
+    "01-guards:14: 结束向[.数据] = 新数据",
+    "01-guards:17: 真结束",
+    "01-guards:18: 结束函数 推入: [甲, 向 :: 指针(向量(甲)), 值 :: 甲] 结果: 布尔 开始"
+   ],
+   "tolerated": [
+    "16-small-forms:4: 处理器 = [开始 记录({甲}) 结束,开始 记录({乙}) 结束]"
+   ]
+  }
+ }
+}
