@@ -1,0 +1,12 @@
+;; small forms: empty, single-line, listed and grouped blocks; comments
+noop do end
+on_start do init() end
+handlers = [do log({a}) end, do log({b}) end]
+deferred = (do cleanup() end)
+pairs = [first: do a() end, second: do b() end]
+x = 1 ;; a trailing comment
+if(ready) do #| why |# go() end
+items = [1, #;old(2) 3]
+long_call(alpha, beta) ...
+    with: options do run() end
+fn add: [a :: i32, b :: i32] ret: i32 do a + b end

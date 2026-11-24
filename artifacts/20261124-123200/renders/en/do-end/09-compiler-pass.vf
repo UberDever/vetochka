@@ -1,0 +1,23 @@
+;; vmeta: passes are functions over terms
+names = \[self, ~[head, rest], acc]
+    ?[{:all}, {:fork}, {:all}] self(self, rest, self(self, head, acc))
+    ?[{:all}, {:fruit}, {:all}] acc
+    ?[{:all}, {:leaf}, {:all}] acc
+
+pass name: collect_fn_names over: module do
+    found := []
+    walk(module) on: \[node] do
+        if(is_fn(node)) do
+            push(found, node[.name])
+        end
+    end
+    found
+end
+
+pass name: forbid_malloc over: module do
+    walk(module) on: \[node] do
+        if(is_call(node, {malloc})) do
+            report(node, {use an allocator parameter})
+        end
+    end
+end

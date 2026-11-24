@@ -1,0 +1,15 @@
+;; 构建描述：声明式嵌套
+构建 do
+    目标 名称: {应用} 类型: {可执行} do
+        源文件: [{src/main.vf}, {src/net.vf}]
+        优化: {发布}
+        依赖: [{核心}, {网络}]
+    end
+    目标 名称: {核心} 类型: {库} do
+        源文件: 通配({src/core/*.vf})
+    end
+    规则 名称: {禁止裸malloc} do
+        禁止: [malloc, realloc, free]
+        允许: [分配器]
+    end
+end

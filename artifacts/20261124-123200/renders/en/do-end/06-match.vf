@@ -1,0 +1,28 @@
+;; vsystem: tagged unions and a match appliance
+union Shape: [] do
+    circle: [radius :: f64]
+    rect: [width :: f64, height :: f64]
+    empty: []
+end
+
+fn area: [shape :: Shape] ret: f64 do
+    match(shape) do
+        case circle: [r] do
+            f64{3.14159} * r * r
+        end
+        case rect: [w, h] do
+            w * h
+        end
+        case empty: [] do
+            f64{0}
+        end
+    end
+end
+
+fn describe: [shape :: Shape] ret: str do
+    match(shape) do
+        case circle: [r] do format({circle of radius {}}, r) end
+        case rect: [w, h] do format({{} by {} rectangle}, w, h) end
+        case empty: [] do {nothing} end
+    end
+end
