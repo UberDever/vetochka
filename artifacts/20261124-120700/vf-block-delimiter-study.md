@@ -2,7 +2,7 @@
 
 Status: design exploration, **not an accepted syntax change**. This note records the 23–24 November discussion of shared vf syntax for `vmeta` and `vsystem`, rather than v0 execution. Nothing below is parser-tested or normative.
 
-Sources: [retained syntax](../20261110-000001/new_spec/02_syntax.md), [earlier vmeta/vsystem corpus](../20260903-120000/picture.md), [devlog](../../devlog/log.md), especially (30.08.26, Let) and the later syntax decisions. The current `do ... end` grammar remains the baseline.
+Sources: [retained syntax](../20261110-000001/new_spec/02_syntax.md), [earlier vmeta/vsystem corpus](../20260903-120000/picture.md), [devlog](../../devlog/log.md), especially (30.08.26, 16) "Let" and the later syntax decisions. The current `do ... end` grammar remains the baseline.
 
 ## Objective and constraints
 
