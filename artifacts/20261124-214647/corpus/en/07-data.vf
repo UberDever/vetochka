@@ -16,7 +16,7 @@ config ~name(server):
     ~host{0.0.0.0}
     ~port(8080)
     ~tls[~cert{server.pem}, ~key{server.key}]
-    limits :
+    limits ~do:
         ~connections(1024)
         ~body_bytes(1048576)
     ;;

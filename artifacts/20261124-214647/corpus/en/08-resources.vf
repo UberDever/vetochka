@@ -1,12 +1,12 @@
 # resources and errors: defer, errdefer, try
 fn ~read_all[path :: str] ~ret(!bytes):
     file := try(open(path))
-    defer :
+    defer ~do:
         close(file)
     ;;
     size := try(file_size(file))
     buffer := try(allocate(size))
-    errdefer :
+    errdefer ~do:
         free(buffer)
     ;;
     try(read_exact(file, buffer))
@@ -15,8 +15,8 @@ fn ~read_all[path :: str] ~ret(!bytes):
 
 fn ~copy_file[from :: str, to :: str] ~ret(!unit):
     source := try(open(from))
-    defer : close(source) ;;
+    defer ~do: close(source) ;;
     target := try(create(to))
-    defer : close(target) ;;
+    defer ~do: close(target) ;;
     try(copy(source, target))
 ;;

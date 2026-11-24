@@ -1,5 +1,5 @@
 # build description: declarative nesting
-build :
+build ~do:
     target ~name{app} ~kind{executable}:
         ~sources[{src/main.vf}, {src/net.vf}]
         ~optimize{release}

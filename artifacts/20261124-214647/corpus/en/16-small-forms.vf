@@ -1,6 +1,6 @@
 # small forms: empty, single-line, listed and grouped blocks; comments
-noop : ;;
-on_start : init() ;;
+noop ~do: ;;
+on_start ~do: init() ;;
 handlers = [: log({a}) ;;, : log({b}) ;;]
 deferred = (: cleanup() ;;)
 pairs = [~first: a() ;;, ~second: b() ;;]

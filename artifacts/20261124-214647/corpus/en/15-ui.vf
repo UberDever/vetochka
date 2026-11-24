@@ -6,7 +6,7 @@ window ~title{Settings}:
             volume = v
             save(settings)
         ;;
-        row :
+        row ~do:
             button({Cancel}) ~on_click: close(window) ;;
             button({OK}) ~on_click: apply(settings) ; close(window) ;;
         ;;

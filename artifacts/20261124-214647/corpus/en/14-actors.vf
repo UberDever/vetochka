@@ -1,7 +1,7 @@
 # concurrency: actors and message loops
-counter = spawn :
+counter = spawn ~do:
     count := 0
-    loop :
+    loop ~do:
         receive(message):
             case ~increment[]: count += 1 ;;
             case ~get[reply_to]:

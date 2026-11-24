@@ -76,27 +76,27 @@
  },
  "size": {
   "en": {
-   "chars": 7876,
-   "columns": 7876,
+   "chars": 7915,
+   "columns": 7915,
    "old_chars": 8027,
    "old_columns": 8027,
-   "symbols": 144,
+   "symbols": 157,
    "blocks": 120
   },
   "ru": {
-   "chars": 9212,
-   "columns": 9212,
+   "chars": 9264,
+   "columns": 9264,
    "old_chars": 9369,
    "old_columns": 9369,
-   "symbols": 144,
+   "symbols": 157,
    "blocks": 120
   },
   "zh": {
-   "chars": 5713,
-   "columns": 7287,
+   "chars": 5739,
+   "columns": 7326,
    "old_chars": 5879,
    "old_columns": 7453,
-   "symbols": 144,
+   "symbols": 157,
    "blocks": 120
   }
  },
@@ -119,13 +119,12 @@
     "local": 97
    },
    "drop ~ before opener": {
-    "local": 36
+    "local": 49
    },
    "alternative on next line": {
     "silent": 5
    },
    "glue opener before": {
-    "local": 13,
     "tolerated": 1
    }
   },
@@ -147,13 +146,12 @@
     "local": 97
    },
    "drop ~ before opener": {
-    "local": 36
+    "local": 49
    },
    "alternative on next line": {
     "silent": 5
    },
    "glue opener before": {
-    "local": 13,
     "tolerated": 1
    }
   },
@@ -175,13 +173,12 @@
     "local": 97
    },
    "drop ~ before opener": {
-    "local": 36
+    "local": 49
    },
    "alternative on next line": {
     "silent": 5
    },
    "glue opener before": {
-    "local": 13,
     "tolerated": 1
    }
   }
@@ -242,9 +239,8 @@
  "openers": {
   "en": {
    "glued after RPAREN": 47,
-   "glued after SYMBOL": 36,
+   "glued after SYMBOL": 49,
    "glued after RBRACK": 13,
-   "spaced after IDENT": 13,
    "glued after STR": 7,
    "glued after LPAREN": 2,
    "glued after LBRACK": 1,
@@ -252,9 +248,8 @@
   },
   "ru": {
    "glued after RPAREN": 47,
-   "glued after SYMBOL": 36,
+   "glued after SYMBOL": 49,
    "glued after RBRACK": 13,
-   "spaced after IDENT": 13,
    "glued after STR": 7,
    "glued after LPAREN": 2,
    "glued after LBRACK": 1,
@@ -262,9 +257,8 @@
   },
   "zh": {
    "glued after RPAREN": 47,
-   "glued after SYMBOL": 36,
+   "glued after SYMBOL": 49,
    "glued after RBRACK": 13,
-   "spaced after IDENT": 13,
    "glued after STR": 7,
    "glued after LPAREN": 2,
    "glued after LBRACK": 1,

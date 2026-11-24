@@ -1,5 +1,9 @@
 """What if `port: 8080` were allowed? Run: python3 -I variants.py
 
+Measured for (24.11.26, 15), before the corpus replaced `defer :` and the
+like with `defer ~do:` by convention (24.11.26, 16); rerunning on the later
+corpus gives slightly different counts.
+
 Variants of vfs.py, measured on corpus/:
 
 * strict:  the decided rule; a plain identifier may not touch `:`.

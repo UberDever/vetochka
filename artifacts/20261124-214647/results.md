@@ -9,9 +9,9 @@ Same tree shape in en, ru, zh once names are erased: 17/17 programs.
 
 | Corpus | Chars (old → new) | Columns (old → new) | Symbols | Blocks |
 | --- | --- | --- | --- | --- |
-| en | 8027 → 7876 | 8027 → 7876 | 144 | 120 |
-| ru | 9369 → 9212 | 9369 → 9212 | 144 | 120 |
-| zh | 5879 → 5713 | 7453 → 7287 | 144 | 120 |
+| en | 8027 → 7915 | 8027 → 7915 | 157 | 120 |
+| ru | 9369 → 9264 | 9369 → 9264 | 157 | 120 |
+| zh | 5879 → 5739 | 7453 → 7326 | 157 | 120 |
 
 ## Where openers sit
 
@@ -22,25 +22,22 @@ Same tree shape in en, ru, zh once names are erased: 17/17 programs.
 | en | glued after RBRACK | 13 |
 | en | glued after RPAREN | 47 |
 | en | glued after STR | 7 |
-| en | glued after SYMBOL | 36 |
+| en | glued after SYMBOL | 49 |
 | en | spaced after COMMA | 1 |
-| en | spaced after IDENT | 13 |
 | ru | glued after LBRACK | 1 |
 | ru | glued after LPAREN | 2 |
 | ru | glued after RBRACK | 13 |
 | ru | glued after RPAREN | 47 |
 | ru | glued after STR | 7 |
-| ru | glued after SYMBOL | 36 |
+| ru | glued after SYMBOL | 49 |
 | ru | spaced after COMMA | 1 |
-| ru | spaced after IDENT | 13 |
 | zh | glued after LBRACK | 1 |
 | zh | glued after LPAREN | 2 |
 | zh | glued after RBRACK | 13 |
 | zh | glued after RPAREN | 47 |
 | zh | glued after STR | 7 |
-| zh | glued after SYMBOL | 36 |
+| zh | glued after SYMBOL | 49 |
 | zh | spaced after COMMA | 1 |
-| zh | spaced after IDENT | 13 |
 
 ## Mutations
 
@@ -49,27 +46,27 @@ Same tree shape in en, ru, zh once names are erased: 17/17 programs.
 
 | Corpus | Mutation | local | distant | tolerated | silent |
 | --- | --- | --- | --- | --- | --- |
-| en | glue opener before | 13 | 0 | 1 | 0 |
+| en | glue opener before | 0 | 0 | 1 | 0 |
 | en | glue opener after | 119 | 0 | 0 | 0 |
 | en | glue closer before | 120 | 0 | 0 | 0 |
 | en | glue closer after | 97 | 0 | 0 | 0 |
-| en | drop ~ before opener | 36 | 0 | 0 | 0 |
+| en | drop ~ before opener | 49 | 0 | 0 | 0 |
 | en | drop ~ elsewhere | 66 | 0 | 0 | 42 |
 | en | old label habit | 30 | 0 | 0 | 0 |
 | en | alternative on next line | 0 | 0 | 0 | 5 |
-| ru | glue opener before | 13 | 0 | 1 | 0 |
+| ru | glue opener before | 0 | 0 | 1 | 0 |
 | ru | glue opener after | 119 | 0 | 0 | 0 |
 | ru | glue closer before | 120 | 0 | 0 | 0 |
 | ru | glue closer after | 97 | 0 | 0 | 0 |
-| ru | drop ~ before opener | 36 | 0 | 0 | 0 |
+| ru | drop ~ before opener | 49 | 0 | 0 | 0 |
 | ru | drop ~ elsewhere | 66 | 0 | 0 | 42 |
 | ru | old label habit | 30 | 0 | 0 | 0 |
 | ru | alternative on next line | 0 | 0 | 0 | 5 |
-| zh | glue opener before | 13 | 0 | 1 | 0 |
+| zh | glue opener before | 0 | 0 | 1 | 0 |
 | zh | glue opener after | 119 | 0 | 0 | 0 |
 | zh | glue closer before | 120 | 0 | 0 | 0 |
 | zh | glue closer after | 97 | 0 | 0 | 0 |
-| zh | drop ~ before opener | 36 | 0 | 0 | 0 |
+| zh | drop ~ before opener | 49 | 0 | 0 | 0 |
 | zh | drop ~ elsewhere | 66 | 0 | 0 | 42 |
 | zh | old label habit | 30 | 0 | 0 | 0 |
 | zh | alternative on next line | 0 | 0 | 0 | 5 |

@@ -10,6 +10,8 @@ Not the project parser. Changes from artifacts/20261124-123200/vfp.py:
 * adjacency: a delimiter never touches its block's contents; the opener may
   touch a preceding symbol or closing bracket or brace; otherwise, outside,
   a delimiter may touch only the bracket enclosing its block, or a comma.
+  A plain identifier may take a block across whitespace (`defer : ... ;;`);
+  the corpus uses a symbol instead (`defer ~do: ... ;;`) by convention.
 
 v0 forms (`\\[...]`, `?[...]`, `=[...]`) parse as before: vf includes v0.
 """
