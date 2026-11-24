@@ -209,3 +209,35 @@ Agent's assessment, not a decision:
 - The parser is a throwaway reconstruction with the assumptions above. Lowering is only compared across designs, not checked against a specified lowering.
 - The mutations only delete whitespace. Missing or extra delimiters were not tested.
 - The keyboard models were written from memory and were not checked on real layouts.
+
+## Follow-up: rulings and Chinese speculation
+
+Added after the results, the same day.
+
+**User decision.** Use delimited `| ... ;;`, with no per-language word pairs. The user finds it decent overall, with strengths no other option has: code can look indentation-based ("tabulation larping"), and the syntax stays multilingual. See the devlog for the entry.
+
+**`|` in operator runs.** The user considers `|-` lexing as an operator correct, for example the infix `a |- b` from logic. Open question 2 is closed: `else: |-1` is a user error that reports a non-local error, which the user accepts.
+
+**Lambdas as infix operands.** This was assumption 2 above, and it is not a grammar restriction. In the retained snapshot, `tagged_expression ::= tag? (closure | infix<postfix_expression>)` makes a closure an alternative to a whole infix chain rather than an operand inside one, so `f = \[x] x` cannot be derived there, only `f = (\[x] x)`. Since (22.11.26, 8), lambdas and binders are prefix forms extending to the right, and `force-flat.vf` uses them as operands, so the snapshot lags the design. The user agrees that it is no restriction.
+
+**Chinese word pairs: speculation only.** The user wants any Chinese pair chosen by a native speaker. These are the agent's non-native thoughts, recorded for that reader. Each pair was rendered and parsed, but none was measured.
+
+| Pair | Source and reading | Risk |
+| --- | --- | --- |
+| `起 … 合` | 起承转合, the classical four-part composition of poems and essays: 起 opens, 合 concludes; 转 ("the turn") could be the localized `else:` label, so `合 转: 起` follows the composition's order | 合 alone can mean "combine" |
+| `者 … 也` | the classical judgment frame "X者，Y也"; 若…者 is a classical conditional, so `如果(...) 者` reads naturally to a classicist | may read as wenyan cosplay to modern readers |
+| `展 … 收` | unrolling and rolling up a scroll | 收 means "receive", a natural function name |
+| `起 … 讫` | the compound 起讫 ("from start to finish"); 讫 is the character on the 收讫 ("paid in full") stamp | least poetic; 讫 is rare as an identifier |
+| `【 … 】` | what a Simplified Chinese IME emits for `[` `]` with Chinese punctuation on; punctuation never merges into an identifier, so it avoids the gluing weakness of every word pair | a third, non-ASCII bracket pair; typing a list in Chinese mode would make a block |
+
+Rendered with `起 … 合` and `转:`:
+
+```vf
+如果(密码 == 秘密) 起
+    转到(关着)
+合 转: 起
+    报警()
+合
+```
+
+Every word pair keeps the result in "Gluing errors" above. Chinese makes that slip more likely, because words are written without spaces.
